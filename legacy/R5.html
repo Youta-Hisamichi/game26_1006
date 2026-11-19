@@ -1,0 +1,3459 @@
+<script src="Vars.js"></script>
+<style>
+html {
+  scroll-behavior: smooth;
+}
+</style>
+
+<script>
+
+let _isAutoEnemySelect = true;
+
+let _my_o = {
+
+	_isForceHeal:false,
+	_isEndSien:false,//@_isEndSien_me
+	_isSelectPhase:true,
+	_isCardSettingComp:false,//@_isMyCardSettingComp
+	_isInitCard12:false,
+
+	_isSienSelected:false,
+	_isSienHealOn:false,
+	_isSienHealOn_a:[false,false,false,false,false],
+	_isSienOn_a:[false,false,false,false,false],
+
+	_healTarget_name:null,//@_healTarget_name_me
+	_healTarget_i:0,//@_healTarget_i_me
+
+	_AP:1,//@_AP_me
+	_SPmarker:0,//@_SPmarker_me
+	_tmp_SPmarker:0,//@_tmp_SPmarker_me
+	_totalCost:0,//
+	_selectCard12_i:0,//
+
+	_card_a:[],
+	_card5_to12_i:[0,0,0,0,0],
+	_card5_a_a:[null,null,null,null,null],
+	_card5_sien_a_a:[null,null,null,null,null],//
+	_card5_move_a:[[0,1,2,3,4],[0,1,2,3,4],[0,1,2,3,4],[0,1,2,3,4],[0,1,2,3,4]],
+	_card_sien_a:[],//  @_card_sien_a_me
+
+	_preTaiki_i:0,
+
+	_selected_a:[],
+	_selected_name_a:[],
+		
+	_marker_a_tmp:[0,0,0,0,0],
+	_battle_a_tmp:[0,0,0,0,0],//⭐️<ーここまで完了！
+
+	_last_i0_select:0,
+
+};//{hoge:[1,3,5,"愛"]};
+
+
+let _enemy_o = structuredClone(_my_o);//let _card_a_org = structuredClone(_card_a);
+
+//_enemy_o._selected_name_a = ["緑で赤をこうげき","青で紫をこうげき","ガードx1","緑を後ろにいどう、後ろの真ん中が緑に","ガードx2"];
+//_enemy_o._selected_a = ["atk1_1","atk2_2","guard_1","move0_3","guard_2"];//_enemyRound_a
+
+
+let _turn = 1;
+let _round = 1;
+
+//ーーーーーーーーーーーーーーーーーーーーーーーーー
+
+let isPls1_AGI_HitRate_CT_battlPhase_quick_enemy;
+let isPls1_AGI_HitRate_CT_battlPhase_quick_me;
+
+let _isForceSenseEnemy;//一応ここに
+
+let isForceKaihi_normal_kansetu_dmg_sense_me;
+let isHitRatePls3_SensuMukou_hit_me;
+let isAtkPls2_break_me;
+let isDmgMin2_parry_me;
+let isHeal_1Chara_HP2_me;
+
+let isForceKaihi_normal_kansetu_dmg_sense_enemy;
+let isHitRatePls3_SensuMukou_hit_enemy;
+let isAtkPls2_break_enemy;
+let isDmgMin2_parry_enemy;
+let isHeal_1Chara_HP2_enemy;
+let sienName_me;
+let sienName_enemy;
+
+
+
+</script>
+
+<div id="baseUI" style="display: flex; justify-content: center; align-items: center; height: 100vh;margin:0px;">
+
+
+<div id="startUI" >
+<a href="javascript:onClickGameStart();"><img src="5R.jpg" height="70%"></a>
+<br><br><br><br>
+<button onClick="onClickGameStart();" style="font-size:40px;">ゲームスタート</button>
+<br><br><br><br>
+<a href="javascript:startGame();" style="font-size:20px;">強制ゲームスタート</a>
+<br><br><br>
+</div>
+
+<div id="selectUI">
+<h1 style="font-size:70px;">あなたのデッキを選択してね！</h1>
+<br><br><br><br>
+<button onClick="onClickSelectCard(0);" style="font-size:40px;"><img src="card/unit_x1.png" height="30%"><br>デッキ１<br><span style="color:#080">イージー</span></button>　
+<button onClick="onClickSelectCard(1);" style="font-size:40px;"><img src="card/unit_x1.png" height="30%"><br>デッキ２<br><span style="color:#00F">ノーマル</span></button>　
+<button onClick="onClickSelectCard(2);" style="font-size:40px;"><img src="card/unit_x1.png" height="30%"><br>デッキ３<br><span style="color:#F00">ハード</span></button>　
+<button onClick="onClickSelectCard(3);" style="font-size:40px;"><img src="card/unit_empty.png" height="30%"><br>あとで<br>自分で選ぶ</button>　
+<button onClick="onClickSelectCard(4);" style="font-size:40px;"><img src="card/unit_empty.png" height="30%"><br>ランダム<br>　</button>
+<br><br><br><a href="javascript:backTitle();" style="font-size:25px;">もどる</a>
+</div>
+
+<div id="choiceEnemyUI">
+<h1>どの相手と戦う？</h1>
+<br><br><br><br>
+<button onClick="onClickSelectEnemy(0);" style="font-size:40px;"><img src="card/unit_x6.png" height="30%"><br>相手１<br><span style="color:#080">イージー</span></button>　
+<button onClick="onClickSelectEnemy(1);" style="font-size:40px;"><img src="card/unit_x6.png" height="30%"><br>相手２<br><span style="color:#00F">ノーマル</span></button>　
+<button onClick="onClickSelectEnemy(2);" style="font-size:40px;"><img src="card/unit_x6.png" height="30%"><br>相手３<br><span style="color:#F00">ハード</span></button>　
+<button onClick="onClickSelectEnemy(3);" style="font-size:40px;"><img src="card/unit_empty.png" height="30%"><br>あとで<br>自分で選ぶ</button>　
+<button onClick="onClickSelectEnemy(4);" style="font-size:40px;"><img src="card/unit_empty.png" height="30%"><br>ランダム<br>　</button>
+<br><br><br><a href="javascript:backSelectCard();" style="font-size:25px;">もどる</a>
+</div>
+
+<div id="choiceTutorial">
+<h1>チュートリアル見る？</h1>
+<br><br>
+<button onClick="onClickSelectTutorial(0);" style="font-size:35px;">見る</button>　
+<br><br><br><br>
+<button onClick="startGame();" style="font-size:35px;">見ない（ゲームスタート）</button>
+<br><br><br><a href="javascript:backSelectEnemy();" style="font-size:25px;">もどる</a>
+</div>
+
+<div id="UItutorial">
+<h1>チュートリアル</h1>
+<br>
+<div style="color:#FFF;line-height:22px;">
+チュートリアル仮テキスト　チュートリアル仮テキスト　チュートリアル仮テキスト<br>
+チュートリアル仮テキスト　チュートリアル仮テキスト　チュートリアル仮テキスト<br>
+チュートリアル仮テキスト　チュートリアル仮テキスト　チュートリアル仮テキスト<br>
+チュートリアル仮テキスト　チュートリアル仮テキスト　チュートリアル仮テキスト<br>
+チュートリアル仮テキスト　チュートリアル仮テキスト　チュートリアル仮テキスト<br>
+チュートリアル仮テキスト　チュートリアル仮テキスト　チュートリアル仮テキスト<br>
+チュートリアル仮テキスト　チュートリアル仮テキスト　チュートリアル仮テキスト<br>
+チュートリアル仮テキスト　チュートリアル仮テキスト　チュートリアル仮テキスト<br>
+<br><br>
+わからなくなったらゲーム中にまた読んでね
+</div>
+<br>
+<br>
+<button onClick="startGame();" style="font-size:25px;">ゲームスタート</button>
+<br><br><br><a href="javascript:backSelectTutorial();" style="font-size:20px;">もどる</a>
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div id="gameUI">
+<script>
+
+let _selected_deck;//easy,normal,hard,manual,random
+let _selected_enemy;//easy,normal,hard,manual,random
+
+let _is_select_deck_manual;
+let _is_select_deck_random;
+
+let _is_selected_enemy_manual;
+let _is_selected_enemy_random;
+
+
+hideUI();
+
+function hideUI(){
+	document.getElementById("gameUI").style.display="none";
+	document.getElementById("selectUI").style.display="none";
+	document.getElementById("choiceEnemyUI").style.display="none";
+	document.getElementById("choiceTutorial").style.display="none";
+	document.getElementById("UItutorial").style.display="none";
+}
+
+function backTitle(){
+	hideUI();
+	document.getElementById("startUI").style.display="";
+}
+
+function backSelectCard(){
+	hideUI();
+	document.getElementById("selectUI").style.display="";
+}
+
+function backSelectEnemy(){
+	hideUI();
+	document.getElementById("choiceEnemyUI").style.display="";
+}
+
+function backSelectTutorial(){
+	hideUI();
+	document.getElementById("choiceTutorial").style.display="";
+}
+
+function onClickGameStart(){
+	document.getElementById("startUI").style.display="none";
+	document.getElementById("selectUI").style.display="";
+}
+
+function onClickSelectCard(i0){
+
+	_selected_deck = ["easy","normal","hard","manual","random"][i0];
+
+	_is_select_deck_manual = _selected_deck == "manual";
+	_is_select_deck_random = _selected_deck == "random";
+
+
+	console.log("L72 _selected_deck="+_selected_deck+"/_selected_enemy="+_selected_enemy);
+
+	document.getElementById("selectUI").style.display="none";
+	document.getElementById("choiceEnemyUI").style.display="";
+}
+
+function onClickSelectEnemy(i0){
+
+	_selected_enemy =["easy","normal","hard","manual","random"][i0];//easy,normal,hard,random
+
+	_is_selected_enemy_manual = _selected_enemy == "manual";
+	_is_selected_enemy_random = _selected_enemy == "random";
+
+
+	console.log("L82 _selected_deck="+_selected_deck+"/_selected_enemy="+_selected_enemy);
+
+	document.getElementById("choiceEnemyUI").style.display="none";
+	document.getElementById("choiceTutorial").style.display="";
+}
+
+function onClickSelectTutorial(i0){
+	document.getElementById("choiceTutorial").style.display="none";
+	if(i0 == 1){
+		startGame();
+	}
+	else
+	{
+		showTutorial();
+	}
+}
+
+function showTutorial(){
+	document.getElementById("UItutorial").style.display="";	
+}
+
+function startGame(){
+	document.getElementById("baseUI").style.display="none";	
+	document.getElementById("gameUI").style.display="";
+
+	if(_is_selected_enemy_random)
+	{
+		setAutoCard_enemy();
+	}
+}
+
+
+
+
+function update_marker(isMe=true, add=0){
+
+	let now_o = isMe ? _my_o : _enemy_o;//OK
+
+	add = Number(add);
+
+	if(add){
+		//console.log("L239 isMe="+isMe+"/add="+add);
+	}
+
+	now_o._SPmarker += add;
+
+	document.getElementById("SPmarker_"+(isMe?"me":"enemy")).innerHTML = now_o._SPmarker;
+
+	set_o(now_o, isMe);
+
+	//console.log("L280 update_marker add="+add+"/nowSP="+now_o._SPmarker)
+}
+
+function update_mihari(isMe){
+
+	let s = "";
+	let a = isMe ? _my_o._card_sien_a : _enemy_o._card_sien_a;
+
+	for(let i=0; i<5; i++){
+		//console.log(a[i]);
+		s += '<img src="card/'+getCardBackImg(a[i][3])+'" style="width:14vw;" id="hinari_'+(i+1)+'"_me">\n';
+	}
+
+	document.getElementById("mihari_"+(isMe?"me":"enemy")).innerHTML = s;
+}
+
+
+function mihariOnOff(isMe){
+	let isOn = document.getElementById("mihari_"+(isMe?"me":"enemy")).style.display;
+	document.getElementById("mihari_"+(isMe?"me":"enemy")).style.display = isOn?"":"none";
+	document.getElementById("boardBody1_"+(isMe?"me":"enemy")).style.display = !isOn?"":"none";
+	document.getElementById("boardBody2_"+(isMe?"me":"enemy")).style.display = !isOn?"":"none";
+	document.getElementById("boardBody3_"+(isMe?"me":"enemy")).style.display = !isOn?"":"none";
+	document.getElementById("boardBody4_"+(isMe?"me":"enemy")).style.display = !isOn?"":"none";
+	document.getElementById("boardBody5_"+(isMe?"me":"enemy")).style.display = !isOn?"":"none";
+
+	update_mihari(isMe);
+}
+
+function getCardBackImg(type_i_3){
+
+	let type = type_i_3;
+	
+	let s = "hogeeeeeeee";
+
+	if(type=="こがらなすがた"){
+		s = "unit_x3";
+	}
+	else if(type=="はばたくもの"){
+		s = "unit_x4";
+	}
+	else if(type=="きょたい"){
+		s = "unit_x5";
+	}
+	else if(type=="よろいすがた"){
+		s = "unit_x1";
+	}
+	else if(type=="じゅつしゃ"){
+		s = "unit_x2";
+	}
+	else if(type=="おそろしいもの"){
+		s = "unit_x6";
+	}
+
+	//console.log("L56 s="+s+"/type="+type);
+
+	return s + ".png";
+}
+
+function getSien(a0){
+	
+	return a0[9];
+
+	/*for(let i=0; i<_card_a.length; i++){
+
+		console.log("L340 "+i+"/_card_a[i][0]="+_card_a[i][0]+"/a0[0]="+a0[0]+"/len="+_card_a.length);
+
+		if(_card_a[i][0] == a0[0]){
+			console.log("L343 ヒット！");
+			return _sien_master_a[i];
+		}
+	}
+	
+	return null;*/
+}
+
+/*
+let _sien_master_a = [
+"ヒット",
+"ヒール",
+"クイック",
+"センス",
+"ブレイク",
+"ヒール",
+"ヒット",
+"センス",
+"パリィ",
+"センス",
+"ヒール",
+"クイック",
+"ブレイク",
+"ヒット",
+"ヒット",
+"パリィ",
+"ブレイク",
+"ブレイク",
+"ヒット",
+"ヒール",
+"ヒット",
+"センス",
+"クイック",
+"センス",
+"センス",
+"センス",
+"パリィ",
+"パリィ",
+"ブレイク",
+"クイック",
+"ヒール",
+"ブレイク",
+"クイック",
+"ヒール",
+"クイック",
+"ブレイク",
+"ヒット",
+"パリィ",
+"センス",
+"センス",
+"パリィ",
+"ヒット",
+"ブレイク",
+"ヒール",
+"ヒット",
+"パリィ",
+"ヒット"
+]
+
+
+let s = "";
+
+for(i=0;i<_card_a.length;i++){
+	s += "[";
+	for(i2=0;i2<_card_a[i].length;i2++){
+		if(isNaN(_card_a[i][i2])){
+			s += "\""+_card_a[i][i2]+"\",";			
+		}
+		else{
+			s += _card_a[i][i2]+",";			
+		}
+	}	
+	s += "\""+_sien_master_a[i]+"\"],\n";
+}
+
+console.log(s);
+*/
+
+
+let _card_a_org = structuredClone(_card_a);
+
+
+</script><!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1020">
+</head>
+
+<body style="text-align:center;font-size:16px;line-height:16px;background-color:#080;margin:0px;">
+	<br>
+<h2 stle="margin:0px;padding:0px;">Round5ブラウザゲーム版モック</h2>
+<h3>仕様メモ：「補給フェイズ無し、アイテム無し」2025年6月16日 午後7:47</h3>
+<b style="line-height:22px;">▼支援について<br>
+①センス：次の通常攻撃、または間接ダメージを回避<br>
+②ヒット：次の攻撃のとき命中＋３。センス無効化<br>
+③ブレイク：次の攻撃のとき、ATK+2<br>
+④パリィ：次のダメージを−２<br>
+⑤クイック：バトルフェイズ中、AGI、命中、CT値+1<br>
+→クリティカル値+1の場合、ダイス11以上<br>
+⑥ヒール：１体のHP２回復<br>
+</b>
+<br>
+
+<div style="border:2px;width:100%;" width="400px" height="50%">
+<div id="deadCard_enemy" align="center" style="width: 100%;height: auto;object-fit:center;">
+</div>
+
+<a name="card12_enemy"> </a>
+<div id="enemyCard12">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<br>
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+<img src="card/unit_x1.png" style="height:280px;width:200px;">
+</div>
+<br>
+<button onClick="openEnemyCard12();">敵の待機カードオープン</button>
+<br>
+
+<hr>
+<a name="card12_enemy_sien_selected"> </a>
+
+<table border="1" style="margin:auto;text-align:center;font-size:16px;line-height:16px;background-color:#FFF;">
+	<tr><td colspan="3">陣営：<span style="color:#00F">青</span>
+	
+	<hr><img src="SP.png" width="32" height="32" style="position:relative;top:8px">SPマーカー：<span id="SPmarker_enemy">5</span><br><br>（初期値５@全体ガード用。ターンでも増えない）
+	
+	</td><td style="font-size:16px" colspan="3">
+		<button onClick="changeSien(false);" id="sienBtnEnemy"><img src="card/unit_empty.png" style="width:14vw;" id="sienImgEnemy"></button><br>
+
+		支援ユニット置き場<span id="sienDone_enemy"></span></td></tr>
+	<tr><td style="font-size:16px">攻撃条件</td><td>AGI 6以上</td><td>AGI 4以上</td><td>ー</td><td>ー</td><td>ー</td></tr>
+	<tr><td style="font-size:16px">味方<br>TARGET</td>
+
+		<td><span id="playerBoard_atk_enemy1"></span><span id="selectResult_enemy1"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td>
+		<td><span id="playerBoard_atk_enemy2"></span><span id="selectResult_enemy2"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td>
+		<td><span id="playerBoard_atk_enemy3"></span><span id="selectResult_enemy3"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td>
+		<td><span id="playerBoard_atk_enemy4"></span><span id="selectResult_enemy4"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td>
+		<td><span id="playerBoard_atk_enemy5"></span><span id="selectResult_enemy5"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td></tr>
+
+	<tr><td style="font-size:16px">敵<br>TARGET</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+	</tr>
+	<tr><td style="font-size:16px">Round</td><td>1R</td><td>2R</td><td>3R</td><td>4R</td><td>5R</td></tr>
+	<tr><td colspan="7" style="background-color:#00F;color:#FFF;">相手のプレイヤーボード</td></tr>
+</table>
+<br>
+<a name="card5_enemy"> </a>
+
+<a name="card_enemy"> </a>
+<br>
+合計コスト：<span id="TotalCost_enemy">0</span>/15
+<br>
+<button onClick="selectCard6_enemy(3);" id="Card3Btn_enemy"><img id="Card_enemy3" src="card/unit_empty.png" style="width:14vw;"></button> <span id="hp_enemy3" style="font-size:28">HP?</span>　
+<button onClick="selectCard6_enemy(4);" id="Card4Btn_enemy"><img id="Card_enemy4" src="card/unit_empty.png" style="width:14vw;"></button> <span id="hp_enemy4" style="font-size:28">HP?</span>　
+<button onClick="selectCard6_enemy(5);" id="Card5Btn_enemy"><img id="Card_enemy5" src="card/unit_empty.png" style="width:14vw;"></button> <span id="hp_enemy5" style="font-size:28">HP?</span>
+<br>
+<br>
+<button onClick="selectCard6_enemy(1);" id="Card1Btn_enemy"><img id="Card_enemy1" src="card/unit_empty.png" style="width:14vw;"></button> <span id="hp_enemy1" come="＜敵は１と２が左右逆かも" style="font-size:28">HP?</span>　
+
+<button onClick="selectCard6_enemy(2);" id="Card2Btn_enemy"><img id="Card_enemy2" src="card/unit_empty.png" style="width:14vw;"></button> <span id="hp_enemy2" style="font-size:28">HP?</span>
+
+<br>
+<br>
+<!--button onClick="openEnemyCard5();">敵のカードオープン</button-->
+<br>
+<hr>
+ターン<span id="TxtTurn">1</span> / ラウンド<span id="TxtRound">2</span>
+<br>
+<br>
+<table border="0" style="margin:auto;background-color:#FFF;"><tr><td>
+<table border="1" style="margin:auto;text-align:center;font-size:16px;line-height:16px;background-color:#FFF;">
+	<tr><td colspan="6">ゲームボード</td><tr>
+	<tr><td rowspan="6" id="turnView"><div style="background-color:#FF0;margin:0px;"><b>1<br>TURN</b></div><hr>2<br>TURN<hr>3<br>TURN<hr>4<br>TURN<hr>5<br>TURN</td>
+	<td id="AP_enemy">AP <img src="AP.png" width="24" height="24" style="position:relative;top:5px">1 2 3 4 5 6 7 8 9
+	</td><tr>
+	<tr><td>
+<table border="1" style="margin:auto;font-size:40px;line-height:46px;background-color:#FFF;">
+	<tr><td><span style="color:#080">緑</span>弓</td><td><span style="color:#00F">青</span>斧</td></tr>
+	<tr><td><span style="color:#F00">赤</span>剣</td><td><span style="color:#F0F">紫</span>盾</td></tr>
+</table>
+
+</td></tr><tr>
+<td id="AP_me">AP <img src="AP.png" width="24" height="24" style="position:relative;top:5px">1 2 3 4 5 6 7 8 9
+</td></tr></table>
+</td><td>
+<table border="1" style="margin:auto;margin-left:20px;height:200px;background-color:#FFF;">
+	<tr><td style="padding:10px;text-align:center;">
+		砂時計<br>
+		<br>
+		<br>
+		<div style="font-size:50px">02:59</div><br>
+<hr>
+		<button>スタート</button> 
+		<button>ストップ</button> 
+		<button>リセット</button></td></tr></table>
+</td></tr></table>
+
+<br>
+<a name="gameTextArea"> </a>
+<div id="textarea_div" style="display:none;"><div id="textarea" style="overflow: scroll;margin:auto;background-color:#000;color:#FFF;width:800px;height:500px;line-height:30px;text-align:left;padding:4px;"><!-- rows="11" cols="80" -->
+</div>
+<br>
+<button id="nextTurn" onClick="nextTurn();" style="font-size:28px;display:none;">次へ</button>
+</div>
+<button id="startTurnBtn" onClick="startTurnBtn();" style="font-size:28px;"> ターン開始 </button><!--  display:none;--->
+<br><br>
+<button onClick="autoSelectRound1(true)" id="autoSelectRound1" style="background-color:#000;color:#999">選択して1ターン終了</button>
+<br><br>
+<button onClick="autoSelectRound1()" id="autoSelectRound1_1" style="background-color:#000;color:#999">選択して全ターン終了</button>
+<br>
+
+
+<script>
+function showTurn(){
+
+	s = "";
+
+	for(i=0;i<5;i++){
+		id = i+1;
+		if(id == _turn){
+			s += '<div style="background-color:#FF0;margin:0px;"><b>';
+		}
+
+		s += id+"<br>TURN";
+
+		if(id == _turn){
+			s += "</b></div>";
+		}
+		if(id < 5){
+			s += "<hr>";
+		}
+	}
+
+	document.getElementById("turnView").innerHTML = s;
+}
+
+function showAP(isMe=true){
+	s = " AP ";
+
+	for(i=0;i<9;i++){
+		id = i+1;
+		if(id == (isMe?_my_o:_enemy_o)._AP){
+			s += '<img src="AP.png" width="24" height="24" style="position:relative;top:5px">';
+		}
+		s += id + "　";
+	}
+	document.getElementById("AP_"+(isMe ? "me" : "enemy")).innerHTML = s;	
+}
+
+</script>
+
+<hr>
+<a name="card5_me"> </a>
+
+<a name="card"> </a>
+<br>
+
+<button onClick="selectCard6(1);" id="Card1Btn"><img src="card/unit_empty.png" style="width:14vw;" id="Card1"></button> <span id="hp_me1" style="font-size:28">HP?</span>　
+<button onClick="selectCard6(2);" id="Card2Btn"><img src="card/unit_empty.png" style="width:14vw;" id="Card2"></button> <span id="hp_me2" style="font-size:28">HP?</span>
+<br>
+<br>
+<button onClick="selectCard6(3);" id="Card3Btn"><img src="card/unit_empty.png" style="width:14vw;" id="Card3"></button> <span id="hp_me3" style="font-size:28">HP?</span>　
+<button onClick="selectCard6(4);" id="Card4Btn"><img src="card/unit_empty.png" style="width:14vw;" id="Card4"></button> <span id="hp_me4" style="font-size:28">HP?</span>　
+<button onClick="selectCard6(5);" id="Card5Btn"><img src="card/unit_empty.png" style="width:14vw;" id="Card5"></button> <span id="hp_me5" style="font-size:28">HP?</span>
+
+<br>
+<br>
+合計コスト：<span id="TotalCost">0</span>/15
+<br>
+<!--AP<span id="AP_me">1</span>
+<hr>
+発掘品：回復薬x1<br>-->
+<br>
+
+<table border="1" style="margin:auto;text-align:center;font-size:16px;line-height:16px;background-color:#FFF;">
+	<tr><td colspan="7" style="background-color:#F00;color:#FFF;">自分のプレイヤーボード
+	</td></tr>
+	<tr><td colspan="7" style="background-color:#008;color:#FFF">
+見張りガード<button onClick="mihariOnOff(true);">ON/OFF</button><br>
+
+<script>
+
+
+</script>
+
+<span id="mihari_me" style="display:none;">
+
+</span>
+
+	</td></tr>
+
+	<tr id="boardBody1_me"><td style="font-size:16px">Round</td><td>1R</td><td>2R</td><td>3R</td><td>4R</td><td>5R</td></tr>
+	<tr id="boardBody2_me"><td style="font-size:16px">敵<br>TARGET</td>
+		<td><span id="playerBoard_atk1"></span><span id="selectResult1"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td>
+		<td><span id="playerBoard_atk2"></span><span id="selectResult2"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td>
+		<td><span id="playerBoard_atk3"></span><span id="selectResult3"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td>
+		<td><span id="playerBoard_atk4"></span><span id="selectResult4"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td>
+		<td><span id="playerBoard_atk5"></span><span id="selectResult5"></span><br>[<span style="color:#080">緑</span>弓][<span style="color:#00F">青</span>斧]</td></tr>
+	<tr id="boardBody3_me"><td style="font-size:16px">味方<br>TARGET</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+		<td>[<span style="color:#F00">赤</span>剣][<span style="color:#F0F">紫</span>盾]</td>
+	</tr>
+	<tr id="boardBody4_me"><td style="font-size:16px">攻撃条件</td><td>AGI 6以上</td><td>AGI 4以上</td><td>ー</td><td>ー</td><td>ー</td></tr>
+	<tr id="boardBody5_me"><td colspan="3">陣営：<span style="color:#F00">赤</span>
+			<hr><img src="SP.png" width="32" height="32" style="position:relative;top:8px">SPマーカー：<span id="SPmarker_me">5</span><br><br>（初期値５@全体ガード用。ターンでも増えない）
+
+	</td><td style="font-size:16px" colspan="3">
+		
+		<button onClick="changeSien(true);" id="sienBtnMe"><img src="card/unit_empty.png" style="width:14vw;" id="sienImgMe"></button><br>
+		支援ユニット置き場<span id="sienDone_me"></span>
+	</td></tr>
+</table>
+
+<script>
+
+
+function get_card5_a_a(isMe=true){
+	return (isMe?_my_o:_enemy_o)._card5_a_a;
+}
+
+
+</script>
+</div>
+<br>
+<a name="card12"> </a>
+<div id="myCard12" align="center" style="width: 100%;height: auto;object-fit:center;">
+</div>
+
+<div id="deadCard_me" align="center" style="width: 100%;height: auto;object-fit:center;">
+<!-- <img src="card/unit_x1.png" style="width:14vw;transform:rotate(90deg);"> -->
+</div>
+
+
+<button onClick="openCard12();" id="openCard12">待機カードオープン</button>
+<br>
+
+</body>
+<script>
+
+function initCard12(){
+
+//console.log("L702 initCard12()");
+
+
+	_my_o._isInitCard12 = true;
+
+	let s = '';
+
+	for(let i=0; i<12; i++){
+		s += '<span id="taikiCard'+i+'"><button onClick="selectTaikiCard('+i+')"><img src="card/'+_my_o._card_a[i][1]+'" style="width:14vw;" alt="'+i+'" title="'+i+'"></button>'+
+			' <span id="hp_me12_'+(i+1)+'" style="font-size:28">HP'+_my_o._card_a[i][6]+'</span>'+
+			'</span>';
+		//s+= ' <span id="hp_me'+(i+1)+'" style="font-size:28">HP'+(i+1)+'</span>';
+		if(i==5){
+			s += "<br><span id='btn5' style='display:none;'><div>"+
+
+				"<button onClick='changeCard6(1);' id='Btn12345_1' style='font-size:40px;'>1</button>"+
+				"<button onClick='changeCard6(2);' id='Btn12345_2' style='font-size:40px;'>2</button><br>"+
+				"<button onClick='changeCard6(3);' id='Btn12345_3' style='font-size:40px;'>3</button>"+
+				"<button onClick='changeCard6(4);' id='Btn12345_4' style='font-size:40px;'>4</button>"+
+				"<button onClick='changeCard6(5);' id='Btn12345_5' style='font-size:40px;'>5</button>"+
+				"<button onClick='changeCard6(6);' id='Btn12345_6' style='font-size:30px;'>支援</button>"+
+
+				"<br><br><button onClick='changeCard6(-1);' style='font-size:26px;'>CLOSE</button><br><br></div></span>";
+		}
+	}
+
+	document.getElementById("myCard12").innerHTML = s;
+}
+
+function resetCard12(){
+
+	_my_o._isInitCard12 = false;
+
+	_my_o._card5_to12_i = [0,0,0,0,0];
+	_my_o._card5_a_a = [null,null,null,null,null];
+	_my_o._card5_sien_a_a = [null,null,null,null,null];
+	_enemy_o._card5_to12_i = [0,0,0,0,0];
+	_enemy_o._card5_a_a = [null,null,null,null,null];
+	_enemy_o._card5_sien_a_a = [null,null,null,null,null];
+
+	_my_o._card_sien_a = [];
+	_enemy_o._card_sien_a = [];
+
+
+	let s = '';
+
+	for(let i=0; i<12; i++){//+'unit_x'+parseInt(Math.random()*5+1)
+		s += '<span id="taikiCard'+i+'"><button onClick="selectTaikiCard('+i+')"><img src="card/'+getCardBackImg(_my_o._card_a[i][3])+'" style="width:14vw;"></button></span>';
+		if(i==5){
+			s += "<br>";
+		}
+	}
+
+	document.getElementById("myCard12").innerHTML = s;
+
+	for(let i=0; i<5; i++){
+		document.getElementById("Card"+(i+1)).src = "card/unit_empty.png";
+	}
+
+	_my_o._totalCost = 0;
+
+	updateTotalCost();
+}
+
+function ResetEnemyCard(){
+
+	let s = '';
+
+	for(let i=0; i<12; i++){
+		if(!_enemy_o._card_a[i]){
+			break;
+		}
+
+		s += '<span id="taikiCard_enemy'+i+'"><button onClick="selectTaikiCard_enemy('+i+')"><img src="card/'+getCardBackImg(_enemy_o._card_a[i][3])+'" style="width:14vw;"></button></span>';
+		if(i==5){
+			s += "<br>";
+		}
+	}
+	document.getElementById("enemyCard12").innerHTML = s;
+
+	for(let i=0; i<5; i++){
+		document.getElementById("Card_enemy"+(i+1)).src = "card/unit_empty.png";//'card/unit_x'+parseInt(Math.random()*5+1)+'.png';
+	}
+}
+
+function selectTaikiCard(i){
+
+	if(!_my_o._isSelectPhase){
+		return;
+	}
+
+	if(!_my_o._isInitCard12){
+		openCard12();
+		return;
+	}
+
+	let cost = _my_o._card_a[i][4];
+	let nextTotalCost = _my_o._totalCost + cost;
+	let isSienOnly;
+
+	if(nextTotalCost > 15 || _turn > 1){
+		///alert("合計コストオーバーしました！\nコストは最大１５です！\n現在"+_my_o._totalCost+"\n選んだカード"+cost);
+		///return;
+		isSienOnly = true;
+	}
+
+	_my_o._selectCard12_i = i;
+
+	if(_now_CardSelecting_id_me == 0){
+		document.getElementById("btn5").style.display = "";
+	}
+	else{
+		changeCard6(_now_CardSelecting_id_me);
+		_now_CardSelecting_id_me = 0;
+	}
+
+	/*
+	for(let i=0; i<_my_o._card5_a_a.length; i++){
+		if(isSienOnly){
+			document.getElementById("Btn12345_"+(i+1)).style.display = i<=5?"none":"";		
+		}
+		else
+		{
+			document.getElementById("Btn12345_"+(i+1)).style.display = _my_o._card5_a_a[i]?"none":"";		
+		}
+	}*/
+
+	//document.getElementById("taikiCard"+i).innerHTML = "<div><button>1</button><button>2</button><br><button>3</button><button>4</button><button>5</button></div>";
+}
+
+
+function selectTaikiCard_enemy(i){
+
+	if(!_enemy_o._isInitCard12){
+		openEnemyCard12();//openCard12();
+		return;
+	}
+
+	let cost = _enemy_o._card_a[i][4];
+	let nextTotalCost = _enemy_o._totalCost + cost;
+	let isSienOnly;
+
+	if(nextTotalCost > 15 || _turn > 1){
+		// alert("合計コストオーバーしました！\nコストは最大１５です！\n現在"+_enemy_o._totalCost+"\n選んだカード"+cost);
+		// return;
+		isSienOnly = true;
+	}
+
+	_enemy_o._selectCard12_i = i;
+
+	if(_now_CardSelecting_id_enemy == 0){
+		document.getElementById("btn5_enemy").style.display = "";
+	}
+	else{
+		changeCard6_enemy(_now_CardSelecting_id_enemy);
+		_now_CardSelecting_id_enemy = 0;
+	}
+
+	//changeCard6_enemy(1~6)//changeCard6_enemy(i);//1/29
+	//document.getElementById("btn5_enemy").style.display = "";
+
+	/*
+	for(let i=0; i<_enemy_o._card5_a_a.length; i++){
+		if(isSienOnly){
+			document.getElementById("BtnEnemy12345_"+(i+1)).style.display = i<=5?"none":"";		
+		}
+		else
+		{
+			document.getElementById("BtnEnemy12345_"+(i+1)).style.display = _enemy_o._card5_a_a[i]?"none":"";		
+		}
+	}
+	*/
+}
+
+function log(s){
+	console.log(s)
+}
+
+function isEndCard5(isMe){//now_o._card5_a_a[0]
+	let now_o = isMe ? _my_o : _enemy_o;//OK
+
+	let count = 0;
+
+	for(let i=0; i<now_o._card5_a_a.length;i++){//now_o._card5_a_a[0][8]
+		if(now_o._card5_a_a[i] && now_o._card5_a_a[i].length>2){
+			count++;
+		}
+	}
+
+	if(now_o._card_sien_a[0]){
+		count++;
+	}
+
+	return count >= 6;
+}
+
+function changeCard6(id){
+
+//console.log("L810 id="+id);//マニュアルだと来ない
+
+	document.getElementById("btn5").style.display = "none";
+
+	if(id != -1){
+		if(id == 6){//支援
+
+			if(_my_o._card5_sien_a_a[0] != null && _my_o._card5_sien_a_a[0][1] != null){
+
+				document.getElementById('taikiCard'+_my_o._preTaiki_i).style.display = "";
+			}
+
+//console.log("L905 _my_o._selectCard12_i="+_my_o._selectCard12_i);
+
+			_my_o._preTaiki_i = _my_o._selectCard12_i;
+
+			_my_o._card5_sien_a_a[0] = _my_o._card_a[_my_o._selectCard12_i];
+
+			if(!_my_o._card_sien_a){
+				_my_o._card_sien_a = [];
+			}
+
+			_my_o._card_sien_a[0] = _my_o._card_a[_my_o._selectCard12_i];//12/22  
+
+			_my_o._card5_sien_a_a[0] = _my_o._card_sien_a[0];//2/27
+
+//(10) ['とうせきき', 'unit_u5.png', 'unit_u5-216x300.png', 'きょたい', 1, 'ゆみ', 6, 1, 3, 'ブレイク']0: "とうせきき"1: "unit_u5.png"2: "unit_u5-216x300.png"3: "きょたい"4: 15: "ゆみ"6: 67: 18: 39: "ブレイク"length: 10[[Prototype]]: Array(0) unit_u5.png
+
+
+			document.getElementById("sienImgMe").src = "card/"+_my_o._card5_sien_a_a[0][1];
+			
+//console.log("☺️L881 _my_o._selectCard12_i="+_my_o._selectCard12_i, _my_o._card_sien_a[0],_my_o._card5_sien_a_a[0][1],document.getElementById("sienImgMe").src );
+
+//console.log("L922 _my_o._card_sien_a[0]="+_my_o._card_sien_a[0]);
+
+			if(isEndCard5(true)){//全カード選択が終わってたら
+				onChangeSelect(0,true);
+			}
+
+//console.log("☺️☺️L881 _my_o._selectCard12_i="+_my_o._selectCard12_i, _my_o._card_sien_a[0],_my_o._card5_sien_a_a[0][1],document.getElementById("sienImgMe").src );
+		}
+		else{//支援以外
+
+			//if(_my_o._selectCard12_i==13){
+			//	return;//TODO?試し
+			//}
+
+//console.log("L937 _my_o._selectCard12_i=",_my_o._selectCard12_i,_my_o._card_a);//L937 _my_o._selectCard12_i= 13 
+
+			let cost = _my_o._card_a[_my_o._selectCard12_i][4];
+			_my_o._card5_a_a[id-1] = _my_o._card_a[_my_o._selectCard12_i];
+
+			if(document.getElementById('Card'+id)){
+				document.getElementById('Card'+id).src = "card/"+_my_o._card_a[_my_o._selectCard12_i][1];
+			}
+			_my_o._card5_to12_i[id-1]=_my_o._selectCard12_i;
+			_my_o._totalCost += cost;
+			updateTotalCost();
+		}
+
+		document.getElementById('taikiCard'+_my_o._selectCard12_i).style.display = "none";
+		document.location.href = "#card";		
+	}
+	else{
+		_my_o._selectCard12_i = -1;
+	}
+
+
+	if(_my_o._card_sien_a[0] && !_my_o._isCardSettingComp && _my_o._card5_a_a[0] != null && _my_o._card5_a_a[1] != null && _my_o._card5_a_a[2] != null && _my_o._card5_a_a[3] != null && _my_o._card5_a_a[4] != null){//全部そろった
+		_my_o._isCardSettingComp = true;
+		setTimeout(()=>{
+			//console.log("カードが選択されました！\nプレイヤーボードの設定に進んでください");
+
+			if(!_enemy_o._card5_a_a[0] || !_enemy_o._card5_a_a[0][0])
+			{
+				setAutoCard_enemy();
+
+				if(!_my_o._card5_sien_a_a[0]){
+					_my_o._card5_sien_a_a[0] = _my_o._card_a[_my_o._card_a.length-1];
+
+					document.getElementById("sienImgMe").src = "card/"+_my_o._card5_sien_a_a[0][1];
+					document.getElementById('taikiCard11').style.display = "none";
+				}
+			}
+
+			updateHp();
+
+			//しえんが変化してバグるので一旦消してみる2/25 resetBoardSelect(0,true,"L969");
+
+			///startTurnBtn();
+		}, 100);
+	}
+}
+
+function changeCard6_enemy(id, isAuto, o0_sien=null){
+
+	document.getElementById("btn5_enemy").style.display = "none";
+
+	if(id != -1){
+		if(id == 6){//支援
+
+			if(_enemy_o._card5_sien_a_a[0] != null && _enemy_o._card5_sien_a_a[0][1] != null){
+				document.getElementById('taikiCard_enemy'+_enemy_o._preTaiki_i).style.display = "";
+			}
+
+			_enemy_o._preTaiki_i = _enemy_o._selectCard12_i;
+
+//console.log("L905 _enemy_o._selectCard12_i="+_enemy_o._selectCard12_i);
+
+			_enemy_o._card5_sien_a_a[0] = _enemy_o._card_a[_enemy_o._selectCard12_i];
+
+
+			if(!_enemy_o._card_sien_a){
+				_enemy_o._card_sien_a = [];
+			}
+
+			//L996 _enemy_o._selectCard12_i=2
+//console.log("L996 _enemy_o._selectCard12_i="+_enemy_o._selectCard12_i);
+
+			_enemy_o._card_sien_a[0] = _enemy_o._card_a[_enemy_o._selectCard12_i];//12/22
+
+			_enemy_o._card5_sien_a_a[0] = _enemy_o._card_sien_a[0];//2/27
+
+			if(o0_sien){
+				_enemy_o._card5_sien_a_a[0] = _enemy_o._card_sien_a[0] = o0_sien;
+			}
+
+			document.getElementById("sienImgEnemy").src = "card/"+_enemy_o._card5_sien_a_a[0][1];
+
+			//ここで元を消す
+
+
+//console.log("L1007 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);	
+//L1007 _enemy_o._card_sien_a[0]=ハンター,unit_u21.png,unit_u21-216x300.png,よろいすがた,3,ゆみ,5,3,6,クイック		
+
+//console.log("👿L1010 きてる？　changeCard6_enemy　_enemy_o._selectCard12_i="+_enemy_o._selectCard12_i,_enemy_o._card_sien_a[0],_enemy_o._card5_sien_a_a[0][1]);
+
+
+			resetBoardSelect(0,false,"L1003");//バグるかも
+
+//console.log("L1007.3 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);//OK
+		}
+		else
+		{
+			let cost = _enemy_o._card_a[_enemy_o._selectCard12_i][4];
+			_enemy_o._card5_a_a[id-1] = _enemy_o._card_a[_enemy_o._selectCard12_i];
+			if(document.getElementById('Card_enemy'+id)){
+				document.getElementById('Card_enemy'+id).src = "card/"+_enemy_o._card_a[_enemy_o._selectCard12_i][1];
+			}
+			_enemy_o._card5_to12_i[id-1]=_enemy_o._selectCard12_i;
+			_enemy_o._totalCost += cost;
+			updateTotalCost();
+		}
+		
+		document.getElementById('taikiCard_enemy'+_enemy_o._selectCard12_i).style.display = "none";
+		document.location.href = (id == 6?"#card12_enemy_sien_selected":"#card_enemy");
+	}
+	else{
+		_enemy_o._selectCard12_i = -1;
+	}
+
+
+	if(!_enemy_o._isCardSettingComp && _enemy_o._card5_a_a[0] != null && _enemy_o._card5_a_a[1] != null && _enemy_o._card5_a_a[2] != null && _enemy_o._card5_a_a[3] != null && _enemy_o._card5_a_a[4] != null){//全部そろった
+		_enemy_o._isCardSettingComp = true;
+
+		if(isAuto && !_enemy_o._card5_sien_a_a[0]){
+			_enemy_o._card5_sien_a_a[0] = _enemy_o._card_a[_enemy_o._card_a.length-1];
+
+			//console.log("L967 _enemy_o._card5_sien_a_a[0]="+_enemy_o._card5_sien_a_a[0]+"/_enemy_o._card_a[_enemy_o._card_a.length-1]="+_enemy_o._card_a[_enemy_o._card_a.length-1]);
+			//L967 _enemy_o._card5_sien_a_a[0]=undefined/_enemy_o._card_a[_enemy_o._card_a.length-1]=undefined
+			
+			//console.log("_enemy_o._card_a.length="+_enemy_o._card_a.length+"/len="+_enemy_o._card_a.length);
+			//_enemy_o._card_a.length=0/len=0
+
+			//_enemy_o._card5_sien_a_a[0]=undefined/src=[object HTMLImageElement]
+
+			document.getElementById("sienImgEnemy").src = "card/"+_enemy_o._card5_sien_a_a[0][1];
+			document.getElementById('taikiCard_enemy11').style.display = "none";
+		}
+
+
+		//setTimeout(()=>{
+			//console.log("カードが選択されました！\nプレイヤーボードの設定に進んでください");
+
+			// if(!_enemy_o._card5_a_a[0] || !_enemy_o._card5_a_a[0][0])
+			// {
+			// 	setAutoCard_enemy();
+
+			// 	if(!_enemy_o._card5_sien_a_a[0]){
+			// 		_enemy_o._card5_sien_a_a[0] = _enemy_o._card_a[_enemy_o._card_a.length-1];
+
+			// 		document.getElementById("sienImgMe").src = "card/"+_enemy_o._card5_sien_a_a[0][1];
+			// 		document.getElementById('taikiCard11').style.display = "none";
+			// 	}
+			// }
+
+			updateHp();
+
+			resetBoardSelect(0,false,"L1061");
+
+			///startTurnBtn();
+		//}, 1);
+	}
+	
+	//resetBoardSelect(0,false);//バグるかも
+
+	//console.log("L1007.5 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);//バグってない
+}
+
+function selectCard6_enemy(id){
+
+	if(!_enemy_o._isSelectPhase){
+		return;
+	}
+
+	_now_CardSelecting_id_enemy = id;
+	
+	if(!_enemy_o._card5_a_a[id-1]){
+		document.location.href = "#card12_enemy";
+	}
+	else{
+		document.getElementById("Card_enemy"+id).src = "card/unit_empty.png";
+		document.getElementById('taikiCard_enemy'+_enemy_o._card5_to12_i[id-1]).style.display = "";
+
+		let cost = _enemy_o._card5_a_a[id-1][4];
+
+		_enemy_o._totalCost -= cost;
+		updateTotalCost();
+
+		_enemy_o._card5_a_a[id-1] = null;
+		_enemy_o._card5_to12_i[id-1] = 0;
+	}
+	/**/
+}
+
+let _now_CardSelecting_id_me;
+let _now_CardSelecting_id_enemy;
+
+function selectCard6(id){
+
+	if(!_my_o._isSelectPhase){
+		console.log("L1107");
+		return;
+	}
+
+	console.log("L1062 selectCard6 id="+id,_my_o._isSelectPhase,_enemy_o._isSelectPhase);
+
+	_now_CardSelecting_id_me = id;
+
+	if(!_my_o._card5_a_a[id-1]){
+		document.location.href = "#card12";
+	}
+	else{
+		document.getElementById("Card"+id).src = "card/unit_empty.png";
+		document.getElementById('taikiCard'+_enemy_o._card5_to12_i[id-1]).style.display = "";
+
+		let cost = _my_o._card5_a_a[id-1][4];
+
+		_my_o._totalCost -= cost;
+		updateTotalCost();
+
+		_my_o._card5_a_a[id-1] = null;
+		_enemy_o._card5_to12_i[id-1] = 0;
+	}
+	//console.log("selectCard6="+id+"/src="+document.getElementById("Card"+id).src);
+}
+
+function updateTotalCost(){
+	document.getElementById("TotalCost").innerHTML = _my_o._totalCost;
+	document.getElementById("TotalCost_enemy").innerHTML = _enemy_o._totalCost;
+}
+
+const shuffleArray = (array) => {//シャッフル//Suffle
+	const cloneArray = [...array]
+
+	for (let i = cloneArray.length - 1; i >= 0; i--) {
+		let rand = Math.floor(Math.random() * (i + 1))
+		// 配列の要素の順番を入れ替える
+		let tmpStorage = cloneArray[i]
+		cloneArray[i] = cloneArray[rand]
+		cloneArray[rand] = tmpStorage
+	}
+
+	return cloneArray
+}
+
+function openEnemyCard5(){
+
+	for(let i=0; i<5; i++){
+		document.getElementById("Card_enemy"+(i+1)).src = 'card/'+_enemy_o._card_a[i+5][1];//+'.png';
+	}
+
+	//<img id="CardEnemy1" src="card/unit_x1.png" style="height:280px;width:200px;transform:rotate(180deg);">　
+
+}
+
+function openCard12(){
+
+	//console.log("L1036 openCard12()");
+
+	document.getElementById("openCard12").style.display = "none";
+	initCard12();
+}
+
+
+function openEnemyCard12(){
+
+	_enemy_o._isInitCard12 = true;
+
+	let s = '';
+
+
+	for(let i=0; i<12; i++){
+		s += '<span id="taikiCard_enemy'+i+'"><button onClick="selectTaikiCard_enemy('+i+')"><img src="card/'+_enemy_o._card_a[i][1]+'" style="width:14vw;" alt="'+i+'" title="'+i+'"></button>'+
+				' <span id="hp_enemy12_'+(i+1)+'" style="font-size:28">HP'+_enemy_o._card_a[i][6]+'</span></span>';
+
+		if(i==5){
+			s += "<br><span id='btn5_enemy' style='display:none;'><div>"+
+
+				"<button onClick='changeCard6_enemy(1);' id='BtnEnemy12345_1' style='font-size:40px;'>1</button>"+
+				"<button onClick='changeCard6_enemy(2);' id='BtnEnemy12345_2' style='font-size:40px;'>2</button><br>"+
+				"<button onClick='changeCard6_enemy(3);' id='BtnEnemy12345_3' style='font-size:40px;'>3</button>"+
+				"<button onClick='changeCard6_enemy(4);' id='BtnEnemy12345_4' style='font-size:40px;'>4</button>"+
+				"<button onClick='changeCard6_enemy(5);' id='BtnEnemy12345_5' style='font-size:40px;'>5</button>"+
+				"<button onClick='changeCard6_enemy(6);' id='BtnEnemy12345_6' style='font-size:30px;'>支援</button>"+
+
+				"<br><br><button onClick='changeCard6_enemy(-1);' style='font-size:26px;'>CLOSE</button><br><br></div></span>";
+		}
+	}
+
+	document.getElementById("enemyCard12").innerHTML = s;
+}
+
+
+function init(){
+	//initData();
+	resetGame();//resetCard12();//if(_isAutoEnemySelect){//setAutoCard_enemy();//}
+}
+
+function initData(){
+
+	if(_card_a_deck_cpu &&  _card_a_deck_cpu.length > 0){
+		_enemy_o._card_a = _card_a_deck_cpu;
+
+		//console.log("L1238 len="+_card_a_deck_cpu.length+"/ _enemy_o._card_a = _card_a_deck_cpu="+_enemy_o._card_a);
+	}
+	else{
+		_enemy_o._card_a = [];
+		
+		for(let i=0; i<12; i++){
+			_enemy_o._card_a[i] = _my_o._card_a[12+i];
+		}
+
+		_my_o._card_a.length = 12;
+	}
+
+	if(_card_a_deck && _card_a_deck.length > 0)
+	{
+		_my_o._card_a = _card_a = _card_a_deck;
+	}
+	else
+	{
+		_my_o._card_a = shuffleArray(_card_a);//_card_a => _card_a.sort(() => Math.random() - Math.random());
+	}
+
+//console.log("L1175", _my_o._card_a);
+
+	// let debug_s = "";
+
+	// for(let i=0; i<_my_o._card_a.length; i++){
+	// 	debug_s += _my_o._card_a[i][0]+",";
+	// }
+
+	// console.log("L1173 debug_s = "+debug_s);
+
+
+}
+
+
+
+function nextBoardSelect(i0, isMe=true){
+
+	let now_o = isMe ? _my_o : _enemy_o;//OK
+	let now_enemy_o = isMe ? _enemy_o : _my_o;
+	let key = isMe ? "" : "_enemy";
+
+	//console.log("L1093 nextBoardSelect i0="+i0+"/value0="+value0+"/isMe="+isMe);
+	//L1093 nextBoardSelect i0=+i0+/value0=undefined/isMe=true
+	//L1093 nextBoardSelect i0=2/value0=undefined/isMe=true
+
+	let tag = "selectAtk"+key+i0;
+
+	//console.log("L1007.2 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);	//L1007.2 _enemy_o._card_sien_a[0]=ナイト,unit_u27.png,unit_u27-216x300.png,よろいすがた,4,けん,9,2,4,ヒール
+	//console.log("L1142 tag="+tag+"/now_o._card_sien_a[0]="+now_o._card_sien_a[0]);//tag=selectAtk_enemy12
+
+	let v = document.getElementById(tag).value;//
+
+	if(v.indexOf("sien") != -1){
+
+		//console.log("⚫︎L1146 v="+v);
+
+		now_o._isSienSelected = true;
+		now_o._isSienOn_a[i0] = true;
+		
+		//now_o._isSienSelected_enemy = false;
+
+
+		if(getSien(now_o._card_sien_a[0]) == "ヒール"){
+			now_o._isSienHealOn = true;		
+
+			now_o._isSienHealOn_a[i0] = true;
+			
+			let v_a = v.split("_");//v=sien1
+
+			now_o._healTarget_i = parseInt(v_a[1]);
+
+			let heal_i = v_a[1];//heal_i=undefined
+
+
+console.log("L1120 _card5_a_a="+now_o._card5_a_a+"/_card5_move_a="+now_o._card5_move_a+"/heal_i="+heal_i+"/v="+v);
+
+			now_o._healTarget_name = GetName(now_o._card5_a_a[now_o._card5_move_a[i0][heal_i]]);
+
+		}
+	}
+
+	//console.log("L1153 v="+v+"/i0="+i0);
+
+
+//console.log("L1059 i0="+i0+" v="+v+"/doc="+document.getElementById("opt_"+i0+"_"+v)+"/doc2="+document.getElementById("opt_"+(i0+1)+"_"+v)+"/opt="+("opt_"+i0+"_"+v));
+//L1059 i0=0 v=guard_1/doc=null/doc2=null/opt=opt_0_guard_1
+
+	now_o._selected_a[i0] = v;
+
+	//console.log("L1370 i0="+i0+"/v="+v+"/now_o._selected_a[i0]="+now_o._selected_a[i0]+"/_my_o._selected_a[i0]="+_my_o._selected_a[i0]);//L1370 i0=0
+	//L1370 i0=0/v=/now_o._selected_a[i0]=/_my_o._selected_a[i0]=
+	//L1370 i0=0/v=/now_o._selected_a[i0]=/_my_o._selected_a[i0]=
+
+	//L1370 i0=0/v=atk2_2
+	//L1370 i0=1/v=
+
+//console.log("L1339 i0="+i0+"/v="+v+"/tag="+tag);
+//L1339 i0=1/v=atk2_1_1
+//L1339 i0=1/v=こうげき2赤（エルフ）→緑（ハーピィ）
+
+	now_o._selected_name_a[i0] = document.getElementById("opt_"+i0+"_"+v).innerHTML;//⭕️バグnull
+
+	//console.log("L1061 i0="+i0+"/");
+
+	if(i0 < 4){//_board_i
+		//_board_i++;
+		resetBoardSelect(i0+1,isMe,"L1297");//nextBoardSelect  //_board_i)
+	}
+	else{
+		//let v = document.getElementById("selectAtk"+(i0)).value;
+
+		resetBoardSelect(i0+1,isMe,"L1302");//nextBoardSelect  //はたして・・！？SPマーカー消費されないので入れてみた
+
+		hideSelectAtk(v,i0+1,isMe);
+
+
+		/*if(_isAutoEnemySelect && !now_enemy_o._selected_name_a[4]){
+			//setAutoCard_enemy();
+			autoSelectEnemy();
+		}*/
+
+		if(_my_o._selected_name_a[i0] && _enemy_o._selected_name_a[i0]){
+
+			//console.log("L1207 now_enemy_o._selected_name_a["+i0+"]="+now_enemy_o._selected_name_a[i0]);
+			//console.log("L1207 now_enemy_o._selected_name_a="+now_enemy_o._selected_name_a);
+
+			startTurnBtn();
+		}
+		//document.getElementById("startTurnBtn").style.display = "";
+	}
+
+	set_o(now_o, isMe);
+}
+
+
+function onChangeSelect(i0,isMe=true,isReset=false){
+	//console.log("L1379 onChangeSelect i0="+i0); 
+
+	let key = isMe ? "" : "_enemy";
+	let tag = "selectAtk"+key+(i0+1);
+
+	//<span id="selectResult5"><button onclick="onChangeSelect(4,true);">変更</button><hr><b style="line-height:22px;">いどう緑（プリースト）<br>→後ろ３（よくりゅう）</b><hr></span>
+	//if(document.getElementById("selectAtk5")){
+	//	document.getElementById("selectAtk5").innerHTML = "";
+	//}
+
+	if(document.getElementById(tag)){
+		document.getElementById(tag).style.display = "none";//"";
+	}
+	if(document.getElementById(tag)){
+		document.getElementById(tag).innerHTML = "";//null
+	}
+
+	//console.log("L1172 i0="+i0);
+	//L1379 onChangeSelect i0=4
+
+	if(i0 < 5){//6でも消えず　if(i0 < 6){//if(i0 < 5){
+		resetBoardSelect(i0,isMe,"L1342");//onChangeSelect
+	}
+
+	for(let i=i0+1; i<7; i++){
+
+		tag = "selectAtk"+key+(i);//+1);
+
+		if(isReset && document.getElementById("selectResult"+key+(i))){
+			document.getElementById("selectResult"+key+(i)).innerHTML = "";
+			//document.getElementById("playerBoard_atk"+key+(i+1)).innerHTML = "";
+			//<span id="playerBoard_atk5"><br><select name="languages" style="background-color:#FF0" id="selectAtk4" onchange="nextBoardSelect(4,true)">
+		}
+		
+		if(isReset && document.getElementById("playerBoard_atk"+key+(i+1))){
+			document.getElementById("playerBoard_atk"+key+(i+1)).innerHTML = "";
+		}
+
+		if(document.getElementById(tag)){
+			document.getElementById(tag).style.display = "none";
+		}
+		if(document.getElementById(tag)){
+			document.getElementById(tag).innerHTML = "";
+			console.log("L1409 tag="+tag);
+		}
+	}
+}
+
+function hideSelectAtk(v,i0,isMe=true){
+
+	let key = isMe ? "" : "_enemy";
+	let tag = "selectAtk"+key+(i0-1);
+
+	document.getElementById(tag).style.display = "none";
+
+	//playerBoard_atk1
+	document.getElementById("selectResult"+key+(i0)).innerHTML = "<button onClick='onChangeSelect("+(i0-1)+","+(isMe?true:false)+",true);'>変更</button><hr><b style='line-height:22px;'>"
+		+document.getElementById("opt_"+(i0-1)+"_"+v).innerHTML.replace("→","<br>→")+"</b><hr>";
+
+}
+
+function set_o(now_o, isMe){
+	if(isMe){
+		_my_o = now_o;
+	}
+	else{
+		_enemy_o = now_o;
+	}
+}
+
+
+function resetBoardSelect(i0,isMe=true, debug0=""){//isEnemy0
+
+//console.log("L1380 resetBoardSelect(debug0="+debug0);
+
+	let now_o = isMe ? _my_o : _enemy_o;//OK
+	let now_enemy_o = isMe ? _enemy_o : _my_o;//OK
+
+
+	let key = isMe ? "" : "_enemy";
+
+	now_o._last_i0_select = i0;
+
+	if(now_o._isSienOn_a[i0]){
+		now_o._isSienSelected = now_o._isSienOn_a[i0] = false;
+	}
+
+	if(now_o._isSienHealOn_a[i0]){
+		now_o._isSienHealOn = now_o._isSienHealOn_a[i0] = false;
+	}
+
+
+	if(i0 > 0){
+		
+		let v = document.getElementById("selectAtk"+key+(i0-1)).value;
+
+		if(v){
+			hideSelectAtk(v,i0,isMe);//内部グローバル変数なしOK
+		}
+		
+		let v0 = v;		
+		let pre_a = now_o._card5_move_a[i0-1];
+
+		update_marker(isMe,now_o._marker_a_tmp[i0-1]);//内部グローバル変数なしOK
+
+		now_o._marker_a_tmp[i0-1] = 0;
+
+
+		if(v.indexOf("sien_") != -1)
+		{			
+			//console.log("L1226 sien変更！");
+		}
+		else if(v.indexOf("guard_") != -1)
+		{			
+			v = v.replace("guard_","");
+			let pre_marker = v;//ガード選択時はマーカー消費
+			now_o._marker_a_tmp[i0-1] = v;
+			update_marker(isMe,-pre_marker);//console.log("L991 pre_marker="+pre_marker);
+		}
+		else if(v.indexOf("move") != -1)
+		{
+			v = v.replace("move","");
+
+			let start_i = v.split("_")[0];
+			let gorl_i = v.split("_")[1];
+			let start_v = pre_a[start_i];
+			let goal_v = pre_a[gorl_i];
+
+			pre_a[start_i] = goal_v;
+			pre_a[gorl_i] = start_v;
+		}
+
+		if(v0.substr(0,3) == "atk")
+		{
+			now_o._battle_a_tmp[i0-1] = 1;//v;//攻撃は2回まで。赤赤か、紫紫か、赤紫か。
+			//console.log("L1004 atk v0="+v0);
+
+			let atk1_3_id = parseInt(v.substr(7,1))//atk1_3_id=1/v=atk1_1_2
+
+console.log("L1520 atk1_3_id="+atk1_3_id+"/v="+v);//L1520 atk1_3_id=1//L1520 atk1_3_id=2
+
+			if(atk1_3_id == 2){
+				now_o._marker_a_tmp[i0-1] = 1;//update_marker(true,-1);//２個目は仮に防御＋２（SP消費１）
+				update_marker(isMe,-1);
+				console.log("L1500 ２個目は仮に防御＋２（SP消費１）");
+			}
+			else if(atk1_3_id == 3){
+				now_o._marker_a_tmp[i0-1] = 2;//update_marker(true,-2);//３個目は仮にアタック＋２（SP消費２）
+				update_marker(isMe,-2);
+				console.log("L1505 ３個目は仮にアタック＋２（SP消費２）");
+			}
+		}
+		else{
+			now_o._battle_a_tmp[i0-1] = 0;
+		}
+
+		now_o._card5_move_a[i0] = [pre_a[0],pre_a[1],pre_a[2],pre_a[3],pre_a[4]];
+
+//console.log("L1450 now_o._card5_move_a[i0]=",now_o._card5_move_a[i0]);//ここはOK
+
+
+		// if(isEnemy0){
+		// 	_enemy_o._card5_move_a = now_o._card5_move_a;//TODO?なぞ　26/1/24 		
+		// }
+		// else{
+		// 	now_o._card5_move_a = now_o._card5_move_a;//TODO?なぞ　26/1/24 
+		// }
+	}
+
+
+	for(let i=0; i<6; i++){
+		if(i > i0){
+			if(document.getElementById("selectAtk"+key+i)){
+				update_marker(isMe,now_o._marker_a_tmp[i-1]);//ここ？
+				now_o._marker_a_tmp[i-1] = 0;
+				now_o._battle_a_tmp[i-1] = 0;
+				document.getElementById("selectAtk"+key+i).selectedIndex = 0;
+				document.getElementById("selectResult"+key+i).innerHTML = "";
+			}
+		}
+	}
+
+	if(i0 >= 5){
+		set_o(now_o, isMe);
+		return;
+	}
+
+	let atk_count = now_o._battle_a_tmp[0]+now_o._battle_a_tmp[1]+now_o._battle_a_tmp[2]+now_o._battle_a_tmp[3]+now_o._battle_a_tmp[4];
+	let isAtkOk = atk_count < 2;
+
+//console.log("L1294 "+now_o._card5_move_a[i0]+"/isMe="+isMe);
+
+	let n1 = now_o._card5_a_a.length<1||!now_o._card5_a_a[now_o._card5_move_a[i0][0]]?"":now_o._card5_a_a[now_o._card5_move_a[i0][0]][0];
+	let n2 = now_o._card5_a_a.length<2||!now_o._card5_a_a[now_o._card5_move_a[i0][1]]?"":now_o._card5_a_a[now_o._card5_move_a[i0][1]][0];
+	let n3 = now_o._card5_a_a.length<3||!now_o._card5_a_a[now_o._card5_move_a[i0][2]]?"":now_o._card5_a_a[now_o._card5_move_a[i0][2]][0];
+	let n4 = now_o._card5_a_a.length<4||!now_o._card5_a_a[now_o._card5_move_a[i0][3]]?"":now_o._card5_a_a[now_o._card5_move_a[i0][3]][0];
+	let n5 = now_o._card5_a_a.length<5||!now_o._card5_a_a[now_o._card5_move_a[i0][4]]?"":now_o._card5_a_a[now_o._card5_move_a[i0][4]][0];
+
+	let e1 = now_enemy_o._card5_a_a.length<1||!now_enemy_o._card5_a_a[0]?"":now_enemy_o._card5_a_a[0][0];
+	let e2 = now_enemy_o._card5_a_a.length<2||!now_enemy_o._card5_a_a[1]?"":now_enemy_o._card5_a_a[1][0];
+
+	//L1312 now_o._card5_sien_a_a[0]=ジャイアン
+	//L1312 now_o._card5_sien_a_a[0]=null
+//console.log("L1312 now_o._card5_sien_a_a[0]="+now_o._card5_sien_a_a[0]);
+
+	let c1 = now_o._card5_sien_a_a[0]?now_o._card5_sien_a_a[0][0]:"";
+
+	let marker = now_o._SPmarker;
+
+	let selectAtkTag = '<br><select name="languages" style="background-color:#FF0" id="selectAtk'+key+i0+'" onChange="nextBoardSelect('+i0+','+(isMe?"true":"false")+')">\n<option value="">アクションを選択</option>\n';
+
+	let coloNo_atker_a = isMe ? ["赤","紫"]:["緑","青"];
+	let coloNo_target_a = isMe ? ["緑","青"]:["赤","紫"];
+
+	if(isAtkOk){//攻撃は2回まで。赤赤か、紫紫か、赤紫か。
+/*
+
+//①SP消費
+
+②２個目は仮に防御＋２
+③３個目は仮にアタック＋２
+
+④APコストの参照
+⑤SPが足りなかった時
+
+次回：APのリストを実装。効果はダミー。コスト APの消費量などは同じ（APは攻撃しても減らない）。48枚ぶんの〜
+
+次回：１個目は攻撃
+　　　２個目は仮に防御＋２（SP消費１） APはカードそのまま参照（贅沢言うとAGI高いキャラはAIG＋3かも・・？やっぱやらなくてOK）
+　　　３個目は仮にアタック＋２（SP消費２）APはカードそのまま参照
+
+
+//次回：攻撃１や攻撃３のようにする
+//攻撃は AP（ターン数）を参照。攻撃２〜３はSPを参照
+//次回：味方が死んだらAPが１増える//実装済み
+*/
+		function get_atk_opt(selectAtkTag, atkID, targetID)
+		{
+			let atk_id = "atk"+atkID+"_"+targetID;
+			let i1 = atkID-1;
+			let i2 = targetID-1;
+			let name1 = coloNo_atker_a[i1];
+			let name2 = coloNo_target_a[i2];
+			let n = atkID == 1 ? n1 : n2;
+			let e = targetID == 1 ? e1 : e2;
+
+			//AP2[10] AP3[11]//now_o._card5_a_a[now_o._card5_move_a[i0][0]][0]
+
+			///let AP1_border = now_o._card5_a_a[now_o._card5_move_a[i0][i1]][12];//2
+			let AP2_border = now_o._card5_a_a[now_o._card5_move_a[i0][i1]][10];//2
+			let AP3_border = now_o._card5_a_a[now_o._card5_move_a[i0][i1]][11];//3
+
+
+			//console.log("L1606 now_o._card5_a_a=",now_o._card5_a_a);
+
+//console.log("L1607 now_o._card5_a_a[now_o._card5_move_a[i1][0]]=",now_o._card5_a_a[now_o._card5_move_a[i1][0]])
+
+//console.log("⭕️L1606 name1="+name1+"/AP2_border="+AP2_border+"/AP3_border="+AP3_border+"/now_o._AP="+now_o._AP+"/i1="+i1);
+
+			//26/3~4 ①カードの赤丸は1~3コストまでは AP攻撃かえず、４コスト以上は３−３−３に統一。あとは中位のやつは１−１ー２とか。最初は１の固定のままでOK//防御技１、バイキルト２
+
+			if(now_o._AP >= 1){
+			///if(now_o._AP >= AP1_border){
+				selectAtkTag += `<option id="opt_`+i0+`_`+atk_id+`_1" value="`+atk_id+`_1">こうげき1`+name1+`（${n}）→`+name2+`（${e}）</option>\n`;
+			}
+
+			if(now_o._AP >= AP2_border && now_o._SPmarker >= 1){
+				selectAtkTag += `<option id="opt_`+i0+`_`+atk_id+`_2" value="`+atk_id+`_2">こうげき2`+name1+`（${n}）→`+name2+`（${e}）</option>\n`;
+			}
+
+			if(now_o._AP >= AP3_border && now_o._SPmarker >= 2){
+				selectAtkTag += `<option id="opt_`+i0+`_`+atk_id+`_3" value="`+atk_id+`_3">こうげき3`+name1+`（${n}）→`+name2+`（${e}）</option>\n`;
+			}
+
+			return selectAtkTag;
+		}
+
+		if(i0==0){//1R AGI 6以上
+
+			if(now_o._card5_a_a[0] && now_o._card5_a_a[0][8] >= 6){//null (reading '8')=onChangeSelect(0,true);=function changeCard6(id){
+				if(n1 != "" && e1 != ""){
+					selectAtkTag = get_atk_opt(selectAtkTag,1,1);//`<option id="opt_`+i0+`_atk1_1" value="atk1_1">こうげき`+coloNo_atker_a[0]+`（${n1}→`+coloNo_target_a[0]+`（${e1}）</option>\n`;
+				}
+				if(n1 != "" && e2 != ""){
+					selectAtkTag = get_atk_opt(selectAtkTag,1,2);//`<option id="opt_`+i0+`_atk1_2" value="atk1_2">こうげき`+coloNo_atker_a[0]+`（${n1}→`+coloNo_target_a[1]+`（${e2}）</option>\n`;
+				}
+			}
+			if(now_o._card5_a_a[1] && now_o._card5_a_a[1][8] >= 6){
+				if(n2 != "" && e1 != ""){
+					selectAtkTag = get_atk_opt(selectAtkTag,2,1);//`<option id="opt_`+i0+`_atk2_1" value="atk2_1">こうげき`+coloNo_atker_a[1]+`（${n2}）→`+coloNo_target_a[0]+`（${e1}）</option>\n`;
+				}
+				if(n2 != "" && e2 != ""){
+					selectAtkTag = get_atk_opt(selectAtkTag,2,2);//`<option id="opt_`+i0+`_atk2_2" value="atk2_2">こうげき`+coloNo_atker_a[1]+`（${n2}→`+coloNo_target_a[1]+`（${e2}）</option>\n`;
+				}
+			}
+		}
+		else if(i0==1){//1R AGI 4以上
+			if(now_o._card5_a_a[0] && now_o._card5_a_a[0][8] >= 4){
+				if(n1 != "" && e1 != ""){
+					selectAtkTag = get_atk_opt(selectAtkTag,1,1);
+				}
+				if(n1 != "" && e2 != ""){
+					selectAtkTag = get_atk_opt(selectAtkTag,1,2);//`<option id="opt_`+i0+`_atk1_2" value="atk1_2">こうげき`+coloNo_atker_a[0]+`（${n1}→`+coloNo_target_a[1]+`（${e2}）</option>\n`;
+				}
+			}
+			if(now_o._card5_a_a[1] && now_o._card5_a_a[1][8] >= 4){
+				if(n2 != "" && e1 != ""){
+					selectAtkTag = get_atk_opt(selectAtkTag,2,1);//`<option id="opt_`+i0+`_atk2_1" value="atk2_1">こうげき`+coloNo_atker_a[1]+`（${n2}）→`+coloNo_target_a[0]+`（${e1}）</option>\n`;
+				}
+				if(n2 != "" && e2 != ""){
+					selectAtkTag = get_atk_opt(selectAtkTag,2,2);//`<option id="opt_`+i0+`_atk2_2" value="atk2_2">こうげき`+coloNo_atker_a[1]+`（${n2}→`+coloNo_target_a[1]+`（${e2}）</option>\n`;
+				}
+			}
+		}
+		else
+		{
+			if(n1 != "" && e1 != ""){
+				selectAtkTag = get_atk_opt(selectAtkTag,1,1);
+			}
+			if(n1 != "" && e2 != ""){
+				selectAtkTag = get_atk_opt(selectAtkTag,1,2);//`<option id="opt_`+i0+`_atk1_2" value="atk1_2">こうげき`+coloNo_atker_a[0]+`（${n1}→`+coloNo_target_a[1]+`（${e2}）</option>\n`;
+			}
+			if(n2 != "" && e1 != ""){
+				selectAtkTag = get_atk_opt(selectAtkTag,2,1);//`<option id="opt_`+i0+`_atk2_1" value="atk2_1">こうげき`+coloNo_atker_a[1]+`（${n2}）→`+coloNo_target_a[0]+`（${e1}）</option>\n`;
+			}
+			if(n2 != "" && e2 != ""){
+				selectAtkTag = get_atk_opt(selectAtkTag,2,2);//`<option id="opt_`+i0+`_atk2_2" value="atk2_2">こうげき`+coloNo_atker_a[1]+`（${n2}→`+coloNo_target_a[1]+`（${e2}）</option>\n`;
+			}
+		}
+	}
+
+	for(let i=0; i<marker; i++){
+		selectAtkTag += '<option id="opt_'+i0+'_guard_'+(i+1)+'" value="guard_'+(i+1)+'">ガードx'+(i+1)+'</option>\n';
+	}
+
+	if(n1 != "" && n3 != ""){
+		selectAtkTag += `<option id="opt_`+i0+`_move0_2" value="move0_2">いどう`+coloNo_atker_a[0]+`（${n1}）→後ろ１（${n3}）</option>\n`;
+	}
+	if(n1 != "" && n4 != ""){
+		selectAtkTag += `<option id="opt_`+i0+`_move0_3" value="move0_3">いどう`+coloNo_atker_a[0]+`（${n1}）→後ろ２（${n4}）</option>\n`;
+	}
+	if(n1 != "" && n5 != ""){
+		selectAtkTag += `<option id="opt_`+i0+`_move0_4" value="move0_4">いどう`+coloNo_atker_a[0]+`（${n1}）→後ろ３（${n5}）</option>\n`;
+	}
+	if(n2 != "" && n3 != ""){
+		selectAtkTag += `<option id="opt_`+i0+`_move1_2" value="move1_2">いどう`+coloNo_atker_a[1]+`（${n2}）→後ろ１（${n3}）</option>\n`;
+	}
+	if(n2 != "" && n4 != ""){
+		selectAtkTag += `<option id="opt_`+i0+`_move1_3" value="move1_3">いどう`+coloNo_atker_a[1]+`（${n2}）→後ろ２（${n4}）</option>\n`;
+	}
+	if(n2 != "" && n5 != ""){
+		selectAtkTag += `<option id="opt_`+i0+`_move1_4" value="move1_4">いどう`+coloNo_atker_a[1]+`（${n2}）→後ろ３（${n5}）</option>\n`;
+	}
+
+//console.log("L1582 isMe=",isMe,now_o._card_sien_a , now_o._card_sien_a[0] , !now_o._isSienHealOn, !now_o._isSienSelected);
+
+//L1582 isMe= false [] undefined true true
+//L1582 isMe= true (6) [Array(9), Array(9), Array(9), Array(9), Array(9), Array(9)] (9) ['ヴァンパイアロード', 'unit_u38.png', 'unit_u38-216x300.png', 'はばたくもの', 5, 'ふし', 9, 3, 5]true true
+
+//console.log("L1590", isMe, now_o._card_sien_a, now_o._card_sien_a[0], !now_o._isSienHealOn);
+//L1590 true (6) [Array(10), Array(10), Array(10), Array(10), Array(10), Array(10)] (10) ['ドラゴンゾンビ', 'unit_u26.png', 'unit_u26-216x300.png', 'きょたい', 3, 'りゅう/ふし', 12, 4, 4, 'ブレイク'] true
+
+	if(now_o._card_sien_a && now_o._card_sien_a[0] && !now_o._isSienHealOn){
+
+		let sienName = getSien(now_o._card_sien_a[0]);
+
+//console.log("🔍しえん探せた？L1553 sienName="+sienName+"/now_o._card_sien_a[0]="+now_o._card_sien_a[0]);
+
+
+		if(sienName == "ヒール"){
+
+			for(let i=0;i<2;i++){
+				let o = now_o._card5_a_a[now_o._card5_move_a[i0][i]];
+				if(GetHP(o) > 0 && GetName(o)){//ヒールは後衛の3人にはできなさげ。前衛だけ。
+					selectAtkTag += `<option id="opt_`+i0+`_sien1_`+i+`" value="sien1_`+i+`">しえん ${now_o._card_sien_a[0][0]}の${sienName}→${GetName(o)}</option>\n`;
+				}
+			}
+		}
+		
+		if(!now_o._isSienSelected && sienName != "ヒール")
+		{
+			selectAtkTag += `<option id="opt_`+i0+`_sien1" value="sien1">しえん ${now_o._card_sien_a[0][0]}の${sienName}</option>\n`;
+
+			//console.log("L1602",selectAtkTag);
+		}
+	}	
+
+	selectAtkTag += "</select>";
+
+	//console.log("L1471 isMe="+isMe+"/selectAtkTag="+selectAtkTag)
+
+	document.getElementById("playerBoard_atk"+key+(i0+1)).innerHTML = selectAtkTag;//document.getElementById("playerBoard_atk_enemy"+(i0+1)).innerHTML = selectAtkTag;//これだけで変数ダブりバグ
+
+
+	if(isMe){
+		_my_o = now_o;
+		_enemy_o = now_enemy_o;
+	}
+	else{
+		_enemy_o = now_o;
+		_my_o = now_enemy_o;
+	}
+
+	//set_o(now_o, isMe);
+	//set_o(now_enemy_o, !isMe);
+}
+
+
+
+
+
+
+function changeSien(isMe=true){
+	if(isMe){
+		_now_CardSelecting_id_me = 6;
+		document.location.href = "#card12";
+	}
+	else{
+		//changeCard6_enemy(6);
+		_now_CardSelecting_id_enemy = 6;
+		document.location.href = "#card12_enemy";
+	}
+}
+
+function resetGame(){
+	_isSienOn = false;
+	_my_o._isCardSettingComp = false;
+	_enemy_o._isInitCard12 = false;
+	_my_o._totalCost = 0;
+	_enemy_o._totalCost = 0;
+	initData();
+	resetCard12();
+	ResetEnemyCard();
+
+	_my_o._SPmarker = 5;
+	_enemy_o._SPmarker = 5;
+	_my_o._tmp_SPmarker = _my_o._SPmarker;
+	_enemy_o._tmp_SPmarker = _enemy_o._SPmarker;
+	_my_o._marker_a_tmp = [0,0,0,0,0];
+	_my_o._battle_a_tmp = [0,0,0,0,0];
+
+	update_marker(true);
+	update_marker(false);
+}
+
+//init();
+
+
+function setAutoCard_me(){
+
+	document.getElementById("setDebugCard5_12").style.display = "none";
+	document.getElementById("openCard12").style.display = "none";
+
+	function setAutoCost(){//log("setAutoCost");
+		openCard12();
+		_my_o._totalCost = 0;
+		let a = shuffleArray([0,1,2,3,4,5,6,7,8,9,10,11]);
+
+		if(_now_my_deck && _now_my_deck.length){
+			a = _now_my_deck;
+		}
+
+ //console.log("L1672 me a = "+a);
+
+		for(let i=0; i<6; i++){
+			_my_o._selectCard12_i = a[i];
+			changeCard6(i+1);
+		}
+
+		//_my_o._card_sien_a = [];
+		///_my_o._card_sien_a = [];//2.27これかな？
+
+		for(let i=6; i<_my_o._card_a.length; i++){
+			_my_o._card_sien_a.push(_my_o._card_a[a[i]]);
+		}
+
+//console.log("L1690 ",_card_a)
+
+		//TODO 強制ヒール
+		if(_my_o._isForceHeal){
+			_my_o._card_sien_a[0] = _my_o._card_a[6] = _card_a[1];
+		}
+		else if(_isForceSenseEnemy){//敵センス味方ヒットで無効化の確認
+			_my_o._card_sien_a[0] = _my_o._card_a[6] = _card_a[0];
+		}
+	}
+
+	for(let i=0; i<100; i++){
+		setAutoCost();
+		if(_my_o._totalCost <= 15){
+			//console.log("L1700");
+			break;
+		}
+	}
+
+	//console.log("L1705 _card_a="+_card_a);
+
+/*
+	document.getElementById("sienImgMe").src = "card/"+_my_o._card_sien_a[0][1];
+	document.getElementById('taikiCard11').style.display = "none";
+*/
+
+// console.log("L1007.6.３ _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);//undefined
+
+	setAutoCard_enemy();//消しても無意味//setDebugCard5_12(callBack0=null){//デバッグカードを取得（オートコスト）
+
+//console.log("L1007.6.2 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);バグテル
+
+}
+
+
+
+function setDebugCard5_12(callBack0=null){//デバッグカードを取得（オートコスト）
+
+	setAutoCard_me();
+
+	//console.log("L1007.6.1 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);//xバグってる
+
+	if(callBack0 != null){
+		callBack0();
+	}
+
+	//console.log("L1007.6 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);//xバグってる
+}
+
+/*function autoSelectEnemy(){
+
+	function f(i, isMe=true){
+		let sel = document.getElementById("selectAtk"+(isMe?"":"_enemy")+i);
+		sel.value = sel.children[Rad(1,sel.childElementCount-1)].value;//a[i];//固定文字列でも代入できず"atk2_2";//TODO a[i];
+		nextBoardSelect(i,isMe);//,a[i]
+	}
+
+	for(let i=0; i<5; i++){
+		f(i,false);//敵も
+	}
+}*/
+
+function set_start_turn1(){//１ターン目開始までオート選択ボタン
+	
+	document.getElementById("outSelectTurnBtn").style.display = "none";
+
+	function callBack(){
+		setTimeout(()=>{
+
+			//先頭に"atk2_2"無い場合もあるから、セレクトから選ぶ！これでAIも行けそう？
+			//let a = ["move0_2","atk2_2","sien1","atk1_1","guard_1"];//["atk2_2","sien1_1","move0_2","atk1_1","guard_1"];//guard_2
+
+			function f(i, isMe=true){
+				//setTimeout(()=>{
+					let sel = document.getElementById("selectAtk"+(isMe?"":"_enemy")+i);
+					sel.value = sel.children[Rad(1,sel.childElementCount-1)].value;//a[i];//固定文字列でも代入できず"atk2_2";//TODO a[i];
+
+					nextBoardSelect(i,isMe);//,a[i]
+				//},50*i);
+			}
+
+			for(let i=0; i<5; i++){
+				f(i);
+				f(i,false);//敵も
+			}
+	
+			alert("１ターン目開始までオート選択完了！");
+
+		},150);
+	}
+
+	setDebugCard5_12(callBack);
+}
+
+function startTurnBtn(){
+
+//console.log("L1441 startTurnBtn");
+
+	if(!_my_o._isSelectPhase && !_enemy_o._isSelectPhase){
+		return;
+	}
+
+	_my_o._isSelectPhase = false;
+	_enemy_o._isSelectPhase = false;
+
+	isPls1_AGI_HitRate_CT_battlPhase_quick_enemy = false;
+	isPls1_AGI_HitRate_CT_battlPhase_quick_me = false;
+	
+	document.getElementById("startTurnBtn").style.display = "none";
+	document.getElementById("textarea_div").style.display = "";
+	document.getElementById("textarea").innerHTML = _turn + "ターン目開始！<br><hr>"+document.getElementById("textarea").innerHTML;
+	document.getElementById("nextTurn").style.display = "";
+}
+
+function sai(){
+	return parseInt(Math.random()*6)+1;
+}
+
+
+
+function Rad(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function nextTurn(){//ガード → いどう → しえん → こうげき
+
+//checkGameSet();return;
+
+	if(_round == 6){
+
+		_my_o._isSienSelected = false;
+		_enemy_o._isSienSelected = false;
+
+		_my_o._last_i0_select = 0; 
+		_enemy_o._last_i0_select = 0; 
+
+		document.getElementById("sienDone_me").innerHTML="";//<br><b style='color:#00F'>使用済み！<b>";
+		document.getElementById("sienDone_enemy").innerHTML="";//<br><b style='color:#00F'>使用済み！<b>";
+		
+		_my_o._isForceHeal = false;
+		_enemy_o._isForceHeal = false;
+		_isForceSenseEnemy = false;
+
+		_my_o._isSienHealOn = false;
+		_enemy_o._isSienHealOn = false;
+		_my_o._isEndSien = false;
+		_enemy_o._isEndSien = false;
+
+		_turn++;
+		_my_o._AP++;
+		_enemy_o._AP++;
+		_round = 1;
+
+		_my_o._isSienOn_a = [false,false,false,false,false];
+		_my_o._isSienHealOn_a = [false,false,false,false,false];
+		_enemy_o._isSienOn_a = [false,false,false,false,false];
+		_enemy_o._isSienHealOn_a = [false,false,false,false,false];
+
+		isForceKaihi_normal_kansetu_dmg_sense_me = false;
+		isHitRatePls3_SensuMukou_hit_me = false;
+		isAtkPls2_break_me = false;
+		isDmgMin2_parry_me = false;
+		isHeal_1Chara_HP2_me = false;
+
+		isForceKaihi_normal_kansetu_dmg_sense_enemy = false;
+		isHitRatePls3_SensuMukou_hit_enemy = false;
+		isAtkPls2_break_enemy = false;
+		isDmgMin2_parry_enemy = false;
+		isHeal_1Chara_HP2_enemy = false;
+		sienName_me = null;
+		sienName_enemy = null;
+
+		_my_o._marker_a_tmp = [0,0,0,0,0];
+		_my_o._battle_a_tmp = [0,0,0,0,0];
+
+		_enemy_o._marker_a_tmp = [0,0,0,0,0];
+		_enemy_o._battle_a_tmp = [0,0,0,0,0];
+
+		_my_o._selected_name_a = [];
+		_enemy_o._selected_name_a = [];
+
+		if(_turn > 5){
+			checkGameSet();
+			return;
+		}
+
+		for(i=1;i<=5;i++){
+			document.getElementById("selectResult"+i).innerHTML = "";
+			document.getElementById("selectResult_enemy"+i).innerHTML = "";
+		}
+
+		let msg = "5ラウンド終了しました。<br><span style='color:#FF0'>"+_turn+"ターン目の行動選択に進んでください。</span>";
+		document.getElementById("textarea").innerHTML = msg+"<br><br><hr>"+document.getElementById("textarea").innerHTML;
+		_my_o._isSelectPhase = true;
+
+		
+//_enemy_o._card_sien_a[0] = _enemy_o._card_a[_enemy_o._selectCard12_i+1]//ファイターのまま//test2/26
+//selectTaikiCard_enemy(_turn+6);///2/26_enemy_o._selectCard12_i++;//2/26
+// changeCard6_enemy(6, true);//2/26⭕️選択できたけど支援が出ない・・
+// document.getElementById("sienImgEnemy").src = "card/"+_enemy_o._card_sien_a[0][1];//test2/26
+// document.getElementById('taikiCard_enemy11').style.display = "none";//test2/26
+
+
+
+		showAP();
+		showAP(false);
+		showTurn();
+		document.getElementById("nextTurn").style.display = "none";
+
+//_enemy_o._card_sien_a
+
+//_enemy_o._selectCard12_i = 6 +_turn;//_enemy_o._card_sien_a[_turn];//6 +_turn;
+changeCard6_enemy(6, true, _enemy_o._card_sien_a[_turn]);//_enemy_o._card_sien_a[_turn]);
+
+for(let i=0; i<12; i++){
+
+//console.log("L1949 ",document.getElementById('taikiCard_enemy'+i).innerHTML,_enemy_o._card_sien_a[_turn][1]);
+
+	if(document.getElementById('taikiCard_enemy'+i).innerHTML.indexOf(_enemy_o._card_sien_a[_turn][1])!=-1){
+		//_enemy_o._preTaiki_i = i;//_turn;//0;//_turn+6;
+		document.getElementById('taikiCard_enemy'+i).style.display = "none";
+
+		//document.getElementById('taikiCard_enemy'+i).innerHTML = "";//消える。てことはdisplayがおかしい
+
+		console.log("消えた");
+		break;
+	}
+}
+
+
+		//changeCard6_enemy(6+_turn, true);//消えた//changeCard6_enemy(6, true);//治ったけどファイターのまま。2/26⭕️選択できたけど支援が出ない・・
+
+
+		onChangeSelect(0,true);
+		onChangeSelect(0,false);//1/26
+		
+		_my_o._isCardSettingComp = false;
+	}
+
+	if(_my_o._isSelectPhase){
+		return;
+	}
+
+
+	document.getElementById("nextTurn").style.display = "";
+
+	let msg = "⚫︎"+_turn+"-"+_round+"ラウンド目<br>";
+
+	let i0 = _round-1;
+
+	let now_v = _my_o._selected_a[i0];//"move0_2";//
+	let now_v_enemy = _enemy_o._selected_a[i0];
+
+//console.log("L1667 now_v="+now_v+"/_my_o._selected_a[i0]="+_my_o._selected_a[i0]+"/i0="+i0);
+//L1667 now_v=undefined/_my_o._selected_a[i0]=undefined/i0=0
+	
+	let isAtk = now_v.indexOf("atk")!=-1;
+	let isGuard = now_v.indexOf("guard")!=-1;
+	let isMove = now_v.indexOf("move")!=-1;
+	let isSien = now_v.indexOf("sien")!=-1;
+
+	
+
+
+	if(isSien){
+
+		document.getElementById("sienDone_me").innerHTML="<br><b style='color:#00F'>使用済み！<b>";//とりあえず「消費済み」の表示？
+		_my_o._isEndSien = true;
+
+		sienName_me = getSien(_my_o._card_sien_a[0]);
+
+		console.log("L1614 支援カード："+_my_o._card_sien_a[0][0]+"/支援の種類："+getSien(_my_o._card_sien_a[0])+"/hemlt="+document.getElementById("sienBtnMe").innerHTML);
+
+		///document.getElementById("sienBtnMe").innerHTML='<img src="card/unit_empty.png" style="width:14vw;" id="sienImgMe">';
+
+		console.log("L1697 sienName_me="+sienName_me);
+
+		if(sienName_me == "センス"){
+			isForceKaihi_normal_kansetu_dmg_sense_me = true;//①センス：次の通常攻撃、または間接ダメージを回避
+		}
+		else if(sienName_me == "ヒット"){
+			isHitRatePls3_SensuMukou_hit_me = true;//②ヒット：次の攻撃のとき命中＋３。センス無効化
+		}
+		else if(sienName_me == "ブレイク"){
+			isAtkPls2_break_me = true;//③ブレイク：次の攻撃のとき、ATK+2
+		}
+		else if(sienName_me == "パリィ"){
+			isDmgMin2_parry_me = true;//④パリィ：次のダメージを−２
+			console.log("L1899 ぱり");
+		}
+		else if(sienName_me == "クイック"){
+			isPls1_AGI_HitRate_CT_battlPhase_quick_me = true;//⑤クイック：バトルフェイズ中、AGI、命中、CT値+1
+		}
+		else if(sienName_me == "ヒール"){
+			isHeal_1Chara_HP2_me = true;//⑥ヒール：１体のHP２回復
+		}
+	}
+
+	let isAtk_enemy = now_v_enemy.indexOf("atk")!=-1;
+	let isGuard_enemy = now_v_enemy.indexOf("guard")!=-1;
+	let isMove_enemy = now_v_enemy.indexOf("move")!=-1;
+	let isSien_enemy = now_v_enemy.indexOf("sien")!=-1;	
+
+	if(isSien_enemy){
+
+		document.getElementById("sienDone_enemy").innerHTML="<br><b style='color:#00F'>使用済み！<b>";//とりあえず「消費済み」の表示？
+		_my_o._isEndSien = true;
+
+		sienName_enemy = getSien(_enemy_o._card_sien_a[0]);
+
+		///document.getElementById("sienBtnEnemy").innerHTML='<img src="card/unit_empty.png" style="width:14vw;" id="sienImgEnemy">';
+
+		if(sienName_enemy == "センス"){
+			isForceKaihi_normal_kansetu_dmg_sense_enemy = true;//①センス：次の通常攻撃、または間接ダメージを回避
+		}
+		else if(sienName_enemy == "ヒット"){
+			isHitRatePls3_SensuMukou_hit_enemy = true;//②ヒット：次の攻撃のとき命中＋３。センス無効化
+		}
+		else if(sienName_enemy == "ブレイク"){
+			isAtkPls2_break_enemy = true;//③ブレイク：次の攻撃のとき、ATK+2
+		}
+		else if(sienName_enemy == "パリィ"){
+			isDmgMin2_parry_enemy = true;//④パリィ：次のダメージを−２
+		}
+		else if(sienName_enemy == "クイック"){
+			isPls1_AGI_HitRate_CT_battlPhase_quick_enemy = true;//⑤クイック：バトルフェイズ中、AGI、命中、CT値+1
+		}
+		else if(sienName_enemy == "ヒール"){
+			isHeal_1Chara_HP2_enemy = true;//⑥ヒール：１体のHP２回復
+		}
+	}
+
+
+	let moveStart_i_me = isMove ? parseInt(now_v.substr(4,1)) : -1;//move0_1
+	let moveGoal_i_me = isMove ? parseInt(now_v.substr(6)): -1;
+
+	let moveStart_i_enemy = isMove_enemy ? parseInt(now_v_enemy.substr(4,1)) : -1;
+	let moveGoal_i_enemy = isMove_enemy ? parseInt(now_v_enemy.substr(6)) : -1;
+
+
+	let def_me = isGuard ? parseInt(now_v.replace("guard_","")) : 0;
+	let def_enemy= isGuard_enemy ? parseInt(now_v_enemy.replace("guard_","")) : 0;
+
+	let atk_target_i_me = isAtk ? parseInt(now_v.substr(5))-1 : -1;//atk1_1//now_v
+	let atk_target_i_enemy = isAtk_enemy ? parseInt(now_v_enemy.substr(5))-1 : -1;//atk1_1//now_v_enemy
+
+	let atacker_i_me = isAtk ? parseInt(now_v.substr(3,1))-1 : -1;
+	let atacker_i_enemy = isAtk_enemy ? parseInt(now_v_enemy.substr(3,1))-1 : -1;
+
+	//substr(7,1))//atk1_3_id=1/v=atk1_1_2
+	let attacker_1_3_id_me = isAtk ? parseInt(now_v.substr(7,1)) : -1;//parseInt(now_v.substr(5,1)) : -1;
+	let attacker_1_3_id_enemy = isAtk_enemy ? parseInt(now_v_enemy.substr(7,1)) : -1;
+
+	let defUp_me = 0;//防御＋２
+	let defUp_enemy = 0;
+
+	let atkUp_me = 0;//アタック＋２
+	let atkUp_enemy = 0;
+
+	if(attacker_1_3_id_me == 2){
+		//update_marker(true,-1);//２個目は仮に防御＋２（SP消費１）	
+		defUp_me += 2;
+	}
+	if(attacker_1_3_id_me == 3){
+		//update_marker(true,-2);//３個目は仮にアタック＋２（SP消費２）
+		atkUp_me += 2;
+	}
+
+	if(attacker_1_3_id_enemy == 2){
+		//update_marker(false,-1);//２個目は仮に防御＋２（SP消費１）
+		defUp_enemy += 2;
+	}
+	if(attacker_1_3_id_enemy == 3){
+		//update_marker(false,-2);//３個目は仮にアタック＋２（SP消費２）
+		atkUp_enemy += 2;
+	}
+
+//console.log("L2145 attacker_1_3_id_me="+attacker_1_3_id_me+"/attacker_1_3_id_enemy="+attacker_1_3_id_enemy+"/now_v="+now_v+"/now_v_enemy="+now_v_enemy);
+
+	let agi = atacker_i_me < 0 ? -1 : _my_o._card5_a_a[atacker_i_me][8];//ユニット[0]	画像[1]	裏面[2] すがた[3]	コスト[4]	属性[5]	HP[6]	ATK[7]	AGI[8]
+	let agi_enemy = atacker_i_enemy < 0 ? -1 : _enemy_o._card5_a_a[atacker_i_enemy][8];//ユニット[0]	画像[1]	裏面[2] すがた[3]	コスト[4]	属性[5]	HP[6]	ATK[7]	AGI[8]
+
+	if(isSien){
+		agi = _my_o._card_sien_a[0][8];
+	}
+	if(isSien_enemy){
+		agi_enemy = _enemy_o._card_sien_a[0][8];
+	}
+
+	if(isPls1_AGI_HitRate_CT_battlPhase_quick_me){
+		msg += "しえんのクイックで味方のAGI+1<br>";
+		agi += 1;
+	}
+	if(isPls1_AGI_HitRate_CT_battlPhase_quick_enemy){
+		msg += "しえんのクイックで敵のAGI+1<br>";
+		agi_enemy += 1;
+	}
+
+
+	if(isAtk_enemy){
+		_enemy_o._selected_name_a[i0] = _enemy_o._card5_a_a[atacker_i_enemy][0] + "で" + _my_o._card5_a_a[atk_target_i_enemy][0] + "を<b style='color:#F00'>こうげき</b>！";
+	}
+
+	let v_i = isAtk?0:(isGuard?1:(isMove?2:3));
+	let atk_name = ["こうげき","ガード","いどう","しえん"][v_i];
+
+	let isSenkou = agi > agi_enemy;
+
+	if( isAtk_enemy && !isAtk||
+		isSien_enemy && (isMove_enemy || isSien)||
+		isMove_enemy && (isSien)//||
+		//isGuard_enemy && (!isAtk && !isSien_enemy && !isMove_enemy && !isGuard_enemy)||
+	){
+		isSenkou = true;
+	}
+
+	if(
+		(isAtk && now_v_enemy.indexOf("atk")!=-1)||
+		(isGuard && now_v_enemy.indexOf("guard")!=-1)||
+		(isMove && now_v_enemy.indexOf("move")!=-1)||
+		(isSien && now_v_enemy.indexOf("sien")!=-1)
+	){
+		if(!(isMove&&isMove_enemy) && !(isGuard&&isGuard_enemy)){
+			msg += "両者の行動「"+atk_name+"」が被ったのでAGIが早い方が先行します。<br>";
+			msg += "こちらのAGI"+agi+"　敵のAGI"+agi_enemy+"<br>";
+
+			if(agi > agi_enemy){
+				msg += "こちらが先行です<br>";
+				isSenkou = true;
+			}
+			else if(agi < agi_enemy){
+				msg += "敵が先行です<br>";
+				isSenkou = false;
+			}
+			else{
+				let n1 = (parseInt(Math.random()*6)+1);
+				let n2 = (parseInt(Math.random()*6)+1);
+				if(n1==n2){
+					n1 = (parseInt(Math.random()*6)+1);
+					n2 = (parseInt(Math.random()*6)+1);
+				}
+				else if(n1==n2){
+					n1 = (parseInt(Math.random()*6)+1);
+					n2 = (parseInt(Math.random()*6)+1);
+				}
+
+				if(n1==n2){
+					if(Math.random() > Math.random()){
+						n1=1;
+						n2=6;
+					}
+					else{
+						n1=6;
+						n2=1;
+					}
+				}
+
+				msg += "AGIが同じのため2D6をします<br>";
+				msg += "こちらのダイス:"+n1+" 敵のダイス:"+n2+"<br>";
+				if(n1>n2){
+					msg += "こちらが先行です<br>";
+				}
+				else{
+					msg += "敵が先行です<br>";				
+				}
+			}
+		}
+	}
+
+	// let n1 = (parseInt(Math.random()*6)+1);
+	// let n2 = (parseInt(Math.random()*6)+1);
+	// let n3 = (parseInt(Math.random()*6)+1);
+
+	// let n123 = n1+n2+n3;
+
+	// let n1_e = (parseInt(Math.random()*6)+1);
+	// let n2_e = (parseInt(Math.random()*6)+1);
+	// let n3_e = (parseInt(Math.random()*6)+1);
+
+	// let n123_e = n1_e+n2_e+n3_e;
+
+	let enemyName = "敵A";
+	let mikataName = "味方B";
+
+	function getMyAction(){
+		if(isMove){
+
+			if(GetHP(_my_o._card5_a_a[moveGoal_i_me])<=0 || GetHP(_my_o._card5_a_a[moveStart_i_me])<=0 || _my_o._card5_a_a.length <= moveGoal_i_me || _my_o._card5_a_a.length <= moveStart_i_me){
+				return "あなたの行動・・いどう対象は死んでいる・・！<br>";			
+			}
+
+			_my_o._selected_name_a[i0] = "いどう "+_my_o._card5_a_a[moveStart_i_me][0]+" → "+_my_o._card5_a_a[moveGoal_i_me][0]+"";
+		}
+		else if(isAtk){			
+			_my_o._selected_name_a[i0] = "こうげき"+attacker_1_3_id_me+" "+_my_o._card5_a_a[atacker_i_me][0]+" → "+_enemy_o._card5_a_a[atk_target_i_me][0]+"";
+		}
+
+		let s = _my_o._selected_name_a[i0];
+		
+		s = s.replace("こうげき","<span style='color:#F00'>こうげき</span>");
+		s = s.replace("ぼうぎょ","<span style='color:#0FF'>ぼうぎょ</span>");
+		s = s.replace("ガード","<span style='color:#0FF'>ガード</span>");
+		s = s.replace("いどう","<span style='color:#0F0'>いどう</span>");
+		s = s.replace("しえん","<span style='color:#FF0'>しえん</span>");
+
+		s = "▼あなたの行動「"+s+"」<br>";
+
+		if(isAtk){
+
+			if(GetHP(_my_o._card5_a_a[atacker_i_me]) <= 0 || GetHP(_enemy_o._card5_a_a[atk_target_i_me]) <= 0 ||_my_o._card5_a_a.length <= atacker_i_me || _enemy_o._card5_a_a.length <= atk_target_i_me){
+				s += "こうげき対象は死んでいる・・！<br>";				
+				return s;
+			}
+
+			if(isForceKaihi_normal_kansetu_dmg_sense_enemy){//①センス：次の通常攻撃、または間接ダメージを回避
+				isForceKaihi_normal_kansetu_dmg_sense_enemy = false;
+				if(isHitRatePls3_SensuMukou_hit_me){
+					isHitRatePls3_SensuMukou_hit_me = false;
+					s += "センスで回避は、ヒットで無効化された！<br>";////②ヒット：次の攻撃のとき命中＋３。センス無効化
+				}else{
+					s += "センスで回避された！<br>";
+					return s;
+				}
+			}
+
+
+			console.log("atacker_i_me="+atacker_i_me+"/atk_target_i_me="+atk_target_i_me);
+
+			let border_agi = _enemy_o._card5_a_a[atk_target_i_me][8];
+
+			s += "あなたの命中判定：2D6で相手のAGI「<b style='color:#0FF'>"+border_agi+"</b>」以上なら命中！<br>";//ユニット[0]	画像[1]	裏面[2] すがた[3]	コスト[4]	属性[5]	HP[6]	ATK[7]	AGI[8]
+
+			let hit_sai_1 = sai();
+			let hit_sai_2 = sai();
+			let hit_sai = hit_sai_1 + hit_sai_2;
+
+			let ctBorder = 12;//・クリティカル判定はダイスのみで。クイックは11で出る。ヒットの補正でクリティカルの上乗せ判定はしない→クリティカル先、その後命中判定
+
+			if(isPls1_AGI_HitRate_CT_battlPhase_quick_me){
+				s += "クイックでCT値+1<br>";//しえんの
+				ctBorder -= 1;
+			}
+
+			let isCritical = hit_sai >= ctBorder;
+
+
+			if(isHitRatePls3_SensuMukou_hit_me){//②ヒット：次の攻撃のとき命中＋３。センス無効化
+				isHitRatePls3_SensuMukou_hit_me = false;
+				s += "ヒットで命中+3<br>";//しえんの//センスになってるバグ修正した26/1/22 
+				hit_sai += 3;
+			}
+
+			if(isPls1_AGI_HitRate_CT_battlPhase_quick_me){
+				s += "クイックで命中+1<br>";//しえんの
+				hit_sai += 1;
+			}
+
+			let isHit = hit_sai >= _enemy_o._card5_a_a[atk_target_i_me][8];
+
+			s += "あなたのダイス「"+hit_sai_1+"+"+hit_sai_2+"=<b style='color:#"+(hit_sai>=border_agi?"F00":"0FF")+"'>"+hit_sai+"</b>」・・"+(isHit?"敵に<b style='color:#F00'>命中</b>しました！":"敵に<span style='color:#0FF'>回避</span>されました！")+"<br>";
+
+			if(isHit){
+				let atk = _my_o._card5_a_a[atacker_i_me][7];//ユニット[0]	画像[1]	裏面[2] すがた[3]	コスト[4]	属性[5]	HP[6]	ATK[7]	AGI[8]
+
+				if(isAtkPls2_break_me){//③ブレイク：次の攻撃のとき、ATK+2
+					isAtkPls2_break_me = false;
+					s += "しえんのブレイクでATK+2<br>";
+					atk += 2;
+				}
+
+				if(atkUp_me){
+					s += "こうげき３でATK+2<br>";
+					atk += 2;
+				}
+
+				let def = def_enemy;//TODO
+
+				if(defUp_enemy){//自分にかける！
+					s += "こうげき２でDef+2<br>";
+					def += 2;
+				}
+
+				if(isCritical){
+					def = 0;
+					s += "クリティカルでディフェンス無効<br>";
+				}
+
+				let dmg = atk - def;
+
+				if(isDmgMin2_parry_enemy){//④パリィ：次のダメージを−２
+					isDmgMin2_parry_enemy = false;
+					s += "しえんのパリィでDMG-2<br>";					
+					dmg -= 2;
+				}
+//dmg=100;
+
+				if(dmg < 0){
+					dmg = 0;
+				}
+				s += "ダメージ処理：こちらのATK<b style='color:#FF0'>"+atk+"</b> - 相手のDEF<b style='color:#0FF'>"+def+"</b>=<span style='color:#"+(dmg>0?"F00":"AAA")+"'>"+dmg+"DMG!</span><br>";
+
+				_enemy_o._card5_a_a[atk_target_i_me][6] -= dmg;
+
+				let isDead = false;
+
+				if(_enemy_o._card5_a_a[atk_target_i_me][6] <= 0){
+					isDead = true;
+					_enemy_o._card5_a_a[atk_target_i_me][6] = 0;
+					s += "<b style='font-size:30px'>たおしました・・！</b><br>";
+					s += "相手のAP上限が+1されます<br>";
+					_enemy_o._AP++;
+					showAP(false);
+					updateDeadImg(atk_target_i_me, _enemy_o._card5_a_a[atk_target_i_me], false);					
+				}
+
+				if(dmg > 0 && !isDead){
+					document.getElementById("hp_enemy"+(atk_target_i_me+1)).innerHTML = "<span style='color:#F00'>HP"+_enemy_o._card5_a_a[atk_target_i_me][6]+"</span>";
+				}
+
+				s += "<br>";
+
+				//updateHp();
+			}
+		}
+		else if(isGuard){
+			//s += "<br>";
+		}
+		else if(isMove){
+			//s += "<br>";		
+						
+			let start_o = _my_o._card5_a_a[moveStart_i_me];
+			let goal_o = _my_o._card5_a_a[moveGoal_i_me];
+
+			let start_txt = document.getElementById("hp_me"+(moveStart_i_me+1)).innerHTML;
+			let goal_txt = document.getElementById("hp_me"+(moveGoal_i_me+1)).innerHTML;
+
+			//console.log("moveStart_i_me="+moveStart_i_me+"/start_o="+start_o);
+			//console.log("moveGoal_i_me="+moveGoal_i_me+"/goal_o="+goal_o);
+
+			_my_o._card5_a_a[moveStart_i_me] = goal_o; 
+			_my_o._card5_a_a[moveGoal_i_me] = start_o;			
+			document.getElementById('Card'+(moveStart_i_me+1)).src = "card/"+goal_o[1];
+			document.getElementById('Card'+(moveGoal_i_me+1)).src = "card/"+start_o[1];
+
+			document.getElementById("hp_me"+(moveStart_i_me+1)).innerHTML = goal_txt;
+			document.getElementById("hp_me"+(moveGoal_i_me+1)).innerHTML = start_txt;
+		}
+		else if(isSien){
+			s += "あなたは しえん「"+sienName_me+"」しました!<br>";			
+
+			if(isHeal_1Chara_HP2_me){
+				isHeal_1Chara_HP2_me = false;
+
+//console.log("L2138 _my_o._healTarget_name="+_my_o._healTarget_name);
+
+				let healTarget_o = GetNameToO(_my_o._healTarget_name);
+
+				console.log("_my_o._healTarget_name="+_my_o._healTarget_name);
+				console.log(healTarget_o);
+				
+				let healTarget_i = GetNameTo_i(_my_o._healTarget_name);//_my_o._healTarget_i;
+
+				s += healTarget_o[0]+"はHP2回復しました！<br>";//回復？
+				healTarget_o[6] += 2;
+
+				let max_hp = GetHP_MAX(healTarget_o);
+
+				if(max_hp < healTarget_o[6]){
+					healTarget_o[6] = max_hp;
+				}
+
+				document.getElementById("hp_me"+(healTarget_i+1)).innerHTML = "<span style='color:#F00'>HP"+_my_o._card5_a_a[healTarget_i][6]+"</span>";
+			}	
+		}
+
+		return s
+	}
+
+	function getEnemyAction(){
+
+		if(isMove_enemy){
+//GetHP(_my_o._card5_a_a[moveGoal_i_me])
+			if(GetHP(_enemy_o._card5_a_a[moveGoal_i_enemy]) <= 0 || GetHP(_enemy_o._card5_a_a[moveStart_i_enemy]) <= 0 || _enemy_o._card5_a_a.length <= moveGoal_i_enemy || _enemy_o._card5_a_a.length <= moveStart_i_enemy){
+				return "敵の行動・・いどう対象は死んでいる・・！<br>";		
+			}
+
+			_enemy_o._selected_name_a[i0] = "いどう "+_enemy_o._card5_a_a[moveStart_i_enemy][0]+" → "+_enemy_o._card5_a_a[moveGoal_i_enemy][0]+"";
+		}
+		else if(isAtk_enemy){			
+
+//console.log("L1714 atacker_i_enemy="+atacker_i_enemy+"/atk_target_i_enemy="+atk_target_i_enemy+"/now_v_enemy="+now_v_enemy);
+
+			_enemy_o._selected_name_a[i0] = "こうげき"+attacker_1_3_id_enemy+" "+_enemy_o._card5_a_a[atacker_i_enemy][0]+" → "+_my_o._card5_a_a[atk_target_i_enemy][0]+"";
+		}
+
+		let s = _enemy_o._selected_name_a[i0];
+
+		//「緑を後ろにいどう、後ろの真ん中が緑に」
+		//「いどう赤（プリースト）→後ろ１（とうせきき）」
+		//console.log("L1651 s="+s);
+		s = s.replace("こうげき","<span style='color:#F00'>こうげき</span>");
+		s = s.replace("ぼうぎょ","<span style='color:#0FF'>ぼうぎょ</span>");
+		s = s.replace("ガード","<span style='color:#0FF'>ガード</span>");
+		s = s.replace("いどう","<span style='color:#0F0'>いどう</span>");
+		s = s.replace("しえん","<span style='color:#FF0'>しえん</span>");
+
+
+		s = "▼敵の行動「"+s+"」<br>";//+"」\nサイコロ "+n1_e+"："+n2_e+"："+n3_e+"\n"+mikataName+"に"+n123_e+"のダメージ！\n";
+
+		if(isAtk_enemy){
+
+			if(GetHP(_enemy_o._card5_a_a[atacker_i_enemy]) <= 0 || GetHP(_my_o._card5_a_a[atk_target_i_enemy]) <= 0 ||_enemy_o._card5_a_a.length <= atacker_i_enemy || _my_o._card5_a_a.length <= atk_target_i_enemy){
+				s += "こうげき対象は死んでいる・・！<br>";				
+				return s;
+			}
+
+			if(isForceKaihi_normal_kansetu_dmg_sense_me){//①センス：次の通常攻撃、または間接ダメージを回避
+
+				isForceKaihi_normal_kansetu_dmg_sense_me = false;
+
+				if(isHitRatePls3_SensuMukou_hit_enemy){
+					isHitRatePls3_SensuMukou_hit_enemy = false;
+					s += "センスで回避は、ヒットで無効化された！<br>";////②ヒット：次の攻撃のとき命中＋３。センス無効化
+				}else{
+					s += "センスで回避された！<br>";
+					return s;
+				}
+
+				return s;
+			}
+
+			let border_agi = _my_o._card5_a_a[atk_target_i_enemy][8];
+
+			s += "敵の命中判定：2D6で相手のAGI「<b style='color:#0FF'>"+border_agi+"</b>」以上なら命中！<br>";//ユニット[0]	画像[1]	裏面[2] すがた[3]	コスト[4]	属性[5]	HP[6]	ATK[7]	AGI[8]
+
+			let hit_sai_1 = sai();
+			let hit_sai_2 = sai();
+			let hit_sai = hit_sai_1 + hit_sai_2;
+
+
+			let ctBorder = 12;//・クリティカル判定はダイスのみで。クイックは11で出る。ヒットの補正でクリティカルの上乗せ判定はしない→クリティカル先、その後命中判定
+
+			if(isPls1_AGI_HitRate_CT_battlPhase_quick_enemy){
+				s += "クイックでCT値+1<br>";//しえんの
+				ctBorder -= 1;
+			}
+			
+			let isCritical = hit_sai >= ctBorder;//クリティカルはおまけ効果で、ディフェンス無効
+
+
+			if(isHitRatePls3_SensuMukou_hit_enemy){//②ヒット：次の攻撃のとき命中＋３。センス無効化
+				isHitRatePls3_SensuMukou_hit_enemy = false;
+				s += "ヒットで命中+３<br>";//しえんの//ヒットがセンスになってる文字バグ
+				hit_sai += 3;
+			}
+
+			if(isPls1_AGI_HitRate_CT_battlPhase_quick_enemy){
+				s += "クイックで命中+1<br>";//しえんの
+				hit_sai += 1;
+			}
+
+			
+
+			let isHit = hit_sai >= _my_o._card5_a_a[atk_target_i_enemy][8];
+
+			s += "敵のダイス「"+hit_sai_1+"+"+hit_sai_2+"=<b style='color:#"+(hit_sai>=border_agi?"F00":"0FF")+"'>"+hit_sai+"</b>」・・"+(isHit?"あなたに<b style='color:#F00'>命中</b>しました！":"あなたは<span style='color:#0FF'>回避</span>しました！")+"<br>";
+
+			if(isHit){
+				let atk = _enemy_o._card5_a_a[atacker_i_enemy][7];//ユニット[0]	画像[1]	裏面[2] すがた[3]	コスト[4]	属性[5]	HP[6]	ATK[7]	AGI[8]
+
+				if(isAtkPls2_break_enemy){//③ブレイク：次の攻撃のとき、ATK+2
+					isAtkPls2_break_enemy = false;
+					s += "しえんのブレイクでATK+2<br>";
+					atk += 2;
+				}
+
+				if(atkUp_enemy){
+					s += "こうげき３でATK+2<br>";
+					atk += 2;
+				}
+
+				let def = def_me;//TODO　とりあえずガードなら+1
+				
+				if(defUp_me){
+					s += "こうげき２でDef+2<br>";
+					def += 2;
+				}
+
+				if(isCritical){
+					def = 0;
+					s += "クリティカルでディフェンス無効<br>";
+				}
+
+				let dmg = atk - def;
+
+
+				if(isDmgMin2_parry_me){//④パリィ：次のダメージを−２
+
+					isDmgMin2_parry_me = false;
+					s += "しえんのパリィでDMG-2<br>";					
+					dmg -= 2;
+				}
+
+				if(dmg < 0){
+					dmg = 0;
+				}
+
+//dmg=100;
+
+				s += "ダメージ処理：敵のATK<b style='color:#FF0'>"+atk+"</b> - こちらのDEF<b style='color:#0FF'>"+def+"</b> = <b style='color:#"+(dmg>0?"F00":"AAA")+"'>"+dmg+"</b>DMG!<br>";
+				
+				_my_o._card5_a_a[atk_target_i_enemy][6] -= dmg;
+
+				let isDead = false;
+
+				if(_my_o._card5_a_a[atk_target_i_enemy][6] <= 0){
+					isDead = true;
+					_my_o._card5_a_a[atk_target_i_enemy][6] = 0;
+					s += "<b style='font-size:30px'>たおされました・・！</b><br>";
+					s += "あなたのAP上限が+1されます<br>";
+					_my_o._AP++;
+					showAP(true);
+					updateDeadImg(atk_target_i_enemy, _my_o._card5_a_a[atk_target_i_enemy],true);
+				}
+
+				s += "<br>";
+
+				if(dmg > 0 && !isDead){
+					//console.log("L1672 hp_me1="+document.getElementById("hp_me1")+"/"+
+					//"/ hp_me2="+document.getElementById("hp_me2")+
+					//"/atk_target_i_enemy+1)="+(atk_target_i_enemy+1)+
+					//document.getElementById("hp_me"+(atk_target_i_enemy+1))+"/atk_target_i_enemy="+atk_target_i_enemy);
+					document.getElementById("hp_me"+(atk_target_i_enemy+1)).innerHTML = "<span style='color:#F00'>HP"+_my_o._card5_a_a[atk_target_i_enemy][6]+"</span>";
+					//console.log("L1637 ="+document.getElementById("hp_me"+(atk_target_i_enemy+1))+"/atk_target_i_enemy="+atk_target_i_enemy);
+				}
+				//updateHp();
+			}
+		}
+		else if(isGuard_enemy){
+			//s += "<br>";			
+		}
+		else if(isMove_enemy){
+			//s += "<br>";			
+			let start_o = _enemy_o._card5_a_a[moveStart_i_enemy];
+			let goal_o = _enemy_o._card5_a_a[moveGoal_i_enemy];
+
+			let start_txt = document.getElementById("hp_enemy"+(moveStart_i_enemy+1)).innerHTML;
+			let goal_txt = document.getElementById("hp_enemy"+(moveGoal_i_enemy+1)).innerHTML;
+
+			_enemy_o._card5_a_a[moveStart_i_enemy] = goal_o; 
+			_enemy_o._card5_a_a[moveGoal_i_enemy] = start_o;			
+			document.getElementById('Card_enemy'+(moveStart_i_enemy+1)).src = "card/"+goal_o[1];
+			document.getElementById('Card_enemy'+(moveGoal_i_enemy+1)).src = "card/"+start_o[1];
+
+			document.getElementById("hp_enemy"+(moveStart_i_enemy+1)).innerHTML = goal_txt;
+			document.getElementById("hp_enemy"+(moveGoal_i_enemy+1)).innerHTML = start_txt;
+		}
+		else if(isSien_enemy){
+			s += "敵は しえん「"+sienName_enemy+"」しました!<br>";
+			
+			if(isHeal_1Chara_HP2_enemy){
+				isHeal_1Chara_HP2_enemy = false;
+				
+				let healTarget_i = 0;//TODO GetNameTo_i(name);//_healTarget_i_enemy;//TODO
+
+				s += _enemy_o._card5_a_a[healTarget_i][0]+"はHP2回復しました！<br>";//回復？
+				_enemy_o._card5_a_a[healTarget_i][6] += 2;
+
+				let max_hp = GetHP_MAX(_enemy_o._card5_a_a[healTarget_i]);
+
+				if(max_hp < _enemy_o._card5_a_a[healTarget_i][6]){
+					_enemy_o._card5_a_a[healTarget_i][6] = max_hp;
+				}
+
+				document.getElementById("hp_enemy"+(healTarget_i+1)).innerHTML = "<span style='color:#F00'>HP"+_enemy_o._card5_a_a[healTarget_i][6]+"</span>";
+			}	
+		}
+
+		return s
+	}
+
+
+	if(_round < 6){
+
+		if(isSenkou){
+			let s1 = getMyAction();
+			let s2 = getEnemyAction();
+			msg += s1;
+			msg += s2;
+		}
+		else{
+			let s1 = getEnemyAction();
+			let s2 = getMyAction();
+			msg += s1;
+			msg += s2;
+		}
+
+		_round++;
+
+
+		document.getElementById("textarea").innerHTML = msg + "<br><hr>" + document.getElementById("textarea").innerHTML;
+	}
+	else{
+		//document.getElementById("textarea").value = "5ラウンド終了しました。\n"+_turn+"ターン目の行動選択に進んでください。（以降開発中）";
+	}
+
+	//updateHp();
+}
+
+function updateHp(){//hp_enemy3//_card5_a_a[][6]
+	for(i=0; i<_my_o._card5_a_a.length; i++){
+		if(document.getElementById("hp_me"+(i+1)) && _my_o._card5_a_a[i]){
+			document.getElementById("hp_me"+(i+1)).innerHTML = "HP"+_my_o._card5_a_a[i][6];
+		}
+	}
+	for(i=0; i<_enemy_o._card5_a_a.length; i++){
+		if(document.getElementById("hp_enemy"+(i+1)) && _enemy_o._card5_a_a[i]){
+			document.getElementById("hp_enemy"+(i+1)).innerHTML = "HP"+_enemy_o._card5_a_a[i][6];
+		}
+	}
+	//console.log("L1757 updateHp")
+}
+
+// function updateTaikiCards(){
+
+// }
+
+function getNextTaiki_a(isMe){
+
+	let a5 = isMe ? _my_o._card5_a_a : _enemy_o._card5_a_a;
+	let a12 = isMe ? _my_o._card_a : _enemy_o._card_a;
+
+	for(i=0;i<12;i++){
+		if(a12[i][6] > 0 && a5.indexOf(a12[i]) == -1){
+			//console.log("L1917 a12["+i+"]="+a12[i]);
+			
+			document.getElementById((isMe?'taikiCard':'taikiCard_enemy')+i).style.display = "none";
+
+			return a12[i];
+		}
+	}
+	//console.log("L1921 no return");
+}
+
+function updateDeadImg(dead_i, dead_o, isMe=true){
+
+	let s = "";
+	let a = isMe ? _my_o._card_a : _enemy_o._card_a;
+
+	//死体を最後尾に
+	if(isMe){
+		_my_o._card5_a_a.push(_my_o._card5_a_a[dead_i]);
+		_my_o._card5_a_a.splice(dead_i, 1);
+	}
+	else{
+		_enemy_o._card5_a_a.push(_enemy_o._card5_a_a[dead_i]);
+		_enemy_o._card5_a_a.splice(dead_i, 1);
+	}
+
+
+
+/*
+	for(i=0;i<a.length;i++){
+		if(a[i][6] <= 0){
+			s += '　　<img src="card/'+a[i][1]+'" style="width:14vw;transform:rotate(90deg);">　　　';
+			document.getElementById("deadCard_"+(isMe?"me":"enemy")).innerHTML = s;
+
+			//_my_o._card5_a_a[dead_i]
+		}
+	}
+*/
+
+	/*
+	//５枚カードから死体を省き、末尾に馬車から追加
+	if(isMe){
+		_my_o._card5_a_a.splice(dead_i, 1);
+	}
+	else{
+		_enemy_o._card5_a_a.splice(dead_i, 1);
+	}
+	
+
+	for(i=0;i<12;i++){
+		if(a[i][6] <= 0){
+			s += '　　<img src="card/'+a[i][1]+'" style="width:14vw;transform:rotate(90deg);">　　　';
+		}
+	}
+
+	document.getElementById("deadCard_"+(isMe?"me":"enemy")).innerHTML = s;//横向きの死体カード表示
+	*/
+
+	for(i=0;i<5;i++){
+		id = i+1;
+		if(i < _my_o._card5_a_a.length){
+			document.getElementById('Card'+id).src = "card/"+_my_o._card5_a_a[i][1];
+
+			if(_my_o._card5_a_a[i][6] <= 0){
+				document.getElementById('Card'+id).style.transform = "rotate(90deg)";
+				document.getElementById('Card'+id).style.width = "14vw";
+				document.getElementById('Card'+id+'Btn').style.background = "transparent";	
+				document.getElementById('Card'+id+'Btn').style.border = "none";	
+				document.getElementById('Card'+id+'Btn').style.outline = "none";	
+			}
+
+			/*if(){
+							s += '　　<img src="card/'+a[i][1]+'" style="width:14vw;transform:rotate(90deg);">　　　';
+				document.getElementById("deadCard_"+(isMe?"me":"enemy")).innerHTML = s;
+			}*/
+
+		}		
+		else{
+			document.getElementById('Card'+id).style.display = "none";
+			document.getElementById('hp_me'+id).style.display = "none";						
+		}
+	}
+
+	for(i=0;i<5;i++){
+		id = i+1;
+		if(i < _enemy_o._card5_a_a.length){
+			document.getElementById('Card_enemy'+id).src = "card/"+_enemy_o._card5_a_a[i][1];
+
+			if(_enemy_o._card5_a_a[i][6] <= 0){
+				document.getElementById('Card_enemy'+id).style.transform = "rotate(90deg)";
+				document.getElementById('Card_enemy'+id).style.width = "14vw";
+				document.getElementById('Card'+id+'Btn_enemy').style.background = "transparent";	
+				document.getElementById('Card'+id+'Btn_enemy').style.border = "none";	
+				document.getElementById('Card'+id+'Btn_enemy').style.outline = "none";	
+				//document.getElementById('Card'+id+'Btn_enemy').style.display = "none";				
+								//Card3Btn_enemy					
+		
+				//document.getElementById('hp_enemy'+id).style.display = "none";			
+			}
+		}		
+		else{
+			document.getElementById('Card_enemy'+id).style.display = "none";
+			document.getElementById('hp_enemy'+id).style.display = "none";			
+		}
+	}
+
+
+	updateHp();
+
+}
+
+//setInterval(()=>{ updateHp(); }, 500);
+
+function checkGameSet(){
+
+	let score_me = 0;//生存ユニットのコストの合計
+	let score_enemy = 0;
+
+	for(i=0;i<_my_o._card5_a_a.length;i++){
+		id = i+1;
+		if(_my_o._card5_a_a[i][6] > 0){
+			score_me += _my_o._card5_a_a[i][4];	
+		}
+	}
+
+	for(i=0;i<_enemy_o._card5_a_a.length;i++){
+		if(_enemy_o._card5_a_a[i][6] > 0){
+			score_enemy += _enemy_o._card5_a_a[i][4];
+		}
+	}
+
+	let isWin = score_me > score_enemy;
+	let isHkiwake = score_me == score_enemy;
+
+	let msg = "ゲームセット！スコアを集計します・・<br>生存ユニットのコストの合計値<br>"+score_me+"対"+score_enemy+"で<br>";
+	
+	document.getElementById("autoSelectRound1_0").style.display = "none";
+	document.getElementById("autoSelectRound1").style.display = "none";
+
+	if(isHkiwake){
+		msg+="<b style='color:#8F8'>引き分け！</b>";
+	}
+	else
+	{
+		msg+="あなたの"+(isWin?"<b style='color:#FF0'>勝ち！</b>":"<b style='color:#0FF'>負け・・</b>");
+	}
+
+
+	document.getElementById("textarea").innerHTML = msg+"<br><br><hr>"+document.getElementById("textarea").innerHTML;
+	document.getElementById("nextTurn").style.display = "none";
+}
+
+function GetAtk(a){
+	return a[7];//_my_o._card5_a_a[atacker_i_me][7]
+}
+
+function GetHP(a){
+	return a[6];
+}
+function GetHP_MAX(a){
+	let name = GetName(a);
+	//let a_org = GetNameToO(name);
+
+	for(i=0;i<_card_a_org.length;i++){//
+		if(GetName(_card_a_org[i]) == name){
+			return GetHP(_card_a_org[i]);
+		}
+	}
+
+//console.log("L2634 name="+name);
+//console.log(a_org);
+
+	//return GetHP(a_org);
+}
+function GetName(a){
+	return a[0];
+}
+function GetNameToO(name){
+	for(i=0;i<_my_o._card5_a_a.length;i++){
+		if(GetName(_my_o._card5_a_a[i]) == name){
+			return _my_o._card5_a_a[i];
+		}
+	}
+}
+
+function GetNameTo_i(name){
+	for(i=0;i<_my_o._card5_a_a.length;i++){
+		if(GetName(_my_o._card5_a_a[i]) == name){
+			return i;
+		}
+	}
+}
+
+
+function forceHeal(){
+	console.log("forceHeal");
+
+	_my_o._isForceHeal = true;
+
+	document.getElementById("forceHeal").style.display = "none";	
+}
+
+function forceSenseEnemy(){
+
+	console.log("forceSenseEnemy");
+
+	_isForceSenseEnemy = true;
+
+	_enemy_o._selected_a = ["sien1","atk2_2","guard_1","move0_3","guard_2"];
+
+	document.getElementById("forceSenseEnemy").style.display = "none";	
+}
+
+
+let _isAutoEnd = false;
+
+function autoSelectRound1(is1){
+
+	if(is1){
+		autoSelectAtk(true,true);
+		startTurnBtn();
+
+		for(i=0;i<10;i++){
+			if(_round == 6){
+				nextTurn();
+				break;
+			}
+			nextTurn();
+		}
+	}
+	else{
+		for(i=0;i<6;i++){
+
+			autoSelectAtk(true,true);
+			startTurnBtn();
+			for(i2=0;i2<10;i2++){
+				if(_round == 6){
+					nextTurn();
+					break;
+				}
+				nextTurn();
+			}
+		}
+
+	}
+
+
+}
+
+function test0227(isNextTurnOnly=false){
+	if(!isNextTurnOnly){
+		start_deck(true,true,'hard');
+	}
+	autoSelectAtk(false);
+	autoSelectAtk(true);
+	autoSelectRound1(!isNextTurnOnly);//true);
+}
+
+function test0325(){
+	start_deck(true,false,'player1');
+	start_deck(false,false,'cpu1');
+	autoSelectRound1(true);
+
+	//全ターン終了　autoSelectRound1();
+}
+
+</script>
+
+
+<br><br><hr><br>
+
+<button onClick="test0325()" id="player1_2" style="background-color:#000;color:#999">デッキ選択して１ターン終了</button><br><br>
+<hr>
+
+<button onClick="start_deck(true,false,'player1')" id="player1" style="background-color:#000;color:#999">⭕️自分デッキ１イージー＠ぼうけんしゃたち<br>ファイター,ドワーフ,エルフ,プリースト,ソーサラー</button><br><br>
+<button onClick="start_deck(true,false,'player2')" id="player2" style="background-color:#000;color:#999">⭕️自分デッキ２ノーマル＠せいえい<br>さむらい,ナイト,まほうけんし,ヒーラー,せいじょ</button><br><br>
+<button onClick="start_deck(true,false,'player3')" id="player3" style="background-color:#000;color:#999">⭕️自分デッキ３ハード＠まどうへい<br>まどうアーマー,ゴーレム,マジックソード,ウィッチ,とうせきき</button><br><br>
+<button onClick="start_deck(true,false,'player4')" id="player4" style="background-color:#000;color:#999">⭕️自分デッキ４ハード＠ついせきしゃ<br>ニンジャ,バルタン,ダークエルフ,アサシン,フェアリー</button>
+<hr>
+<button onClick="start_deck(false,false,'cpu1')" id="cpu1" style="background-color:#000;color:#999">👿敵デッキ１イージー＠まものども<br>ゴブリン,ハーピィ,リザードマン,ジャイアント,ドラゴンゾンビ</button><br><br>
+<button onClick="start_deck(false,false,'cpu2')" id="cpu2" style="background-color:#000;color:#999">👿敵デッキ２ノーマル＠ノーライフキング<br>スケルトン,ゴースト,ワーウルフ,リッチ,ヴァンパイアロード</button><br><br>
+<button onClick="start_deck(false,false,'cpu3')" id="cpu3" style="background-color:#000;color:#999">👿敵デッキ３ハード＠サマナー<br>しょうじょ,ウィッチ,ビショップ,サキュバス,デーモン</button><br><br>
+<button onClick="start_deck(false,false,'cpu4')" id="cpu4" style="background-color:#000;color:#999">👿敵デッキ４ハード＠りゅうのまもり<br>せいじょ,ドラゴンパピー,よくりゅう,ブラックドラゴン,ドラゴン</button>
+<hr>
+<hr>
+<!--
+<button onClick="start_deck(true,false,'easy')" id="forceHeal" style="background-color:#000;color:#999">⭕️自分デッキ１イージー</button>
+<button onClick="start_deck(true,false,'normal')" id="forceHeal" style="background-color:#000;color:#999">⭕️自分デッキ２ノーマル</button>
+<button onClick="start_deck(true,false,'hard')" id="forceHeal" style="background-color:#000;color:#999">⭕️自分デッキ３ハード</button>
+<hr>
+<button onClick="start_deck(false,false,'easy')" id="forceHeal" style="background-color:#000;color:#999">👿敵デッキ１イージー</button>
+<button onClick="start_deck(false,false,'normal')" id="forceHeal" style="background-color:#000;color:#999">👿敵デッキ２ノーマル</button>
+<button onClick="start_deck(false,false,'hard')" id="forceHeal" style="background-color:#000;color:#999">👿敵デッキ３ハード</button>
+<hr>
+<button onClick="start_deck(true,true,'easy')" id="forceHeal" style="background-color:#000;color:#999">⭕️👿双方デッキ１イージー</button>
+<button onClick="start_deck(true,true,'normal')" id="forceHeal" style="background-color:#000;color:#999">⭕️👿双方デッキ２ノーマル</button>
+<button onClick="start_deck(true,true,'hard')" id="forceHeal" style="background-color:#000;color:#999">⭕️👿双方デッキ３ハード</button>
+-->
+<br>
+<hr>
+<br>
+<button onClick="forceHeal()" id="forceHeal" style="background-color:#000;color:#999">しえん強制ヒール引きオン</button>
+　
+<button onClick="forceSenseEnemy()" id="forceSenseEnemy" style="background-color:#000;color:#999">敵センス味方ヒットで無効化の確認</button>
+<br>
+<br>
+<button onClick="autoSelectAtk(true)" id="outSelectTurnBtn" style="background-color:#000;color:#999">自分の行動ランダム選択</button>
+<button onClick="autoSelectAtk(false)" id="outSelectTurnBtn" style="background-color:#000;color:#999">敵の行動ランダム選択</button>
+<button onClick="autoSelectAtk(true,true)" id="outSelectTurnBtn" style="background-color:#000;color:#999">両方の行動ランダム選択</button>
+<br><br>
+<button onClick="autoSelectRound1(true)" id="autoSelectRound1_0" style="background-color:#000;color:#999">選択して1ターン終了</button>
+
+<br><br>
+<!--button onClick="autoSelectRound1(false)" id="" style="background-color:#000;color:#999">選択して全５ターン終了</button-->
+
+<br><br>
+<br><br>
+<button onClick="setDebugCard5_12()" id="setDebugCard5_12" style="background-color:#000;color:#999">デバッグカードを取得（オートコスト）</button>
+<br><br>
+<button onClick="set_start_turn1()" id="outSelectTurnBtn" style="background-color:#000;color:#999">１ターン目開始までオート選択</button>
+<hr>
+<button onClick="test0227()" id="outSelectTurnBtn" style="background-color:#000;color:#999">デッキ選択、セレクト選択、ターン終了</button>
+<hr>
+<button onClick="test0227(true)" id="outSelectTurnBtn" style="background-color:#000;color:#999">次のターン2/27</button>
+
+<br><br><br><br><br></html>
+<script>
+	//document.getElementById("playerBoard_atk_enemy"+(1)).innerHTML = "<h1>ほげえええ</h1>";
+
+//	console.log(_o.hoge[3]);
+
+function autoSelectAtk(isMe, isBoth=false){
+
+	let tmpEnemyAIPos_a = [0,1,2,3,4,5];//[[0,0],[1,1],[2,2],[3,3],[4,4]];
+
+	function f(i, isMe=true){
+
+		if(!isMe){//敵AI処理
+
+			let sel = document.getElementById("selectAtk"+(isMe?"":"_enemy")+i);
+			let atk_i = -1;
+			let sien_i = -1;
+			let other_i_a = [];
+			let guard_i = -1;
+			let move_i = -1;
+			let moveStart_i = -1;
+			let moveGoal_i = -1;
+			let moveStart_i_kakutei = -1;
+			let moveGoal_i_kakutei = -1;
+			let moveHpDiff = 999;
+			let isBackHPUpper = false;
+
+			let max_atk_i = -1;
+			let min_hp_i = -1;
+			let min_atk_aftet_hp = 999;//-1;
+
+			let max_dmg_diff = 0;
+
+			function get_hpDmgedEnemy_o(i0){
+
+				if(i0 < 0){
+					return null;
+				}
+
+				let o = _enemy_o._card5_a_a[i0];
+
+				let isTarget = GetHP(o) > 0 && (GetHP_MAX(o) - GetHP(o));// >= 2)
+
+				if(isTarget){
+					return o;
+				}
+				else{
+					return null;
+				}
+			}
+
+
+			//console.log("L2780 sel.children.length="+sel.children.length);
+			
+			//console.log("L2780 sel="+sel.innerHTML);
+
+			for(let i2=1;i2<sel.children.length;i2++){
+				let v = sel.children[i2].value;//
+				
+				//console.log("L2758 i="+i+" i2="+i2+" v="+v);
+
+
+				let isAtk = v.indexOf("atk") != -1;
+				let isSien = v.indexOf("sien") != -1;
+				let isHeal = v.indexOf("sien1_") != -1;;//
+				let isMove = v.indexOf("move") != -1;//_move0_2,_move0_3,_move0_4,_move1_2,_move1_3,move1_4
+				let isGuard = v.indexOf("guard") != -1;
+				//let healTarget_i = !isHeal ? -1 : parseInt(v.replace("sien1_",""))-1;			
+				let healTarget_i = !isHeal ? -1 : parseInt(v.replace("sien1_",""));//-1;			
+
+//console.log("L2842 moveStart_i="+moveStart_i+"/moveGoal_i="+moveGoal_i);
+
+
+				let healTargetEnemy_o = get_hpDmgedEnemy_o(healTarget_i);
+				let isLastRound = i2==sel.children.length-1;
+				let isHealChance = isHeal && (isLastRound || healTargetEnemy_o != null);//) || (isHeal && healTargetEnemy_o != null);//i2==sel.children.length-1 || (isHeal && healTargetEnemy_o != null);
+
+				if(isHealChance){
+
+					let now_max_dmg_diff = GetHP_MAX(_enemy_o._card5_a_a[healTarget_i]) - GetHP(_enemy_o._card5_a_a[healTarget_i]);
+
+					//diff=6 MAX=7 NowHP=1
+					console.log("L2982 diff="+now_max_dmg_diff,"MAX="+GetHP_MAX(_enemy_o._card5_a_a[healTarget_i]) , "NowHP="+GetHP(_enemy_o._card5_a_a[healTarget_i]));
+
+					if(now_max_dmg_diff > max_dmg_diff ){
+						sien_i = i2;
+						max_dmg_diff = now_max_dmg_diff;
+						console.log("L2994 ヒール対象 sel="+sel.innerHTML+"/sien_i="+sien_i+"/v="+v);
+					}
+				}
+				else if(isSien && !isHeal)
+				{
+					sien_i = i2;
+				}
+				else if(isAtk)
+				{
+					//⭕️⑧：HPが少ない敵から狙う→
+					//⑨：攻撃力の高い自キャラが動く
+					//つまり想定残りHPを最小化する
+
+
+					let now_atk_i = parseInt(v.substr(3,1))-1;
+					let now_atk_target_i = parseInt(v.substr(5,1))-1;
+//console.log("L2929 now_atk_i="+now_atk_i+"/now_atk_target_i="+now_atk_target_i);
+
+					let now_atk_aftet_hp = GetHP(_my_o._card5_a_a[now_atk_target_i]) - GetAtk(_enemy_o._card5_a_a[now_atk_i]);//my_o._card5_a_a[atacker_i_me][7]
+
+///console.log(v,"now_atk_aftet_hp="+now_atk_aftet_hp+"/min_atk_aftet_hp="+min_atk_aftet_hp);
+
+//console.log("L2933 now_atk_diff="+now_atk_diff,"Atk="+GetAtk(_enemy_o._card5_a_a[now_atk_i]),"HP="+GetHP(_my_o._card5_a_a[now_atk_target_i]));
+
+					if(max_atk_i == -1){
+						max_atk_i = now_atk_i;
+						min_hp_i = now_atk_target_i;
+						atk_i = i2;//atk1_1,atk1_2,atk2_1,atk2_2
+						min_atk_aftet_hp = now_atk_aftet_hp;
+						///console.log("変更１　初期化　now_atk_aftet_hp="+now_atk_aftet_hp+"/min_atk_aftet_hp_diff="+min_atk_aftet_hp+"/myHP="+GetHP(_my_o._card5_a_a[now_atk_target_i]) +"/Atk="+GetAtk(_enemy_o._card5_a_a[now_atk_i]));
+					}
+					else{
+
+						//_enemy_o._card5_a_a[i0]//_my_o._card5_a_a[i]
+
+						if(now_atk_aftet_hp < min_atk_aftet_hp){//now_atk_diff > max_atk_diff){
+						///console.log("変更２　now_atk_aftet_hp="+now_atk_aftet_hp+"/min_atk_aftet_hp="+min_atk_aftet_hp+"/myHP="+GetHP(_my_o._card5_a_a[now_atk_target_i]) +"/Atk="+GetAtk(_enemy_o._card5_a_a[now_atk_i]),_my_o._card5_a_a[now_atk_target_i],_enemy_o._card5_a_a[now_atk_i]);
+							max_atk_i = now_atk_i;
+							min_hp_i = now_atk_target_i;
+							atk_i = i2;//atk1_1,atk1_2,atk2_1,atk2_2
+							min_atk_aftet_hp = now_atk_aftet_hp;
+						}
+					}
+				}
+				else if(isGuard && v == "guard_1")
+				{
+					guard_i = i2;
+				}
+				else if(isMove){
+					moveStart_i = parseInt(v.substr(4,1));//-1;
+					moveGoal_i = parseInt(v.substr(6,1));//-1;
+
+					//moveStart_i = tmpEnemyAIPos_a[moveStart_i];
+					//moveGoal_i = tmpEnemyAIPos_a[moveGoal_i];
+
+					//console.log("tmpEnemyAIPos_a=",tmpEnemyAIPos_a,moveStart_i,moveGoal_i,tmpEnemyAIPos_a[moveStart_i],tmpEnemyAIPos_a[moveGoal_i],_enemy_o._card5_a_a[moveStart_i],_enemy_o._card5_a_a[tmpEnemyAIPos_a[moveStart_i]]);
+
+					let front_hp = GetHP(_enemy_o._card5_a_a[tmpEnemyAIPos_a[moveStart_i]]);//[0];
+					let back_hp = GetHP(_enemy_o._card5_a_a[tmpEnemyAIPos_a[moveGoal_i]]);//[0];
+
+
+					let now_moveHpDiff = back_hp - front_hp;
+					let isHpLargeBack = now_moveHpDiff > 0;
+
+					if(move_i == -1){//moveHpDiff
+						//console.log("🏃‍♀️移動１ 初期化",i,i2);
+						//console.log("front=",_enemy_o._card5_a_a[moveStart_i],"/goal=",_enemy_o._card5_a_a[moveGoal_i]);
+
+						moveHpDiff = now_moveHpDiff;
+						move_i = i2;
+						isBackHPUpper = isHpLargeBack;
+						moveStart_i_kakutei = moveStart_i;
+						moveGoal_i_kakutei = moveGoal_i;
+					}
+
+					else if(now_moveHpDiff > moveHpDiff){
+						//console.log("🏃‍➡️移動２　変更　front_hp="+front_hp+"/back_hp="+back_hp,i,i2);
+						//console.log("front=",_enemy_o._card5_a_a[moveStart_i],"/goal=",_enemy_o._card5_a_a[moveGoal_i]);
+
+						moveHpDiff = now_moveHpDiff;
+						move_i = i2;
+						isBackHPUpper = isHpLargeBack;
+						moveStart_i_kakutei = moveStart_i;
+						moveGoal_i_kakutei = moveGoal_i;
+					}	
+				}
+				else
+				{
+					other_i_a.push(i2);
+				}
+			}
+
+			let now_i = shuffleArray(other_i_a);
+
+			if(sien_i != -1){
+				now_i = sien_i;
+			}
+			else if(atk_i != -1){
+				now_i = atk_i;
+			}
+			else if(move_i != -1){
+				if(guard_i != -1 && !isBackHPUpper && Math.random() < 0.5){
+					now_i = guard_i;
+				}
+				else{//} if(isBackHPUpper){
+
+//console.log("移動実行　isBackHPUpper="+isBackHPUpper);
+
+					now_i = move_i;
+
+					tmpEnemyAIPos_a[moveStart_i_kakutei] = moveGoal_i_kakutei;//moveStart_i = 
+					tmpEnemyAIPos_a[moveGoal_i_kakutei] = moveStart_i_kakutei;//moveGoal_i = 
+				}
+			}
+
+			sel.value = sel.children[now_i].value;
+
+//console.log("L2901 now_i="+now_i+"/sel.value="+sel.value);
+
+			nextBoardSelect(i,isMe);
+
+			console.log("==========");
+		}
+		else
+		{
+			let sel = document.getElementById("selectAtk"+(isMe?"":"_enemy")+i);
+			sel.value = sel.children[1].value;//sel.value = sel.children[Rad(1,sel.childElementCount-1)].value;
+			nextBoardSelect(i,isMe);//,a[i]
+		}
+
+	}
+
+	if(isMe || isBoth){
+		if(!_my_o._card_sien_a[0] ||!_enemy_o._card5_a_a[0] || !_enemy_o._card5_a_a[0][0]){
+			setAutoCard_me();
+		}
+	}
+
+	if(!isMe || isBoth){
+		if(!_enemy_o._card_sien_a[0] ||!_enemy_o._card5_a_a[0] || !_enemy_o._card5_a_a[0][0]){
+			setAutoCard_enemy();			
+		}
+	}
+
+	for(let i=0; i<5; i++){
+		f(i,isMe);
+		if(isBoth){
+			f(i,!isMe);
+		}
+	}
+
+	if(isBoth){
+		document.location.href = "#gameTextArea";
+	}
+}
+
+
+function start_deck(isMe, isBoth, easyType){//charaType, easyType){
+	
+	console.log(document.getElementById(easyType).innerHTML);
+
+	setSelectDeck(easyType,isBoth,isMe);
+
+	init();
+
+	setDebugCard5_12();
+
+	if(isMe){
+		document.location.href = "#card5_me";
+	}
+	else{
+		document.location.href = "#card5_enemy";
+	}
+
+//console.log("3133="+document.getElementById('taikiCard_enemy1').innerHTML);
+//3133=<button onclick="selectTaikiCard_enemy(1)"><img src="card/unit_u32.png" style="width:14vw;" alt="1" title="1"></button> <span id="hp_enemy12_2" style="font-size:28">HP8</span>
+
+	//L1142 tag=selectAtk_enemy0/now_o._card_sien_a[0]=ナイト,unit_u27.png,unit_u27-216x300.png,よろいすがた,4,けん,9,2,4,ヒール
+//console.log("L1007.4 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);//xバグってる
+}
+
+
+function setAutoCard_enemy(){//つまりこの中
+
+	function setAutoCost_enemy(){
+		openEnemyCard12();
+		_enemy_o._totalCost = 0;
+
+		let a = shuffleArray([0,1,2,3,4,5,6,7,8,9,10,11]);
+
+		if(_now_enemy_deck && _now_enemy_deck.length){
+			a = _now_enemy_deck;
+//console.log("L3211",_now_enemy_deck);
+		}
+
+ //console.log("L1619 enemy a = "+a);
+
+		for(let i=0; i<6; i++){
+			_enemy_o._selectCard12_i = a[i];
+			changeCard6_enemy(i+1, true);
+		}
+
+		///_enemy_o._card_sien_a = [];//2.27これかな？
+
+		//console.log("L1007.6.6 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);
+
+		for(let i=6; i<_enemy_o._card_a.length; i++){
+			_enemy_o._card_sien_a.push(_enemy_o._card_a[a[i]]);//たぶんここ？
+		}
+
+		//console.log("L1007.6.7 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);
+	}
+
+//console.log("L1007.6.4 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);//undefined
+
+
+	for(let i=0; i<100; i++){
+		setAutoCost_enemy();//つまりここ！
+		if(_enemy_o._totalCost <= 15){
+			break;
+		}
+	}
+
+//console.log("L1007.6.5 _enemy_o._card_sien_a[0]="+_enemy_o._card_sien_a[0]);//バグテル
+
+	//TODO 強制しえん
+
+	/*
+	//
+	if(_my_o._isForceHeal){
+		_enemy_o._card_sien_a[0] = _enemy_o._card_a[3] = _card_a[1];//敵もヒール
+	}	
+	else if(_isForceSenseEnemy){
+		_enemy_o._card_sien_a[0] = _enemy_o._card_a[3] = _card_a[3];//敵はセンス
+	}
+	*/
+
+//console.log("L1705 ",_card_a);
+
+/*
+	document.getElementById("sienImgEnemy").src = "card/"+_enemy_o._card_sien_a[0][1];
+	document.getElementById('taikiCard_enemy11').style.display = "none";
+*/
+
+}
+//setSelectDeck("easy");//test
+
+//init();
+
+//autoSelectAtk
+
+//startGame();//強制ゲームスタート
+
+</script>
