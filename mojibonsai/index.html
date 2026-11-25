@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>文字盆栽</title>
+<meta name="description" content="好きな文字を入れると、その文字らしい盆栽がすぐ育つ。たまに育たない文字も。">
+<meta property="og:title" content="文字盆栽">
+<meta property="og:description" content="好きな文字を入れると、その文字らしい盆栽がすぐ育つ。たまに育たない文字も。">
 <style>
 :root{--bg:#f3ecdc;--ink:#2b2118;--card:#fffaf0;--accent:#b5382c;--line:#d8cbb0}
 @media (prefers-color-scheme:dark){:root{--bg:#1d1a16;--ink:#efe6d4;--card:#2a251f;--line:#443b30}}
@@ -28,6 +31,17 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #score{font-size:14px;opacity:.7;margin-left:6px}
 #comment{line-height:1.8;margin:6px 0 0}
 #meta{font-size:12px;opacity:.6;margin-top:6px}
+#metrics{margin-top:10px;display:grid;gap:4px;font-size:12px}
+#metrics:empty{display:none}
+.m{display:grid;grid-template-columns:7.5em 1fr 4.5em;gap:8px;align-items:center}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.m b{text-align:right;font-weight:normal}
+#share{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#share button{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:7px 14px;font-size:14px}
+#share .x{background:#111;color:#fff;border-color:#111}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:8px 16px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.3s}
+#toast.on{opacity:.92}
 #hist{margin-top:14px;font-size:13px}
 #hist h2{font-size:14px;margin:0 0 4px;opacity:.7}
 #hist button{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:3px 10px;font-size:14px;margin:0 6px 6px 0}
@@ -36,7 +50,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 <body>
 <main>
 <h1>文字盆栽</h1>
-<p class="sub">好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字もあります。</p>
+<p class="sub">好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。</p>
 <form id="f">
   <input id="t" maxlength="6" placeholder="例：桜" autocomplete="off" aria-label="文字を入力">
   <button>育てる</button>
@@ -47,16 +61,25 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
   <p id="rank"></p>
   <div><span id="stars"></span><span id="score"></span></div>
   <p id="comment"></p>
+  <div id="metrics"></div>
   <div id="meta"></div>
+  <div id="share">
+    <button type="button" id="bNative" hidden>共有</button>
+    <button type="button" id="bX" class="x">𝕏 でシェア</button>
+    <button type="button" id="bImg">画像を保存</button>
+    <button type="button" id="bCopy">リンクをコピー</button>
+  </div>
 </div>
 <div id="hist" hidden><h2>育てた盆栽</h2><div id="histlist"></div></div>
 </main>
+<div id="toast"></div>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 {const r=Math.min(window.devicePixelRatio||1,2);cv.width=640*r;cv.height=520*r;}
 const DPR=cv.width/640;
+const FONT='"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP","WenQuanYi Zen Hei",serif';
 
 /* ---------- 乱数・文字分類 ---------- */
 function hashStr(s){let h=2166136261>>>0;for(const ch of s){h^=ch.codePointAt(0);h=Math.imul(h,16777619)>>>0;h^=h>>>13;h=Math.imul(h,0x5bd1e995)>>>0;}
@@ -75,36 +98,108 @@ const PAL={
   kata:['#c0392b','#e67e22','#d35400','#f1c40f','#a93226'],
   latin:['#7bc96f','#a5d86e','#5fb878','#c3e88d'],
   digit:['#e0b628','#f2d04b','#c99a1a','#f7e08a'],
-  other:null,
-  dry:['#8a6d3b','#a1887f','#6d4c41','#b59b6a']
+  dry:['#8a6d3b','#a1887f','#6d4c41','#b59b6a'],
+  afro:['#3b2a20','#2a1d16','#4a352a']
 };
 function palFor(c,rng){if(c==='other'){const h=rng()*360;return[`hsl(${h},70%,60%)`,`hsl(${(h+70)%360},70%,60%)`,`hsl(${(h+150)%360},70%,60%)`,`hsl(${(h+230)%360},70%,60%)`];}return PAL[c];}
 
-/* 必ず育つ文字 / 必ず失敗する文字 */
+/* 文字の意味に合わせた色・実り (n=色の呼び名, f=枝先に実る絵文字) */
+const T=(n,pal,f)=>({n,pal,f});
+const THEME={
+ '赤':T('真っ赤',['#d62828','#e5383b','#ba181b']),'紅':T('紅',['#d62828','#e5383b','#ba181b']),'朱':T('朱',['#e4572e','#f26b3a']),
+ '青':T('青',['#1e6fd9','#3a8ee6','#5aa9f0']),'蒼':T('蒼',['#1e6fd9','#3a8ee6','#5aa9f0']),
+ '緑':T('鮮緑',['#20a84a','#3cc864','#168a3a']),'黄':T('黄',['#f5d000','#ffe14d','#ffcc00']),
+ '白':T('純白',['#ffffff','#f1f1f1','#dfe6ee']),'雪':T('雪白',['#ffffff','#e8f1fa','#cfe3f5'],'❄️'),
+ '黒':T('漆黒',['#222','#3a3a4a','#111']),'墨':T('墨',['#222','#3a3a4a','#111']),'闇':T('闇',['#1a1a2e','#2a2a44','#111']),
+ '夜':T('夜空',['#1b1f4b','#2c3270','#3a2a6a'],'⭐'),'桃':T('桃',['#ffb3c7','#ff8fb0','#ffd1dc'],'🍑'),
+ '紫':T('紫',['#7b3fb5','#9b59d0','#b07ae0']),'金':T('金',['#ffd54a','#f0b400','#ffe27a'],'💰'),'銀':T('銀',['#cfd8dc','#b0bec5','#eceff1']),
+ '火':T('炎',['#ff6a00','#ff3d00','#ffb300'],'🔥'),'炎':T('炎',['#ff6a00','#ff3d00','#ffb300'],'🔥'),
+ '水':T('水色',['#26a6d1','#4fc3f7','#0288d1'],'💧'),'海':T('海色',['#0277bd','#26a6d1','#80deea'],'🌊'),
+ '月':T('月光',['#fff3b0','#ffe680','#fff9d6'],'🌙'),'星':T('星',['#fff3b0','#ffe680','#c5cae9'],'⭐'),
+ '猫':T('猫毛',['#b9a38a','#e0b07a','#8d7b68'],'🐱'),'犬':T('犬毛',['#c19a6b','#a67c52','#e0c097'],'🐶'),
+ '魚':T('魚鱗',['#7fb7be','#a8d5e2','#5b9aa0'],'🐟'),'鳥':T('羽',['#8ecae6','#ffd166','#e5989b'],'🐦'),
+ '蛙':T('蛙',['#6bbf59','#8bd36e','#4a9a3c'],'🐸'),'牛':T('牛',['#e8e0d0','#8d6e63','#f5f0e6'],'🐮'),
+ '馬':T('馬',['#a9744f','#8b5a2b','#c68e5f'],'🐴'),'龍':T('龍',['#1fa29a','#2ec4b6','#0b7a75'],'🐉'),
+ '鬼':T('鬼',['#d94841','#b23a48','#e76f51'],'👹'),'酒':T('酒',['#e8c872','#d4a94a','#f3e2a9'],'🍶'),
+ '茶':T('茶',['#8fb36a','#a7c97f','#6f9a4c'],'🍵'),'肉':T('肉',['#c0504d','#d9726c','#a63d3a'],'🍖'),
+ '米':T('米',['#fffaf0','#f5ecd5','#e9dfc4'],'🍚'),'麺':T('麺',['#f0d58c','#e8c765','#f7e4aa'],'🍜'),
+ '寿':T('寿',['#e8f5e9','#c8e6c9','#ef9a9a'],'🍣'),'愛':T('愛',['#ff4d6d','#ff8fa3','#ffb3c1'],'💗'),
+ '夢':T('夢',['#b39ddb','#ce93d8','#9fa8da'],'💤'),'骨':T('骨',['#f3f0e6','#ddd8c8','#cfc9b8'],'💀'),
+ '雷':T('稲妻',['#ffe600','#ffd000','#fff176'],'⚡'),'雨':T('雨',['#6fa8dc','#8fb8e8','#a9c9ee'],'☔'),
+ '花':T('花',['#ffb7c5','#ff8fab','#ffd6e0'],'🌸'),'虫':T('虫',['#7cb342','#9ccc65','#558b2f'],'🐛'),
+ '猿':T('猿',['#8d6e63','#a1887f','#bcaaa4'],'🐵'),'鯛':T('鯛',['#f08080','#f4a6a6','#e57373'],'🐟'),
+ '犬':T('犬毛',['#c19a6b','#a67c52','#e0c097'],'🐶'),'茸':T('茸',['#c0392b'],'🍄')
+};
+const WORDS={'ufo':'ufo','宇宙':'ufo','アフロ':'afro','afro':'afro','ハゲ':'bald','はげ':'bald','禿':'bald','顔':'face','かお':'face'};
 const SURE_OK=new Set([...'松桜竹梅菊楓柳森木林盆栽福寿']);
 const SURE_BAD={'枯':'withered','死':'withered','無':'withered','空':'withered','草':'weed','雑':'weed','茸':'mushroom','菌':'mushroom','芽':'sprout','ん':'sprout','0':'sprout','０':'sprout'};
 const BAD_MODES=['withered','noodle','mushroom','sprout','weed'];
+const GAGS=['ufo','face','afro','giant','bald'];
 const STYLES=['chokkan','shakan','moyogi','kengai','hokidachi'];
+const SP={'桜':'hira','楓':'kata','紅':'kata','菊':'digit','金':'digit'};
+
+/* ---------- 字形の分析（実際に文字を描いて測る） ---------- */
+function glyphInfo(chars){
+  try{
+    const n=Math.min(chars.length,6),S=120,W=S*n;
+    const off=document.createElement('canvas');off.width=W;off.height=S;
+    const x=off.getContext('2d',{willReadFrequently:true});
+    x.fillStyle='#000';x.font=`bold ${S*.86}px ${FONT}`;x.textAlign='center';x.textBaseline='middle';
+    chars.slice(0,n).forEach((c,i)=>x.fillText(c,S*i+S/2,S*.54));
+    const d=x.getImageData(0,0,W,S).data;
+    const lit=(px,py)=>px>=0&&px<W&&py>=0&&py<S&&d[(py*W+px)*4+3]>128;
+    let ink=0,sx=0,sy=0,minx=W,maxx=0,miny=S,maxy=0;
+    for(let y=0;y<S;y++)for(let px=0;px<W;px++)if(lit(px,y)){ink++;sx+=px;sy+=y;if(px<minx)minx=px;if(px>maxx)maxx=px;if(y<miny)miny=y;if(y>maxy)maxy=y;}
+    if(ink<60)return null;
+    const bw=maxx-minx+1,bh=maxy-miny+1;
+    let tot=0,match=0;const m=minx+maxx;
+    for(let y=miny;y<=maxy;y+=2)for(let px=minx;px<=maxx;px+=2)if(lit(px,y)){tot++;if(lit(m-px,y)||lit(m-px+1,y)||lit(m-px-1,y))match++;}
+    const step=Math.max(6,Math.ceil(Math.sqrt(bw*bh/230)));
+    const pts=[];
+    for(let gy=miny;gy<=maxy;gy+=step)for(let gx=minx;gx<=maxx;gx+=step){
+      let c=0,t=0;for(let yy=gy;yy<gy+step;yy+=2)for(let xx=gx;xx<gx+step;xx+=2){t++;if(lit(xx,yy))c++;}
+      if(c/t>=.3)pts.push({x:gx+step/2-minx-bw/2,y:gy+step/2-miny-bh/2});
+    }
+    return{sym:tot?match/tot:0,cx:(sx/ink-(minx+maxx)/2)/bw,cy:(sy/ink-miny)/bh,dens:ink/(bw*bh),bw,bh,step,pts};
+  }catch(e){return null;}
+}
 
 /* ---------- 樹木生成 ---------- */
+const TREE_MODES=['ok','glyph','ufo','face','giant'];
 function build(text){
-  const chars=Array.from(text);
-  const seed=hashStr(text), rng=rngFrom(seed);
+  const chars=Array.from(text),seed=hashStr(text),rng=rngFrom(seed);
+  const sure=chars.some(c=>SURE_OK.has(c));
   let mode='ok';
-  if(chars.length===1&&SURE_BAD[text])mode=SURE_BAD[text];
-  else if(!chars.some(c=>SURE_OK.has(c))&&seed%7===0)mode=BAD_MODES[(seed>>>8)%BAD_MODES.length];
-  const style=STYLES[(seed>>>4)%5];
-  const SP={'桜':'hira','楓':'kata','紅':'kata','菊':'digit','金':'digit'};
+  if(WORDS[text.toLowerCase()])mode=WORDS[text.toLowerCase()];
+  else if(chars.length===1&&SURE_BAD[text])mode=SURE_BAD[text];
+  else if(!sure&&seed%7===0)mode=BAD_MODES[(seed>>>8)%BAD_MODES.length];
+  else if(!sure&&seed%9===4)mode=GAGS[(seed>>>6)%GAGS.length];
+  const info=(TREE_MODES.includes(mode))?glyphInfo(chars):null;
+  if(mode==='ok'&&info&&chars.length<=2&&(seed>>>10)%4===0)mode='glyph';
   const classes=chars.map(c=>SP[c]||cls(c));
+  const th=chars.map(c=>THEME[c]).find(Boolean)||null;
+  const fruit=(mode==='ok'&&th&&th.f)?th.f:null;
   const els=[],pads=[];
   const dry=mode==='withered';
   const sc=1+Math.min(chars.length,6)*0.05;
-  const maxD=mode==='withered'?2:(chars.length>=2?3:2);
-  const side=rng()<.5?-1:1;
-  const padPal=()=>{const c=classes[Math.floor(rng()*classes.length)];return{c,p:dry?PAL.dry:palFor(c,rng)};};
+  const maxD=dry?2:(chars.length>=2?3:2);
+  let side=rng()<.5?-1:1;
+  let style=STYLES[(seed>>>4)%5];
+  if(info&&TREE_MODES.includes(mode)){
+    if(Math.abs(info.cx)>0.04){style='shakan';side=info.cx>0?1:-1;}
+    else if(info.cy>0.57)style='kengai';
+    else if(info.sym>0.8)style=info.dens>0.36?'hokidachi':'chokkan';
+    else style='moyogi';
+  }
+  if(mode==='glyph'||mode==='face'||mode==='afro')style='chokkan';
+  const dens=info?info.dens:.3;
+  const tw=10+dens*22;
+  const padPal=()=>{const i=Math.floor(rng()*chars.length),t=THEME[chars[i]];
+    if(t&&!dry)return{c:'theme',p:t.pal};
+    const c=classes[i];return{c,p:dry?PAL.dry:palFor(c,rng)};};
 
   function branch(x,y,ang,len,w,depth,t0,o={}){
-    const n=Math.max(4,Math.round(len/14)), seg=len/n, dur=len/300;
+    const n=Math.max(4,Math.round(len/14)),seg=len/n,dur=len/300;
     let px=x,py=y,a=ang;
     for(let i=0;i<n;i++){
       let drift=0;
@@ -114,42 +209,76 @@ function build(text){
         else if(style==='moyogi')drift=Math.sin(i*1.05)*.13*side;
         else if(style==='kengai')drift=.075*side;
         else drift=(rng()-.5)*.03;
-      }else drift=(rng()-.5)*.22+(dry?.07*side:0)+(o.wobble?Math.sin(i*.8)*o.wobble:0);
+      }else drift=(rng()-.5)*(o.straight?.02:.22)+(dry?.07*side:0)+(o.wobble?Math.sin(i*.8)*o.wobble:0);
       a+=drift;
-      const nx=px+Math.cos(a)*seg, ny=py+Math.sin(a)*seg;
-      els.push({x0:px,y0:py,x1:nx,y1:ny,w0:w*(1-i/n*.45),w1:w*(1-(i+1)/n*.45),ts:t0+i/n*dur,te:t0+(i+1)/n*dur,c:o.color});
+      const nx=px+Math.cos(a)*seg,ny=py+Math.sin(a)*seg;
+      els.push({x0:px,y0:py,x1:nx,y1:ny,w0:w*(1-i/n*.45),w1:w*(1-(i+1)/n*.45),ts:t0+i/n*dur,te:t0+(i+1)/n*dur,c:o.color,t:depth===0});
       px=nx;py=ny;
       const te=t0+(i+1)/n*dur;
       if(depth<maxD&&!o.noKids){
         const fan=depth===0&&style==='hokidachi';
-        if(fan){ if(i===n-1){for(let k=0;k<5;k++){const aa=-Math.PI/2+(k-2)*.42+(rng()-.5)*.15;branch(px,py,aa,len*(1.1+rng()*.5),w*.55,depth+1,te);}} }
+        if(fan){if(i===n-1){for(let k=0;k<5;k++){const aa=-Math.PI/2+(k-2)*.42+(rng()-.5)*.15;branch(px,py,aa,len*(1.1+rng()*.5),w*.55,depth+1,te);}}}
         else if(i>=(depth===0?2:1)&&i<n-1&&rng()<(depth===0?.5:.4)){
           const s=(i%2?1:-1)*(rng()<.8?1:-1);
           branch(px,py,a+s*(.55+rng()*.6),len*(.42+rng()*.25),w*.6,depth+1,te);
         }
       }
     }
-    // 先端の葉
-    if(!o.noPad&&(depth>=1||maxD===0||o.forcePad)){
+    if(!o.noPad&&(depth>=1||o.forcePad)){
       const pp=padPal();
-      pads.push({x:px,y:py,r:(dry?9:(depth>=maxD?22:17)+rng()*12)*(depth===0?1.3:1)*sc,ts:t0+dur,kind:o.kind||'blob',cls:pp.c,pal:pp.p,seed:rng()});
+      pads.push({x:px,y:py,r:(dry?9:(depth>=maxD?22:17)+rng()*12)*(depth===0?1.3:1)*sc,ts:t0+dur,kind:o.kind||'blob',cls:pp.c,pal:pp.p,seed:rng(),nb:dry?3:6+Math.round(dens*10)});
     }
     return{x:px,y:py,end:t0+dur};
   }
 
   const H=250*sc;
-  if(mode==='ok'||mode==='withered'){
-    let ang=-Math.PI/2,len=H;
+  let face=null,faceKind=null;
+  if(mode==='ok'||dry||mode==='ufo'||mode==='giant'||mode==='face'){
+    let ang=-Math.PI/2,len=H,w=(dry?10:tw)*sc;
     if(style==='shakan')ang+=side*.45;
     if(style==='kengai'){len=H*1.05;ang+=side*.25;}
     if(style==='hokidachi')len=H*.4;
-    if(dry){len*=.75;}
-    branch(0,0,ang,len,dry?10:17*sc,0,0);
-    if(!dry){ // 幹の先にも葉
-      const last=els[els.length-1];
-      // 先端は branch 内の depth>=1 のみ。幹先端にも葉を足す
-      if(style!=='hokidachi'){const pp=padPal();pads.push({x:last.x1,y:last.y1,r:(30+rng()*10)*sc,ts:last.te,kind:'blob',cls:pp.c,pal:pp.p,seed:rng()});}
+    if(dry)len*=.75;
+    if(mode==='giant'){len*=1.2;w*=1.5;}
+    if(mode==='face'){len=H*.6;w=34;}
+    branch(0,0,ang,len,w,0,0);
+    if(!dry&&style!=='hokidachi'){
+      const last=els[els.length-1],pp=padPal();
+      pads.push({x:last.x1,y:last.y1,r:(30+rng()*10)*sc,ts:last.te,kind:'blob',cls:pp.c,pal:pp.p,seed:rng(),nb:6+Math.round(dens*10)});
     }
+    if(mode==='face'){
+      const tr=els.filter(e=>e.t),m=tr[Math.floor(tr.length*.35)];
+      face={x:(m.x0+m.x1)/2,y:(m.y0+m.y1)/2,w:(m.w0+m.w1)/2};
+      faceKind=['happy','sleepy','angry','surprised'][(seed>>>3)%4];
+    }
+    if(fruit){
+      const c=pads.filter(p=>p.kind==='blob').slice();
+      for(let i=c.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[c[i],c[j]]=[c[j],c[i]];}
+      c.slice(0,6).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.8,y:p.y+p.r*.5,r:11+rng()*4,ts:p.ts+.08,kind:'emoji',e:fruit,pal:['#000'],cls:'emoji'}));
+    }
+  }else if(mode==='glyph'){
+    const trunk=branch(0,0,-Math.PI/2,150*sc,tw*sc,0,0,{noKids:true,straight:true,noPad:true});
+    const top=els[els.length-1];
+    const k=Math.min(2.1,250/info.bw,215/info.bh);
+    const ccx=top.x1,ccy=top.y1-12-info.bh*k/2;
+    const th2=th?th.pal:(palFor(classes[0],rng));
+    const pal=classes[0]==='kanji'&&!th?['#3b7048','#2f5d3a','#4a7d52','#5d9468']:th2;
+    const low=info.pts.filter(p=>p.y>info.bh*.15).sort((a,b)=>b.y-a.y).slice(0,12);
+    for(let i=0;i<4&&low.length;i++){
+      const p=low[Math.floor(rng()*low.length)];
+      els.push({x0:top.x1,y0:top.y1,x1:ccx+p.x*k,y1:ccy+p.y*k,w0:6,w1:3,ts:top.te,te:top.te+.12});
+    }
+    for(const p of info.pts){
+      const rel=(p.y+info.bh/2)/info.bh;
+      pads.push({x:ccx+p.x*k,y:ccy+p.y*k,r:info.step*k*.78,ts:top.te+.1+(1-rel)*.35+rng()*.04,kind:'dot',cls:'dot',pal,seed:rng()});
+    }
+  }else if(mode==='afro'){
+    branch(0,0,-Math.PI/2,140,16,0,0,{noKids:true,straight:true,noPad:true});
+    const l=els[els.length-1];
+    pads.push({x:l.x1,y:l.y1-62,r:108,ts:l.te,kind:'blob',cls:'afro',pal:PAL.afro,seed:rng(),nb:22});
+    pads.push({x:l.x1,y:l.y1-56,r:40,ts:l.te+.08,kind:'emoji',e:'😎',pal:['#000'],cls:'emoji'});
+  }else if(mode==='bald'){
+    branch(0,0,-Math.PI/2,120,15,0,0,{noKids:true,straight:true,forcePad:true,kind:'leaf'});
   }else if(mode==='noodle'){
     branch(0,0,-Math.PI/2,330,4,0,0,{noKids:true,wobble:.16,color:'#6b8e4e',forcePad:true,kind:'leaf',straight:true});
   }else if(mode==='mushroom'){
@@ -160,44 +289,39 @@ function build(text){
     branch(0,0,-Math.PI/2,34,3.5,0,0,{noKids:true,color:'#7cb342',straight:true,forcePad:true,kind:'pair'});
   }else if(mode==='weed'){
     for(let k=0;k<16;k++){
-      const ang=-Math.PI/2+(rng()-.5)*1.7;
-      branch((rng()-.5)*90,0,ang,50+rng()*70,2.5,0,k*0.01,{noKids:true,color:['#6a8f3a','#7cb342','#558b2f'][k%3],noPad:true,wobble:.05,straight:true});
+      branch((rng()-.5)*90,0,-Math.PI/2+(rng()-.5)*1.7,50+rng()*70,2.5,0,k*0.01,{noKids:true,color:['#6a8f3a','#7cb342','#558b2f'][k%3],noPad:true,wobble:.05,straight:true});
     }
-    pads.push({x:0,y:-110,r:20,ts:0.1,kind:'puff',cls:'other',pal:['#fff'],seed:0});
-    const f=els[els.length-1];
+    pads.push({x:0,y:-110,r:20,ts:.1,kind:'puff',cls:'other',pal:['#fff'],seed:0});
   }
-  // 時間の正規化 (成長 0..0.8、葉は +0.2)
   let mx=0;for(const e of els)mx=Math.max(mx,e.te);
   for(const p of pads)mx=Math.max(mx,p.ts);
-  const k=0.8/(mx||1);
-  for(const e of els){e.ts*=k;e.te*=k;}
-  for(const p of pads){p.ts*=k;
-    p.blobs=[];const nb=p.kind==='blob'?(dry?3:8):0;
+  const kk=0.8/(mx||1);
+  for(const e of els){e.ts*=kk;e.te*=kk;}
+  for(const p of pads){p.ts*=kk;
+    p.blobs=[];const nb=p.kind==='blob'?(p.nb||8):0;
     for(let i=0;i<nb;i++){const ang=rng()*6.283,d=Math.sqrt(rng())*p.r*.8;
       p.blobs.push({dx:Math.cos(ang)*d,dy:Math.sin(ang)*d*.6,r:p.r*(.45+rng()*.35),c:p.pal[Math.floor(rng()*p.pal.length)],ph:rng()*6.28});}}
   let minX=0,maxX=0,minY=0;
   for(const e of els){minX=Math.min(minX,e.x1);maxX=Math.max(maxX,e.x1);minY=Math.min(minY,e.y1);}
   for(const p of pads){minX=Math.min(minX,p.x-p.r*1.1);maxX=Math.max(maxX,p.x+p.r*1.1);minY=Math.min(minY,p.y-p.r*1.1);}
-  const fit=Math.min(1,285/Math.max(1,-minX,maxX),345/Math.max(1,-minY));
+  const fit=Math.min(1,285/Math.max(1,-minX,maxX),(mode==='ufo'?280:345)/Math.max(1,-minY));
   const potCols=['#6b4f3a','#3e5c76','#8c3b3b','#4a6b57','#7a6a8a','#c4a35a'];
-  return{fit,text,chars,seed,mode,style,classes,els,pads,potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,
-    dom:classes[0],evalSeed:rng};
+  return{fit,minY,text,chars,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
+    potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,dom:classes[0]};
 }
 
 /* ---------- 描画 ---------- */
-const GY=400; // 土の高さ(canvas座標)
+const GY=400;
 const ease=p=>1-Math.pow(1-p,3);
 const back=p=>{const c=1.7;return 1+(c+1)*Math.pow(p-1,3)+c*Math.pow(p-1,2);};
-function shade(hex,a){ // 簡易明度調整
-  const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;
-  const f=v=>Math.max(0,Math.min(255,Math.round(v+a)));return`rgb(${f(r)},${f(g)},${f(b)})`;}
+function shade(hex,a){const n=parseInt(hex.slice(1),16);const f=v=>Math.max(0,Math.min(255,Math.round(v+a)));return`rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`;}
 function drawBG(g){
+  const night=g&&g.th&&g.chars.includes('夜');
   const gr=ctx.createLinearGradient(0,0,0,520);
-  gr.addColorStop(0,'#f6efdd');gr.addColorStop(1,'#e6d8b8');
+  if(night){gr.addColorStop(0,'#1c2150');gr.addColorStop(1,'#3a3470');}else{gr.addColorStop(0,'#f6efdd');gr.addColorStop(1,'#e6d8b8');}
   ctx.fillStyle=gr;ctx.fillRect(0,0,640,520);
-  const sunCol={kanji:'#9bb88f',hira:'#f3b9c6',kata:'#e8a46a',latin:'#9cc9d8',digit:'#efd36b',other:'#c9a7e0'}[g?g.dom:'kanji'];
+  const sunCol=g&&g.th?g.th.pal[0]:{kanji:'#9bb88f',hira:'#f3b9c6',kata:'#e8a46a',latin:'#9cc9d8',digit:'#efd36b',other:'#c9a7e0'}[g?g.dom:'kanji'];
   ctx.globalAlpha=.35;ctx.fillStyle=sunCol;ctx.beginPath();ctx.arc(480,120,70,0,6.283);ctx.fill();ctx.globalAlpha=1;
-  // 台
   ctx.fillStyle='#7a5a3a';ctx.fillRect(0,GY+75,640,70);
   ctx.fillStyle='#8e6a45';ctx.fillRect(0,GY+75,640,8);
 }
@@ -205,26 +329,31 @@ function drawPot(g){
   const c=g?g.potCol:'#6b4f3a',s=g?g.potShape:0;
   ctx.save();ctx.translate(320,GY);
   ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(0,76,130,10,0,0,6.283);ctx.fill();
-  // 土
   ctx.fillStyle='#4a3626';ctx.beginPath();ctx.ellipse(0,2,100,13,0,0,6.283);ctx.fill();
   ctx.fillStyle='#5d8a45';for(let i=0;i<14;i++){ctx.beginPath();ctx.ellipse(-80+i*12.5,1+Math.sin(i*2)*3,6,2.5,0,0,6.283);ctx.fill();}
-  // 鉢
   const top=s===1?118:108,bot=s===0?82:s===1?100:70,h=s===2?64:70;
   ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(-top,6);ctx.lineTo(top,6);ctx.lineTo(bot,6+h);ctx.lineTo(-bot,6+h);ctx.closePath();ctx.fill();
-  ctx.fillStyle=shade(c.startsWith('#')?c:'#6b4f3a',30);ctx.fillRect(-top-6,2,top*2+12,12);
+  ctx.fillStyle=shade(c,30);ctx.fillRect(-top-6,2,top*2+12,12);
   ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(-top+10,18,16,h-24);
   ctx.fillStyle=shade(c,-25);ctx.fillRect(-bot+8,6+h,26,8);ctx.fillRect(bot-34,6+h,26,8);
+  if(g&&g.mode==='giant'){ // 鉢が割れる
+    ctx.strokeStyle='#1b120b';ctx.lineWidth=3;ctx.lineJoin='round';ctx.beginPath();
+    ctx.moveTo(-10,8);ctx.lineTo(-2,28);ctx.lineTo(-18,44);ctx.lineTo(-6,62);ctx.lineTo(-14,76);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(40,8);ctx.lineTo(34,24);ctx.lineTo(48,38);ctx.stroke();
+    ctx.strokeStyle='#5a3d2b';ctx.lineWidth=7;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-60,10);ctx.quadraticCurveTo(-130,30,-150,76);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(55,10);ctx.quadraticCurveTo(120,35,142,76);ctx.stroke();
+  }
   ctx.restore();
 }
 function drawSeal(g){
-  if(!g)return;const ch=g.chars.slice(0,4);
-  const x=568,y=438,s=52;
+  if(!g)return;const ch=g.chars.slice(0,4),x=568,y=438,s=52;
   ctx.save();ctx.fillStyle='#b5382c';ctx.fillRect(x,y,s,s);
   ctx.fillStyle='#fbeee0';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.font=`bold ${ch.length===1?36:ch.length<=2?22:20}px "Hiragino Mincho ProN","Yu Mincho",serif`;
+  ctx.font=`bold ${ch.length===1?36:ch.length<=2?22:20}px ${FONT}`;
   if(ch.length===1)ctx.fillText(ch[0],x+s/2,y+s/2+1);
   else if(ch.length===2){ctx.fillText(ch[0],x+s/2,y+14);ctx.fillText(ch[1],x+s/2,y+38);}
-  else{ctx.font='bold 20px serif';ch.forEach((c,i)=>ctx.fillText(c,x+(i%2?39:13),y+(i<2?14:38)));}
+  else ch.forEach((c,i)=>ctx.fillText(c,x+(i%2?39:13),y+(i<2?14:38)));
   ctx.restore();
 }
 function drawPad(p,tm,t){
@@ -236,11 +365,16 @@ function drawPad(p,tm,t){
     for(const b of p.blobs){
       const sw=Math.sin(tm*1.6+b.ph)*1.5*(t>=1?1:0);
       ctx.fillStyle=b.c;ctx.globalAlpha=.95;ctx.beginPath();
-      const flat=cl==='kanji'?.6:1;
-      ctx.ellipse(b.dx+sw,b.dy,b.r*s,b.r*s*flat*(cl==='kanji'?1:.85),0,0,6.283);ctx.fill();
+      ctx.ellipse(b.dx+sw,b.dy,b.r*s,b.r*s*(cl==='kanji'?.6:.85),0,0,6.283);ctx.fill();
     }
     if(cl==='kanji'){ctx.strokeStyle='rgba(20,50,25,.35)';ctx.lineWidth=1;for(let i=0;i<10;i++){const a=i/10*6.283;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*p.r*.9*s,Math.sin(a)*p.r*.55*s);ctx.stroke();}}
     ctx.globalAlpha=1;
+  }else if(p.kind==='dot'){
+    ctx.fillStyle=p.pal[Math.floor(p.seed*p.pal.length)];
+    ctx.beginPath();ctx.ellipse(Math.sin(tm*1.5+p.seed*20)*(t>=1?1:0),0,p.r*s,p.r*s*.9,0,0,6.283);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.22)';ctx.lineWidth=1;ctx.stroke();
+  }else if(p.kind==='emoji'){
+    ctx.font=`${p.r*2*s}px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(p.e,0,0);
   }else if(p.kind==='cap'){
     ctx.fillStyle=p.pal[0];ctx.beginPath();ctx.ellipse(0,0,p.r*s,p.r*.7*s,0,Math.PI,0);ctx.closePath();ctx.fill();
     ctx.fillStyle='#fff';[[-.45,-.25,.14],[.1,-.45,.12],[.5,-.2,.13],[-.1,-.15,.09]].forEach(([a,b,c])=>{ctx.beginPath();ctx.arc(a*p.r*s,b*p.r*s,c*p.r*s,0,6.283);ctx.fill();});
@@ -253,6 +387,38 @@ function drawPad(p,tm,t){
   }
   ctx.restore();
 }
+function drawFace(g,t){
+  const f=g.face;if(!f||t<.5)return;
+  ctx.save();ctx.translate(320+f.x,GY+f.y);ctx.globalAlpha=Math.min(1,(t-.5)/.2);
+  const u=f.w*1.05,k=g.faceKind;
+  const eye=x=>{ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,0,u*.2,0,6.283);ctx.fill();ctx.fillStyle='#111';ctx.beginPath();ctx.arc(x,u*.02,u*.1,0,6.283);ctx.fill();};
+  ctx.strokeStyle='#111';ctx.lineWidth=u*.07;ctx.lineCap='round';
+  if(k==='sleepy'){[-1,1].forEach(d=>{ctx.beginPath();ctx.arc(d*u*.28,-u*.04,u*.16,.15,Math.PI-.15);ctx.stroke();});}
+  else{eye(-u*.28);eye(u*.28);}
+  if(k==='angry'){ctx.beginPath();ctx.moveTo(-u*.45,-u*.3);ctx.lineTo(-u*.12,-u*.17);ctx.moveTo(u*.45,-u*.3);ctx.lineTo(u*.12,-u*.17);ctx.stroke();}
+  ctx.beginPath();
+  if(k==='happy'){ctx.arc(0,u*.2,u*.22,.2,Math.PI-.2);ctx.stroke();}
+  else if(k==='sleepy'){ctx.fillStyle='#511';ctx.arc(0,u*.4,u*.08,0,6.283);ctx.fill();}
+  else if(k==='angry'){ctx.moveTo(-u*.2,u*.5);ctx.lineTo(u*.2,u*.42);ctx.stroke();}
+  else{ctx.fillStyle='#511';ctx.ellipse(0,u*.42,u*.1,u*.14,0,0,6.283);ctx.fill();}
+  ctx.fillStyle='rgba(255,110,110,.45)';[-1,1].forEach(d=>{ctx.beginPath();ctx.arc(d*u*.45,u*.22,u*.1,0,6.283);ctx.fill();});
+  if(k==='sleepy'){ctx.fillStyle='#fff';ctx.strokeStyle='#445';ctx.font=`bold ${u*.45}px sans-serif`;ctx.fillText('z',u*.6,-u*.5);ctx.fillText('Z',u*.85,-u*.9);}
+  ctx.restore();
+}
+function drawUFO(g,t,tm){
+  const p=ease(Math.min(1,t/.9));
+  const topY=Math.max(60,GY+g.minY*g.fit-60);
+  const ux=320+Math.sin(tm*1.3)*22,uy=-50+(topY-(-50))*p;
+  ctx.save();
+  const bt=GY+g.minY*g.fit-10;
+  ctx.fillStyle='rgba(190,255,210,.28)';ctx.beginPath();ctx.moveTo(ux-26,uy+14);ctx.lineTo(ux+26,uy+14);ctx.lineTo(ux+90,bt+70);ctx.lineTo(ux-90,bt+70);ctx.closePath();ctx.fill();
+  if(t>=1){ctx.font='34px "Noto Color Emoji","Apple Color Emoji",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🐄',ux+Math.sin(tm*2)*10,uy+30+((tm*40)%(bt-uy+30)));}
+  ctx.fillStyle='#9fe3ff';ctx.beginPath();ctx.ellipse(ux,uy-6,22,18,0,Math.PI,0);ctx.fill();
+  ctx.fillStyle='#aab4c0';ctx.beginPath();ctx.ellipse(ux,uy+4,52,13,0,0,6.283);ctx.fill();
+  ctx.fillStyle='#7d8895';ctx.beginPath();ctx.ellipse(ux,uy+8,40,7,0,0,Math.PI);ctx.fill();
+  for(let i=-2;i<=2;i++){ctx.fillStyle=(Math.floor(tm*3)+i)%2?'#ffe66d':'#ff6b6b';ctx.beginPath();ctx.arc(ux+i*16,uy+5+Math.abs(i)*.8,3,0,6.283);ctx.fill();}
+  ctx.restore();
+}
 function drawTree(g,t,tm){
   ctx.save();ctx.translate(320,GY);ctx.scale(g.fit,g.fit);ctx.translate(-320,-GY);
   ctx.lineCap='round';
@@ -261,25 +427,27 @@ function drawTree(g,t,tm){
     for(const e of g.els){
       if(t<=e.ts)continue;
       const p=Math.min(1,(t-e.ts)/(e.te-e.ts));
-      const x1=e.x0+(e.x1-e.x0)*p,y1=e.y0+(e.y1-e.y0)*p;
-      const w=e.w0+(e.w1-e.w0)*p;
+      const x1=e.x0+(e.x1-e.x0)*p,y1=e.y0+(e.y1-e.y0)*p,w=e.w0+(e.w1-e.w0)*p;
       if(e.c){if(pass===0)continue;ctx.strokeStyle=e.c;ctx.lineWidth=w;}
       else if(pass===0){ctx.strokeStyle=shadeB;ctx.lineWidth=w;}
       else{ctx.strokeStyle=g.mode==='withered'?'#8a7766':'#7a5a3e';ctx.lineWidth=w*.4;}
-      if(!e.c||pass===1){ctx.beginPath();ctx.moveTo(320+e.x0-(pass?w*.15:0),GY+e.y0);ctx.lineTo(320+x1-(pass?w*.15:0),GY+y1);ctx.stroke();}
+      const o=(!e.c&&pass)?w*.15:0;
+      ctx.beginPath();ctx.moveTo(320+e.x0-o,GY+e.y0);ctx.lineTo(320+x1-o,GY+y1);ctx.stroke();
     }
   }
+  drawFace(g,t);
   for(const p of g.pads)drawPad(p,tm,t);
   ctx.restore();
+  if(g.mode==='ufo')drawUFO(g,t,tm);
 }
 
 /* ---------- 舞い散る葉 ---------- */
 let parts=[];
 function spawnPart(g){
-  const cand=g.pads.filter(p=>p.kind==='blob');if(!cand.length)return;
+  const cand=g.pads.filter(p=>p.kind==='blob'||p.kind==='dot');if(!cand.length)return;
   const p=cand[Math.floor(Math.random()*cand.length)];
   const col=p.pal[Math.floor(Math.random()*p.pal.length)];
-  parts.push({x:320+p.x+(Math.random()-.5)*p.r,y:GY+p.y,vy:18+Math.random()*20,ph:Math.random()*6.28,c:col,life:0,s:3+Math.random()*3});
+  parts.push({x:320+(320*0)+ (p.x-0)*g.fit+(Math.random()-.5)*p.r*g.fit,y:GY+p.y*g.fit,vy:18+Math.random()*20,ph:Math.random()*6.28,c:col,life:0,s:3+Math.random()*3});
 }
 function drawParts(dt){
   for(const q of parts){q.life+=dt;q.y+=q.vy*dt;q.x+=Math.sin(q.life*2+q.ph)*18*dt;
@@ -290,11 +458,9 @@ function drawParts(dt){
 }
 
 /* ---------- 評価 ---------- */
-const STYLE_N={chokkan:['直幹','まっすぐ天を突く直幹。力強さと品格があります。'],
-  shakan:['斜幹','風に身を任せる斜幹。動きのある風情です。'],
-  moyogi:['曲幹','ゆったりうねる曲幹。年月を重ねた味わいが出ています。'],
-  kengai:['懸崖','崖から垂れ下がる懸崖。野趣あふれる大胆な姿です。'],
-  hokidachi:['箒立ち','根元から扇状に広がる箒立ち。端正で整った樹形です。']};
+const STYLE_N={chokkan:'直幹',shakan:'斜幹',moyogi:'曲幹',kengai:'懸崖',hokidachi:'箒立ち'};
+const STYLE_D={chokkan:'まっすぐ天を突く直幹。力強さと品格があります。',shakan:'風に身を任せる斜幹。動きのある風情です。',
+  moyogi:'ゆったりうねる曲幹。年月を重ねた味わいが出ています。',kengai:'崖から垂れ下がる懸崖。野趣あふれる大胆な姿です。',hokidachi:'根元から扇状に広がる箒立ち。端正で整った樹形です。'};
 const LEAF_N={kanji:['松','画数の重みを感じさせる、深い緑の松葉です。'],
   hira:['桜','やわらかな丸みが、淡い花になって咲きました。'],
   kata:['紅葉','角ばった字形が、鮮やかな紅葉になりました。'],
@@ -307,41 +473,70 @@ const BAD_N={
   mushroom:['キノコ名人','木ではなくキノコが生えました。これはこれで味わい深い。食べないでください。','菌類の勝利'],
   sprout:['芽止まり','芽が出たところで満足してしまいました。成長は来世に期待しましょう。','双葉のまま'],
   weed:['ほぼ雑草','ただの雑草がぼうぼうに茂りました。たんぽぽの綿毛が一本だけ立派です。','庭の手入れが必要']};
+const GAG_N={
+  ufo:['UFO遭遇賞','UFOが「%」の枝ぶりを気に入り、調査のため吸い上げ中です。牛が一頭巻き込まれています。','???点',4,'樹形: 宇宙規模　／　回収率 87%'],
+  face:['顔つき盆栽','幹にいつの間にか顔が。「%」という字に魂が宿ったようです。','愛嬌 100点',5,'樹形: 擬人化'],
+  afro:['爆発アフロ賞','「%」を植えたらアフロが生えました。サングラスは自前です。','盛り度 ∞点',5,'樹形: 爆発'],
+  giant:['巨木化・鉢崩壊','「%」の根が張りすぎて鉢が割れました。もはや盆栽ではなく樹木。管理人に怒られます。','規格外',3,'樹形: 森'],
+  bald:['ハゲ判定','葉が一本を残して抜け落ちました。残った一本に哀愁が漂います。','1本点',1,'樹形: バーコード']};
+const FACE_N={happy:'ご機嫌',sleepy:'おねむ',angry:'ご立腹',surprised:'びっくり'};
 function evaluate(g){
-  const rng=rngFrom(g.seed^0x9e3779b9);
-  const first=g.chars[0];
-  if(g.mode!=='ok'){
-    const b=BAD_N[g.mode];const score=Math.floor(rng()*22);
-    return{bad:true,rank:b[0],score,stars:score>14?1:0,comment:b[1].replace('%',first),meta:'樹形: '+b[2]+'　／　どんな文字も育つとは限りません。別の文字で再挑戦！'};
+  const rng=rngFrom(g.seed^0x9e3779b9),first=g.chars[0],inf=g.info;
+  if(BAD_N[g.mode]){
+    const b=BAD_N[g.mode],score=Math.floor(rng()*22);
+    return{bad:true,rank:b[0],scoreText:score+'点',stars:score>14?1:0,comment:b[1].replace('%',first),
+      meta:'樹形: '+b[2]+'　／　どんな文字も育つとは限りません。別の文字で再挑戦！'};
   }
-  let score=52+Math.floor(rng()*34)+Math.min(g.chars.length-1,4)*3;
-  if(g.chars.some(c=>SURE_OK.has(c)))score+=10;
+  if(GAG_N[g.mode]){
+    const a=GAG_N[g.mode];let c=a[1].replace('%',first);
+    if(g.mode==='face')c+=`今日の機嫌は「${FACE_N[g.faceKind]}」。`;
+    return{bad:false,rank:a[0],scoreText:a[2],stars:a[3],comment:c,meta:a[4]};
+  }
+  let score,metrics=null;
+  const bonus=(g.chars.some(c=>SURE_OK.has(c))?8:0)+Math.min(g.chars.length-1,4)*2;
+  if(inf){
+    const bal=1-Math.min(1,Math.abs(inf.cx)*5);
+    score=Math.round(40+inf.sym*28+bal*12+rng()*14+bonus);
+    metrics=[
+      {l:'左右対称度',p:inf.sym*100,v:Math.round(inf.sym*100)+'%'},
+      {l:'重心の偏り',p:Math.min(100,Math.abs(inf.cx)*500),v:(Math.abs(inf.cx)<.01?'中央':(inf.cx>0?'右 ':'左 ')+Math.round(Math.abs(inf.cx)*100)+'%')},
+      {l:'インク密度',p:Math.min(100,inf.dens*170),v:Math.round(inf.dens*100)+'%'}];
+  }else score=52+Math.floor(rng()*34)+bonus;
   score=Math.min(99,score);
-  const rank=score>=92?'国風展 大賞':score>=82?'名木':score>=70?'上品':score>=55?'愛らしい一鉢':'素朴な味わい';
-  const [sn,sd]=STYLE_N[g.style];
-  const counts={};g.classes.forEach(c=>counts[c]=(counts[c]||0)+1);
-  const domc=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
-  const [ln,ld]=LEAF_N[domc];
-  let cm=sd+ld;
-  if(g.chars.length>1)cm+=`${g.chars.length}文字が寄り添う、にぎやかな寄せ植え風の趣も。`;
+  let rank=score>=92?'国風展 大賞':score>=82?'名木':score>=70?'上品':score>=55?'愛らしい一鉢':'素朴な味わい';
+  const cnt={};g.classes.forEach(c=>cnt[c]=(cnt[c]||0)+1);
+  const domc=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+  let cm='';
+  if(inf){
+    const sp=Math.round(inf.sym*100),cxp=Math.round(Math.abs(inf.cx)*100),dp=Math.round(inf.dens*100),dir=inf.cx>0?'右':'左';
+    cm+=g.mode==='glyph'?`「${g.text}」の字形そのままに樹冠が刈り込まれた“字形仕立て”です（左右対称度${sp}%）。`:{chokkan:`字形の左右対称度が${sp}%と整っているため、まっすぐ天を突く直幹に育ちました。`,
+      shakan:`字の重心が${dir}に${cxp}%寄っているので、${dir}へ傾く斜幹になりました。`,
+      kengai:`字の重心が下寄り(高さ${Math.round(inf.cy*100)}%)なので、崖から垂れ下がる懸崖に。`,
+      hokidachi:`左右対称度${sp}%で黒みも強い字形。根元から扇状に広がる箒立ちです。`,
+      moyogi:`左右対称度${sp}%とゆらぎのある字形が、うねる曲幹を生みました。`}[g.style];
+    cm+=dp>35?`インク密度${dp}%、画数の多い字らしく幹は太く葉も密生。`:dp<22?`インク密度${dp}%、すっきりした字らしく幹は細身で葉も軽やか。`:`インク密度${dp}%、幹と葉のバランスは良好。`;
+  }else cm+=STYLE_D[g.style];
+  if(g.th)cm+=`葉は「${g.chars.find(c=>THEME[c])}」のイメージ色（${g.th.n}）。`;
+  else cm+=LEAF_N[domc][1];
+  if(g.fruit){cm+=`枝先に${g.fruit}が実りました。「${first}」だけに。収穫は早朝がおすすめです。`;rank='🌳 シュール'+rank;}
+  if(g.chars.length>1)cm+=`${g.chars.length}文字が寄り添う寄せ植えの趣も。`;
   const age=20+Math.floor(rng()*280);
-  return{bad:false,rank,score,stars:Math.max(1,Math.round(score/20)),comment:cm,
-    meta:`樹形: ${sn}　／　葉: ${ln}　／　推定樹齢 ${age}年（育成時間 4秒）`};
+  return{bad:false,rank,scoreText:score+'点',stars:Math.max(1,Math.round(score/20)),comment:cm,metrics,
+    meta:`樹形: ${STYLE_N[g.style]}${g.mode==='glyph'?'（字形樹冠）':''}　／　推定樹齢 ${age}年（育成時間 4秒）`};
 }
 
 /* ---------- 実行 ---------- */
-let G=null,start=0,last=0,shown=false,skip=false;
-const DURATION=4200;
+let G=null,R=null,start=0,last=0,shown=false,skip=false;
+const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   drawBG(G);drawPot(G);
   if(G){
     let t=Math.min(1,(now-start)/DURATION);if(skip)t=1;
-    const te=ease(t);
-    drawTree(G,te,now/1000);
+    drawTree(G,ease(t),now/1000);
     if(t>=1){
-      if(G.mode==='ok'||G.mode==='withered'){if(parts.length<(G.mode==='withered'?14:10)&&Math.random()<.06)spawnPart(G);}
+      if(GOODMODES.includes(G.mode)&&parts.length<(G.mode==='withered'?14:10)&&Math.random()<.06)spawnPart(G);
       drawParts(dt);
       if(!shown){shown=true;showResult(G);}
     }
@@ -350,27 +545,32 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 function showResult(g){
-  const r=evaluate(g);
-  $('rank').textContent=`「${g.text}」 ${r.rank}`;
-  $('stars').textContent='★'.repeat(r.stars)+'☆'.repeat(5-r.stars);
-  $('score').textContent=`${r.score}点`;
-  $('comment').textContent=r.comment;
-  $('meta').textContent=r.meta;
-  $('result').classList.toggle('bad',r.bad);
+  R=evaluate(g);
+  $('rank').textContent=`「${g.text}」 ${R.rank}`;
+  $('stars').textContent='★'.repeat(R.stars)+'☆'.repeat(5-R.stars);
+  $('score').textContent=R.scoreText;
+  $('comment').textContent=R.comment;
+  $('meta').textContent=R.meta;
+  const mb=$('metrics');mb.textContent='';
+  if(R.metrics){const h=document.createElement('div');h.textContent='字形分析（実際に文字を描いて測定）';h.style.opacity='.6';mb.appendChild(h);
+    for(const m of R.metrics){const r=document.createElement('div');r.className='m';
+      r.innerHTML='<span></span><div class="bar"><i></i></div><b></b>';
+      r.children[0].textContent=m.l;r.children[1].firstChild.style.width=Math.max(2,m.p)+'%';r.children[2].textContent=m.v;mb.appendChild(r);}}
+  $('result').classList.toggle('bad',R.bad);
   $('result').classList.add('show');
-  saveHist(g.text,r);
+  saveHist(g.text,R);
 }
 function grow(text){
   text=text.trim();
   if(!text){$('t').focus();return;}
-  G=build(text);parts=[];shown=false;skip=false;start=performance.now();
+  G=build(text);parts=[];shown=false;skip=false;R=null;start=performance.now();
   $('result').classList.remove('show');
   $('t').blur();
 }
 function saveHist(text,r){
   try{
     let h=JSON.parse(localStorage.getItem('mojibonsai')||'[]');
-    h=h.filter(x=>x.t!==text);h.unshift({t:text,r:r.rank,s:r.score});h=h.slice(0,10);
+    h=h.filter(x=>x.t!==text);h.unshift({t:text,r:r.rank,s:r.scoreText});h=h.slice(0,10);
     localStorage.setItem('mojibonsai',JSON.stringify(h));
   }catch(e){}
   renderHist();
@@ -379,14 +579,44 @@ function renderHist(){
   let h=[];try{h=JSON.parse(localStorage.getItem('mojibonsai')||'[]');}catch(e){}
   $('hist').hidden=!h.length;
   const box=$('histlist');box.textContent='';
-  for(const x of h){const b=document.createElement('button');b.type='button';b.textContent=`${x.t} ${x.s}点`;b.title=x.r;b.onclick=()=>{$('t').value=x.t;grow(x.t);};box.appendChild(b);}
+  for(const x of h){const b=document.createElement('button');b.type='button';b.textContent=`${x.t} ${x.s||''}`;b.title=x.r;b.onclick=()=>{$('t').value=x.t;grow(x.t);};box.appendChild(b);}
 }
+
+/* ---------- シェア ---------- */
+function shareURL(){const u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('t',G.text);return u.toString();}
+function shareText(){return`「${G.text}」を育てたら『${R.rank}』${R.scoreText}！ #文字盆栽`;}
+let toastT;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),1800);}
+function makeBlob(){
+  return new Promise(res=>{
+    const c=document.createElement('canvas');c.width=cv.width;c.height=cv.height;
+    const x=c.getContext('2d');x.drawImage(cv,0,0);x.setTransform(DPR,0,0,DPR,0,0);
+    x.fillStyle='#fff3dc';x.textBaseline='alphabetic';
+    x.font=`bold 20px ${FONT}`;x.fillText(`「${G.text}」 ${R.rank}`,16,494);
+    x.font=`14px ${FONT}`;x.fillText(`${R.scoreText}　${'★'.repeat(R.stars)}　#文字盆栽`,16,514);
+    c.toBlob(res,'image/png');
+  });
+}
+function ready(){if(!G||!R){toast('育ち終わるまでお待ちください');return false;}return true;}
+$('bX').onclick=()=>{if(!ready())return;
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText())+'&url='+encodeURIComponent(shareURL()),'_blank','noopener');};
+$('bCopy').onclick=async()=>{if(!ready())return;
+  try{await navigator.clipboard.writeText(shareText()+' '+shareURL());toast('コピーしました');}catch(e){prompt('コピーしてください',shareText()+' '+shareURL());}};
+$('bImg').onclick=async()=>{if(!ready())return;
+  const b=await makeBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`mojibonsai_${G.text}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000);};
+if(navigator.share){$('bNative').hidden=false;
+  $('bNative').onclick=async()=>{if(!ready())return;
+    const d={title:'文字盆栽',text:shareText()+' '+shareURL()};
+    try{const f=new File([await makeBlob()],'mojibonsai.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]}))d.files=[f];else d.url=shareURL();}catch(e){d.url=shareURL();}
+    try{await navigator.share(d);}catch(e){}};}
+
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
 cv.addEventListener('click',()=>{if(G&&!shown)skip=true;});
 {const box=document.querySelector('.chips');
- for(const s of['桜','松','福','Z','７','カ','あ','枯','草']){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=s;b.onclick=()=>{$('t').value=s;grow(s);};box.appendChild(b);}}
+ for(const s of['桜','松','福','猫','火','寿','UFO','カ','あ','枯','草','顔']){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=s;b.onclick=()=>{$('t').value=s;grow(s);};box.appendChild(b);}}
 renderHist();
 requestAnimationFrame(n=>{last=n;frame(n);});
+{const q=new URLSearchParams(location.search).get('t');
+ if(q){$('t').value=q.slice(0,6);(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>grow(q.slice(0,6)));}}
 </script>
 </body>
 </html>
