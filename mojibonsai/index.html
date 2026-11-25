@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>文字盆栽</title>
+<style>
+:root{--bg:#f3ecdc;--ink:#2b2118;--card:#fffaf0;--accent:#b5382c;--line:#d8cbb0}
+@media (prefers-color-scheme:dark){:root{--bg:#1d1a16;--ink:#efe6d4;--card:#2a251f;--line:#443b30}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;min-height:100vh}
+main{max-width:680px;margin:0 auto;padding:16px}
+h1{margin:8px 0 2px;font-size:28px;letter-spacing:.3em;text-align:center}
+.sub{text-align:center;font-size:13px;opacity:.7;margin:0 0 12px}
+form{display:flex;gap:8px;margin-bottom:8px}
+input{flex:1;min-width:0;font:inherit;font-size:20px;padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+button{font:inherit;border:0;border-radius:10px;padding:10px 18px;background:var(--accent);color:#fff;font-size:18px;cursor:pointer}
+button:active{transform:translateY(1px)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px;font-size:14px}
+.chips span{opacity:.6;align-self:center}
+.chip{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:3px 11px;font-size:16px;border-radius:99px}
+canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2px solid var(--line);background:#eee;touch-action:manipulation}
+#result{margin-top:12px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px 16px;opacity:0;transform:translateY(8px);transition:.5s}
+#result.show{opacity:1;transform:none}
+#result.bad{border-color:var(--accent)}
+#rank{font-size:22px;font-weight:bold;margin:0}
+#stars{font-size:20px;color:#d29a1b;letter-spacing:2px}
+#score{font-size:14px;opacity:.7;margin-left:6px}
+#comment{line-height:1.8;margin:6px 0 0}
+#meta{font-size:12px;opacity:.6;margin-top:6px}
+#hist{margin-top:14px;font-size:13px}
+#hist h2{font-size:14px;margin:0 0 4px;opacity:.7}
+#hist button{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:3px 10px;font-size:14px;margin:0 6px 6px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>文字盆栽</h1>
+<p class="sub">好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字もあります。</p>
+<form id="f">
+  <input id="t" maxlength="6" placeholder="例：桜" autocomplete="off" aria-label="文字を入力">
+  <button>育てる</button>
+</form>
+<div class="chips"><span>お試し:</span></div>
+<canvas id="c" width="640" height="520"></canvas>
+<div id="result">
+  <p id="rank"></p>
+  <div><span id="stars"></span><span id="score"></span></div>
+  <p id="comment"></p>
+  <div id="meta"></div>
+</div>
+<div id="hist" hidden><h2>育てた盆栽</h2><div id="histlist"></div></div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const cv=$('c'),ctx=cv.getContext('2d');
+{const r=Math.min(window.devicePixelRatio||1,2);cv.width=640*r;cv.height=520*r;}
+const DPR=cv.width/640;
+
+/* ---------- 乱数・文字分類 ---------- */
+function hashStr(s){let h=2166136261>>>0;for(const ch of s){h^=ch.codePointAt(0);h=Math.imul(h,16777619)>>>0;h^=h>>>13;h=Math.imul(h,0x5bd1e995)>>>0;}
+  h^=h>>>15;h=Math.imul(h,0x85ebca6b)>>>0;h^=h>>>13;return h>>>0;}
+function rngFrom(seed){let a=seed|0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function cls(ch){const c=ch.codePointAt(0);
+  if(c>=0x3040&&c<=0x309f)return'hira';
+  if(c>=0x30a0&&c<=0x30ff)return'kata';
+  if((c>=0x4e00&&c<=0x9fff)||(c>=0x3400&&c<=0x4dbf))return'kanji';
+  if(/[A-Za-zＡ-Ｚａ-ｚ]/.test(ch))return'latin';
+  if(/[0-9０-９]/.test(ch))return'digit';
+  return'other';}
+const PAL={
+  kanji:['#2f5d3a','#3b7048','#264d33','#4a7d52'],
+  hira:['#7bb867','#95cc7b','#f9c6d3','#f48fb1','#fde3ea'],
+  kata:['#c0392b','#e67e22','#d35400','#f1c40f','#a93226'],
+  latin:['#7bc96f','#a5d86e','#5fb878','#c3e88d'],
+  digit:['#e0b628','#f2d04b','#c99a1a','#f7e08a'],
+  other:null,
+  dry:['#8a6d3b','#a1887f','#6d4c41','#b59b6a']
+};
+function palFor(c,rng){if(c==='other'){const h=rng()*360;return[`hsl(${h},70%,60%)`,`hsl(${(h+70)%360},70%,60%)`,`hsl(${(h+150)%360},70%,60%)`,`hsl(${(h+230)%360},70%,60%)`];}return PAL[c];}
+
+/* 必ず育つ文字 / 必ず失敗する文字 */
+const SURE_OK=new Set([...'松桜竹梅菊楓柳森木林盆栽福寿']);
+const SURE_BAD={'枯':'withered','死':'withered','無':'withered','空':'withered','草':'weed','雑':'weed','茸':'mushroom','菌':'mushroom','芽':'sprout','ん':'sprout','0':'sprout','０':'sprout'};
+const BAD_MODES=['withered','noodle','mushroom','sprout','weed'];
+const STYLES=['chokkan','shakan','moyogi','kengai','hokidachi'];
+
+/* ---------- 樹木生成 ---------- */
+function build(text){
+  const chars=Array.from(text);
+  const seed=hashStr(text), rng=rngFrom(seed);
+  let mode='ok';
+  if(chars.length===1&&SURE_BAD[text])mode=SURE_BAD[text];
+  else if(!chars.some(c=>SURE_OK.has(c))&&seed%7===0)mode=BAD_MODES[(seed>>>8)%BAD_MODES.length];
+  const style=STYLES[(seed>>>4)%5];
+  const SP={'桜':'hira','楓':'kata','紅':'kata','菊':'digit','金':'digit'};
+  const classes=chars.map(c=>SP[c]||cls(c));
+  const els=[],pads=[];
+  const dry=mode==='withered';
+  const sc=1+Math.min(chars.length,6)*0.05;
+  const maxD=mode==='withered'?2:(chars.length>=2?3:2);
+  const side=rng()<.5?-1:1;
+  const padPal=()=>{const c=classes[Math.floor(rng()*classes.length)];return{c,p:dry?PAL.dry:palFor(c,rng)};};
+
+  function branch(x,y,ang,len,w,depth,t0,o={}){
+    const n=Math.max(4,Math.round(len/14)), seg=len/n, dur=len/300;
+    let px=x,py=y,a=ang;
+    for(let i=0;i<n;i++){
+      let drift=0;
+      if(depth===0&&!o.straight){
+        if(style==='chokkan')drift=(rng()-.5)*.08;
+        else if(style==='shakan')drift=(rng()-.5)*.06;
+        else if(style==='moyogi')drift=Math.sin(i*1.05)*.13*side;
+        else if(style==='kengai')drift=.075*side;
+        else drift=(rng()-.5)*.03;
+      }else drift=(rng()-.5)*.22+(dry?.07*side:0)+(o.wobble?Math.sin(i*.8)*o.wobble:0);
+      a+=drift;
+      const nx=px+Math.cos(a)*seg, ny=py+Math.sin(a)*seg;
+      els.push({x0:px,y0:py,x1:nx,y1:ny,w0:w*(1-i/n*.45),w1:w*(1-(i+1)/n*.45),ts:t0+i/n*dur,te:t0+(i+1)/n*dur,c:o.color});
+      px=nx;py=ny;
+      const te=t0+(i+1)/n*dur;
+      if(depth<maxD&&!o.noKids){
+        const fan=depth===0&&style==='hokidachi';
+        if(fan){ if(i===n-1){for(let k=0;k<5;k++){const aa=-Math.PI/2+(k-2)*.42+(rng()-.5)*.15;branch(px,py,aa,len*(1.1+rng()*.5),w*.55,depth+1,te);}} }
+        else if(i>=(depth===0?2:1)&&i<n-1&&rng()<(depth===0?.5:.4)){
+          const s=(i%2?1:-1)*(rng()<.8?1:-1);
+          branch(px,py,a+s*(.55+rng()*.6),len*(.42+rng()*.25),w*.6,depth+1,te);
+        }
+      }
+    }
+    // 先端の葉
+    if(!o.noPad&&(depth>=1||maxD===0||o.forcePad)){
+      const pp=padPal();
+      pads.push({x:px,y:py,r:(dry?9:(depth>=maxD?22:17)+rng()*12)*(depth===0?1.3:1)*sc,ts:t0+dur,kind:o.kind||'blob',cls:pp.c,pal:pp.p,seed:rng()});
+    }
+    return{x:px,y:py,end:t0+dur};
+  }
+
+  const H=250*sc;
+  if(mode==='ok'||mode==='withered'){
+    let ang=-Math.PI/2,len=H;
+    if(style==='shakan')ang+=side*.45;
+    if(style==='kengai'){len=H*1.05;ang+=side*.25;}
+    if(style==='hokidachi')len=H*.4;
+    if(dry){len*=.75;}
+    branch(0,0,ang,len,dry?10:17*sc,0,0);
+    if(!dry){ // 幹の先にも葉
+      const last=els[els.length-1];
+      // 先端は branch 内の depth>=1 のみ。幹先端にも葉を足す
+      if(style!=='hokidachi'){const pp=padPal();pads.push({x:last.x1,y:last.y1,r:(30+rng()*10)*sc,ts:last.te,kind:'blob',cls:pp.c,pal:pp.p,seed:rng()});}
+    }
+  }else if(mode==='noodle'){
+    branch(0,0,-Math.PI/2,330,4,0,0,{noKids:true,wobble:.16,color:'#6b8e4e',forcePad:true,kind:'leaf',straight:true});
+  }else if(mode==='mushroom'){
+    const m=(x,len,w,r)=>{const b=branch(x,0,-Math.PI/2+(rng()-.5)*.15,len,w,0,0,{noKids:true,color:'#f1e6cf',noPad:true,straight:true});
+      pads.push({x:b.x,y:b.y,r,ts:b.end,kind:'cap',cls:'other',pal:['#c0392b'],seed:rng()});};
+    m(0,48,16,64);m(-66,26,9,34);m(62,32,10,38);
+  }else if(mode==='sprout'){
+    branch(0,0,-Math.PI/2,34,3.5,0,0,{noKids:true,color:'#7cb342',straight:true,forcePad:true,kind:'pair'});
+  }else if(mode==='weed'){
+    for(let k=0;k<16;k++){
+      const ang=-Math.PI/2+(rng()-.5)*1.7;
+      branch((rng()-.5)*90,0,ang,50+rng()*70,2.5,0,k*0.01,{noKids:true,color:['#6a8f3a','#7cb342','#558b2f'][k%3],noPad:true,wobble:.05,straight:true});
+    }
+    pads.push({x:0,y:-110,r:20,ts:0.1,kind:'puff',cls:'other',pal:['#fff'],seed:0});
+    const f=els[els.length-1];
+  }
+  // 時間の正規化 (成長 0..0.8、葉は +0.2)
+  let mx=0;for(const e of els)mx=Math.max(mx,e.te);
+  for(const p of pads)mx=Math.max(mx,p.ts);
+  const k=0.8/(mx||1);
+  for(const e of els){e.ts*=k;e.te*=k;}
+  for(const p of pads){p.ts*=k;
+    p.blobs=[];const nb=p.kind==='blob'?(dry?3:8):0;
+    for(let i=0;i<nb;i++){const ang=rng()*6.283,d=Math.sqrt(rng())*p.r*.8;
+      p.blobs.push({dx:Math.cos(ang)*d,dy:Math.sin(ang)*d*.6,r:p.r*(.45+rng()*.35),c:p.pal[Math.floor(rng()*p.pal.length)],ph:rng()*6.28});}}
+  let minX=0,maxX=0,minY=0;
+  for(const e of els){minX=Math.min(minX,e.x1);maxX=Math.max(maxX,e.x1);minY=Math.min(minY,e.y1);}
+  for(const p of pads){minX=Math.min(minX,p.x-p.r*1.1);maxX=Math.max(maxX,p.x+p.r*1.1);minY=Math.min(minY,p.y-p.r*1.1);}
+  const fit=Math.min(1,285/Math.max(1,-minX,maxX),345/Math.max(1,-minY));
+  const potCols=['#6b4f3a','#3e5c76','#8c3b3b','#4a6b57','#7a6a8a','#c4a35a'];
+  return{fit,text,chars,seed,mode,style,classes,els,pads,potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,
+    dom:classes[0],evalSeed:rng};
+}
+
+/* ---------- 描画 ---------- */
+const GY=400; // 土の高さ(canvas座標)
+const ease=p=>1-Math.pow(1-p,3);
+const back=p=>{const c=1.7;return 1+(c+1)*Math.pow(p-1,3)+c*Math.pow(p-1,2);};
+function shade(hex,a){ // 簡易明度調整
+  const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;
+  const f=v=>Math.max(0,Math.min(255,Math.round(v+a)));return`rgb(${f(r)},${f(g)},${f(b)})`;}
+function drawBG(g){
+  const gr=ctx.createLinearGradient(0,0,0,520);
+  gr.addColorStop(0,'#f6efdd');gr.addColorStop(1,'#e6d8b8');
+  ctx.fillStyle=gr;ctx.fillRect(0,0,640,520);
+  const sunCol={kanji:'#9bb88f',hira:'#f3b9c6',kata:'#e8a46a',latin:'#9cc9d8',digit:'#efd36b',other:'#c9a7e0'}[g?g.dom:'kanji'];
+  ctx.globalAlpha=.35;ctx.fillStyle=sunCol;ctx.beginPath();ctx.arc(480,120,70,0,6.283);ctx.fill();ctx.globalAlpha=1;
+  // 台
+  ctx.fillStyle='#7a5a3a';ctx.fillRect(0,GY+75,640,70);
+  ctx.fillStyle='#8e6a45';ctx.fillRect(0,GY+75,640,8);
+}
+function drawPot(g){
+  const c=g?g.potCol:'#6b4f3a',s=g?g.potShape:0;
+  ctx.save();ctx.translate(320,GY);
+  ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(0,76,130,10,0,0,6.283);ctx.fill();
+  // 土
+  ctx.fillStyle='#4a3626';ctx.beginPath();ctx.ellipse(0,2,100,13,0,0,6.283);ctx.fill();
+  ctx.fillStyle='#5d8a45';for(let i=0;i<14;i++){ctx.beginPath();ctx.ellipse(-80+i*12.5,1+Math.sin(i*2)*3,6,2.5,0,0,6.283);ctx.fill();}
+  // 鉢
+  const top=s===1?118:108,bot=s===0?82:s===1?100:70,h=s===2?64:70;
+  ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(-top,6);ctx.lineTo(top,6);ctx.lineTo(bot,6+h);ctx.lineTo(-bot,6+h);ctx.closePath();ctx.fill();
+  ctx.fillStyle=shade(c.startsWith('#')?c:'#6b4f3a',30);ctx.fillRect(-top-6,2,top*2+12,12);
+  ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(-top+10,18,16,h-24);
+  ctx.fillStyle=shade(c,-25);ctx.fillRect(-bot+8,6+h,26,8);ctx.fillRect(bot-34,6+h,26,8);
+  ctx.restore();
+}
+function drawSeal(g){
+  if(!g)return;const ch=g.chars.slice(0,4);
+  const x=568,y=438,s=52;
+  ctx.save();ctx.fillStyle='#b5382c';ctx.fillRect(x,y,s,s);
+  ctx.fillStyle='#fbeee0';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`bold ${ch.length===1?36:ch.length<=2?22:20}px "Hiragino Mincho ProN","Yu Mincho",serif`;
+  if(ch.length===1)ctx.fillText(ch[0],x+s/2,y+s/2+1);
+  else if(ch.length===2){ctx.fillText(ch[0],x+s/2,y+14);ctx.fillText(ch[1],x+s/2,y+38);}
+  else{ctx.font='bold 20px serif';ch.forEach((c,i)=>ctx.fillText(c,x+(i%2?39:13),y+(i<2?14:38)));}
+  ctx.restore();
+}
+function drawPad(p,tm,t){
+  const q=Math.min(1,Math.max(0,(t-p.ts)/0.2));if(q<=0)return;
+  const s=back(q);
+  ctx.save();ctx.translate(320+p.x,GY+p.y);
+  if(p.kind==='blob'){
+    const cl=p.cls;
+    for(const b of p.blobs){
+      const sw=Math.sin(tm*1.6+b.ph)*1.5*(t>=1?1:0);
+      ctx.fillStyle=b.c;ctx.globalAlpha=.95;ctx.beginPath();
+      const flat=cl==='kanji'?.6:1;
+      ctx.ellipse(b.dx+sw,b.dy,b.r*s,b.r*s*flat*(cl==='kanji'?1:.85),0,0,6.283);ctx.fill();
+    }
+    if(cl==='kanji'){ctx.strokeStyle='rgba(20,50,25,.35)';ctx.lineWidth=1;for(let i=0;i<10;i++){const a=i/10*6.283;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*p.r*.9*s,Math.sin(a)*p.r*.55*s);ctx.stroke();}}
+    ctx.globalAlpha=1;
+  }else if(p.kind==='cap'){
+    ctx.fillStyle=p.pal[0];ctx.beginPath();ctx.ellipse(0,0,p.r*s,p.r*.7*s,0,Math.PI,0);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#fff';[[-.45,-.25,.14],[.1,-.45,.12],[.5,-.2,.13],[-.1,-.15,.09]].forEach(([a,b,c])=>{ctx.beginPath();ctx.arc(a*p.r*s,b*p.r*s,c*p.r*s,0,6.283);ctx.fill();});
+  }else if(p.kind==='leaf'){
+    ctx.fillStyle='#7cb342';ctx.rotate(-.5);ctx.beginPath();ctx.ellipse(8*s,0,12*s,5*s,0,0,6.283);ctx.fill();
+  }else if(p.kind==='pair'){
+    ctx.fillStyle='#8bc34a';[-1,1].forEach(d=>{ctx.beginPath();ctx.ellipse(d*12*s,-2,13*s,6*s,d*-.5,0,6.283);ctx.fill();});
+  }else if(p.kind==='puff'){
+    ctx.fillStyle='rgba(255,255,255,.9)';ctx.strokeStyle='#bbb';for(let i=0;i<12;i++){const a=i/12*6.283;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*p.r*s,Math.sin(a)*p.r*s);ctx.stroke();ctx.beginPath();ctx.arc(Math.cos(a)*p.r*s,Math.sin(a)*p.r*s,3,0,6.283);ctx.fill();}
+  }
+  ctx.restore();
+}
+function drawTree(g,t,tm){
+  ctx.save();ctx.translate(320,GY);ctx.scale(g.fit,g.fit);ctx.translate(-320,-GY);
+  ctx.lineCap='round';
+  const shadeB=g.mode==='withered'?'#5b4a3c':'#4a3322';
+  for(let pass=0;pass<2;pass++){
+    for(const e of g.els){
+      if(t<=e.ts)continue;
+      const p=Math.min(1,(t-e.ts)/(e.te-e.ts));
+      const x1=e.x0+(e.x1-e.x0)*p,y1=e.y0+(e.y1-e.y0)*p;
+      const w=e.w0+(e.w1-e.w0)*p;
+      if(e.c){if(pass===0)continue;ctx.strokeStyle=e.c;ctx.lineWidth=w;}
+      else if(pass===0){ctx.strokeStyle=shadeB;ctx.lineWidth=w;}
+      else{ctx.strokeStyle=g.mode==='withered'?'#8a7766':'#7a5a3e';ctx.lineWidth=w*.4;}
+      if(!e.c||pass===1){ctx.beginPath();ctx.moveTo(320+e.x0-(pass?w*.15:0),GY+e.y0);ctx.lineTo(320+x1-(pass?w*.15:0),GY+y1);ctx.stroke();}
+    }
+  }
+  for(const p of g.pads)drawPad(p,tm,t);
+  ctx.restore();
+}
+
+/* ---------- 舞い散る葉 ---------- */
+let parts=[];
+function spawnPart(g){
+  const cand=g.pads.filter(p=>p.kind==='blob');if(!cand.length)return;
+  const p=cand[Math.floor(Math.random()*cand.length)];
+  const col=p.pal[Math.floor(Math.random()*p.pal.length)];
+  parts.push({x:320+p.x+(Math.random()-.5)*p.r,y:GY+p.y,vy:18+Math.random()*20,ph:Math.random()*6.28,c:col,life:0,s:3+Math.random()*3});
+}
+function drawParts(dt){
+  for(const q of parts){q.life+=dt;q.y+=q.vy*dt;q.x+=Math.sin(q.life*2+q.ph)*18*dt;
+    if(q.y>GY+6){q.y=GY+6;q.vy=0;}
+    ctx.fillStyle=q.c;ctx.globalAlpha=Math.max(0,1-Math.max(0,q.life-6)/2);
+    ctx.beginPath();ctx.ellipse(q.x,q.y,q.s,q.s*.6,q.life,0,6.283);ctx.fill();}
+  ctx.globalAlpha=1;parts=parts.filter(q=>q.life<8);
+}
+
+/* ---------- 評価 ---------- */
+const STYLE_N={chokkan:['直幹','まっすぐ天を突く直幹。力強さと品格があります。'],
+  shakan:['斜幹','風に身を任せる斜幹。動きのある風情です。'],
+  moyogi:['曲幹','ゆったりうねる曲幹。年月を重ねた味わいが出ています。'],
+  kengai:['懸崖','崖から垂れ下がる懸崖。野趣あふれる大胆な姿です。'],
+  hokidachi:['箒立ち','根元から扇状に広がる箒立ち。端正で整った樹形です。']};
+const LEAF_N={kanji:['松','画数の重みを感じさせる、深い緑の松葉です。'],
+  hira:['桜','やわらかな丸みが、淡い花になって咲きました。'],
+  kata:['紅葉','角ばった字形が、鮮やかな紅葉になりました。'],
+  latin:['若葉','異国の風を受けたような、瑞々しい若葉です。'],
+  digit:['黄金葉','数の力が黄金色の葉になりました。金運も上々。'],
+  other:['七色葉','見たことのない虹色の葉。新種かもしれません。']};
+const BAD_N={
+  withered:['枯れ盆栽','「%」は育つ前に枯れてしまいました…。水やりのタイミングが合わなかったようです。','枯山水の気配'],
+  noodle:['もやし級','ひょろひょろ伸びすぎました。これは盆栽というより…もやし？ 先端に一枚だけ葉が。','背ばかり高い'],
+  mushroom:['キノコ名人','木ではなくキノコが生えました。これはこれで味わい深い。食べないでください。','菌類の勝利'],
+  sprout:['芽止まり','芽が出たところで満足してしまいました。成長は来世に期待しましょう。','双葉のまま'],
+  weed:['ほぼ雑草','ただの雑草がぼうぼうに茂りました。たんぽぽの綿毛が一本だけ立派です。','庭の手入れが必要']};
+function evaluate(g){
+  const rng=rngFrom(g.seed^0x9e3779b9);
+  const first=g.chars[0];
+  if(g.mode!=='ok'){
+    const b=BAD_N[g.mode];const score=Math.floor(rng()*22);
+    return{bad:true,rank:b[0],score,stars:score>14?1:0,comment:b[1].replace('%',first),meta:'樹形: '+b[2]+'　／　どんな文字も育つとは限りません。別の文字で再挑戦！'};
+  }
+  let score=52+Math.floor(rng()*34)+Math.min(g.chars.length-1,4)*3;
+  if(g.chars.some(c=>SURE_OK.has(c)))score+=10;
+  score=Math.min(99,score);
+  const rank=score>=92?'国風展 大賞':score>=82?'名木':score>=70?'上品':score>=55?'愛らしい一鉢':'素朴な味わい';
+  const [sn,sd]=STYLE_N[g.style];
+  const counts={};g.classes.forEach(c=>counts[c]=(counts[c]||0)+1);
+  const domc=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
+  const [ln,ld]=LEAF_N[domc];
+  let cm=sd+ld;
+  if(g.chars.length>1)cm+=`${g.chars.length}文字が寄り添う、にぎやかな寄せ植え風の趣も。`;
+  const age=20+Math.floor(rng()*280);
+  return{bad:false,rank,score,stars:Math.max(1,Math.round(score/20)),comment:cm,
+    meta:`樹形: ${sn}　／　葉: ${ln}　／　推定樹齢 ${age}年（育成時間 4秒）`};
+}
+
+/* ---------- 実行 ---------- */
+let G=null,start=0,last=0,shown=false,skip=false;
+const DURATION=4200;
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  drawBG(G);drawPot(G);
+  if(G){
+    let t=Math.min(1,(now-start)/DURATION);if(skip)t=1;
+    const te=ease(t);
+    drawTree(G,te,now/1000);
+    if(t>=1){
+      if(G.mode==='ok'||G.mode==='withered'){if(parts.length<(G.mode==='withered'?14:10)&&Math.random()<.06)spawnPart(G);}
+      drawParts(dt);
+      if(!shown){shown=true;showResult(G);}
+    }
+    drawSeal(G);
+  }
+  requestAnimationFrame(frame);
+}
+function showResult(g){
+  const r=evaluate(g);
+  $('rank').textContent=`「${g.text}」 ${r.rank}`;
+  $('stars').textContent='★'.repeat(r.stars)+'☆'.repeat(5-r.stars);
+  $('score').textContent=`${r.score}点`;
+  $('comment').textContent=r.comment;
+  $('meta').textContent=r.meta;
+  $('result').classList.toggle('bad',r.bad);
+  $('result').classList.add('show');
+  saveHist(g.text,r);
+}
+function grow(text){
+  text=text.trim();
+  if(!text){$('t').focus();return;}
+  G=build(text);parts=[];shown=false;skip=false;start=performance.now();
+  $('result').classList.remove('show');
+  $('t').blur();
+}
+function saveHist(text,r){
+  try{
+    let h=JSON.parse(localStorage.getItem('mojibonsai')||'[]');
+    h=h.filter(x=>x.t!==text);h.unshift({t:text,r:r.rank,s:r.score});h=h.slice(0,10);
+    localStorage.setItem('mojibonsai',JSON.stringify(h));
+  }catch(e){}
+  renderHist();
+}
+function renderHist(){
+  let h=[];try{h=JSON.parse(localStorage.getItem('mojibonsai')||'[]');}catch(e){}
+  $('hist').hidden=!h.length;
+  const box=$('histlist');box.textContent='';
+  for(const x of h){const b=document.createElement('button');b.type='button';b.textContent=`${x.t} ${x.s}点`;b.title=x.r;b.onclick=()=>{$('t').value=x.t;grow(x.t);};box.appendChild(b);}
+}
+$('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
+cv.addEventListener('click',()=>{if(G&&!shown)skip=true;});
+{const box=document.querySelector('.chips');
+ for(const s of['桜','松','福','Z','７','カ','あ','枯','草']){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=s;b.onclick=()=>{$('t').value=s;grow(s);};box.appendChild(b);}}
+renderHist();
+requestAnimationFrame(n=>{last=n;frame(n);});
+</script>
+</body>
+</html>
