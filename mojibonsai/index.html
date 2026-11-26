@@ -101,7 +101,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
     <button type="button" id="bCopy" data-i="copy">リンクをコピー</button>
   </div>
 </div>
-<div id="rk"><h2 data-i="rkh">累計ランキング（この端末）</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
+<div id="rk"><h2 data-i="rkh">この端末ランキング</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
 <div id="gl"><h2 data-i="glh">みんなのランキング（累計）</h2><div id="glStatus"></div>
   <div id="glJoin"><input id="glName" maxlength="50" autocomplete="off"><button type="button" id="glBtn" data-i="glJoinBtn">参加する</button></div>
   <ol id="glList"></ol><button type="button" id="glRefresh" data-i="glRefresh">更新</button></div>
@@ -695,7 +695,7 @@ const UI={
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。100万点や1億点のテキスト盆栽を探してね。','Type any text and a bonsai that suits it grows in seconds. Can you find a Text Bonsai worth 1,000,000 or 100,000,000 points?'],
   grow:['育てる','Grow'],try:['お試し:','Try:'],share:['シェア','Share'],shareTo:['共有先を選ぶ','Share to'],close:['閉じる','Close'],mail:['メール','Email'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
   dev:['開発','Developer'],
-  glh:['みんなのランキング（累計）','Global ranking (total)'],glOff:['オンラインランキングは準備中です','Online ranking is coming soon'],glJoinBtn:['参加する','Join'],glNote:['参加するとニックネームと累計点数が公開されます','Joining publishes your nickname and total score.'],glNick:['ニックネーム（25文字まで）','Nickname (max 25)'],glMe:['参加中: ','Joined as '],glErr:['ランキングに接続できません','Cannot reach the ranking server'],glRefresh:['更新','Refresh'],glRank:['あなたの順位: ','Your rank: '],glOut:['圏外','out of top 20'],rkh:['累計ランキング（この端末）','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
+  glh:['みんなのランキング（累計）','Global ranking (total)'],glOff:['オンラインランキングは準備中です','Online ranking is coming soon'],glJoinBtn:['参加する','Join'],glNote:['参加するとニックネームと累計点数が公開されます','Joining publishes your nickname and total score.'],glNick:['ニックネーム（25文字まで）','Nickname (max 25)'],glMe:['参加中: ','Joined as '],glErr:['ランキングに接続できません','Cannot reach the ranking server'],glRefresh:['更新','Refresh'],glRank:['あなたの順位: ','Your rank: '],glOut:['圏外','out of top 20'],rkh:['この端末ランキング','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
   anal:['字形分析（実際に文字を描いて測定）','Glyph analysis (measured from the rendered text)'],
   wait:['育ち終わるまでお待ちください','Please wait until it finishes growing'],copied:['コピーしました','Copied'],copyPrompt:['コピーしてください','Copy this']
 };
@@ -972,7 +972,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.9.0',BUILD='2026-11-26 19:46 JST';
+const VERSION='1.9.1',BUILD='2026-11-26 19:48 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
