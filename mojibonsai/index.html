@@ -152,7 +152,7 @@ const THEME={
 };
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
 const WORDS={'giant':'giant','ufo':'ufo','宇宙':'ufo','アフロ':'afro','afro':'afro','ハゲ':'bald','はげ':'bald','禿':'bald'};
-const BIGW=new Set(['プロテイン','ぷろていん','マッチョ','筋肉','筋トレ','protein','muscle','gym']); // 1つの巨大絵文字になる言葉
+const BIGW=new Set(['プロテイン','ぷろていん','マッチョ','筋肉','筋トレ','protein','muscle','gym','うんち','うんこ','ウンチ','ウンコ','糞','poop','poo','unchi']); // 1つの巨大絵文字になる言葉
 const SURE_OK=new Set([...'松桜竹梅菊楓柳森木林盆栽福寿']);
 const SURE_BAD={'枯':'withered','死':'withered','無':'withered','空':'withered','草':'weed','雑':'weed','茸':'mushroom','菌':'mushroom','芽':'sprout','ん':'sprout','0':'sprout','０':'sprout'};
 const BAD_MODES=['withered','noodle','mushroom','sprout','weed'];
@@ -790,7 +790,7 @@ function evaluate(g){
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
 const SLOT_START=0,STAMP_AT=2.0;
 const SHOW_SCORE=false; // 点数の表示を一時的にオフ（trueで復活）
-const VERSION='1.3.5',BUILD='2026-11-26 11:28 JST';
+const VERSION='1.3.6',BUILD='2026-11-26 11:29 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
