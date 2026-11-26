@@ -42,6 +42,13 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 .m b{text-align:right;font-weight:normal}
 #share{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 #share button{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:7px 14px;font-size:14px}
+#share .primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+#menu{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:10}
+#menu.on{display:flex}
+#menu .sheet{background:var(--card);color:var(--ink);width:min(520px,100%);border-radius:16px 16px 0 0;padding:16px;display:grid;gap:10px}
+#menu h3{margin:0;font-size:16px}
+#menu .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+#menu a,#menu button{display:block;text-align:center;text-decoration:none;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 6px;font-size:15px}
 #share .x{background:#111;color:#fff;border-color:#111}
 #ver{margin:22px 0 2px;text-align:center;font-size:12px;opacity:.5}
 #dev{margin:0 0 14px;text-align:center;font-size:12px}
@@ -72,7 +79,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
   <div id="metrics"></div>
   <div id="meta"></div>
   <div id="share">
-    <button type="button" id="bNative" hidden data-i="share">共有</button>
+    <button type="button" id="bShare" class="primary" data-i="share">シェア</button>
     <button type="button" id="bX" class="x" data-i="shareX">𝕏 でシェア</button>
     <button type="button" id="bImg" data-i="img">画像を保存</button>
     <button type="button" id="bCopy" data-i="copy">リンクをコピー</button>
@@ -82,6 +89,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 <footer id="ver"></footer>
 <div id="dev"><a href="https://x.com/Hisashi_vc" target="_blank" rel="noopener noreferrer"><span data-i="dev">開発</span>: ひさしApp</a></div>
 </main>
+<div id="menu"><div class="sheet"><h3 data-i="shareTo">共有先を選ぶ</h3><div class="grid" id="menuGrid"></div><button type="button" id="menuClose" data-i="close">閉じる</button></div></div>
 <div id="toast"></div>
 <script>
 "use strict";
@@ -143,7 +151,7 @@ const THEME={
  '犬':T('犬毛',['#c19a6b','#a67c52','#e0c097'],'🐶'),'茸':T('茸',['#c0392b'],'🍄')
 };
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
-const WORDS={'giant':'giant','ufo':'ufo','宇宙':'ufo','アフロ':'afro','afro':'afro','ハゲ':'bald','はげ':'bald','禿':'bald','顔':'face','かお':'face'};
+const WORDS={'giant':'giant','ufo':'ufo','宇宙':'ufo','アフロ':'afro','afro':'afro','ハゲ':'bald','はげ':'bald','禿':'bald'};
 const SURE_OK=new Set([...'松桜竹梅菊楓柳森木林盆栽福寿']);
 const SURE_BAD={'枯':'withered','死':'withered','無':'withered','空':'withered','草':'weed','雑':'weed','茸':'mushroom','菌':'mushroom','芽':'sprout','ん':'sprout','0':'sprout','０':'sprout'};
 const BAD_MODES=['withered','noodle','mushroom','sprout','weed'];
@@ -194,10 +202,12 @@ const EMO={
  // 英単語
  'apple':'🍎','lemon':'🍋','orange':'🍊','banana':'🍌','grape':'🍇','grapes':'🍇','strawberry':'🍓','melon':'🍈','watermelon':'🍉','cherry':'🍒','pineapple':'🍍','pizza':'🍕','burger':'🍔','coffee':'☕','beer':'🍺','cake':'🍰','ramen':'🍜','curry':'🍛','taco':'🌮','donut':'🍩','cookie':'🍪','candy':'🍬','icecream':'🍦','heart':'💗','smile':'😄','happy':'😄','sad':'😭','angry':'😠','sleep':'😴','ghost':'👻','alien':'👽','robot':'🤖','music':'🎵','coin':'💰','money':'💰','diamond':'💎','crown':'👑','sun':'☀️','rainbow':'🌈','cloud':'☁️','lightning':'⚡','tiger':'🐯','bear':'🐻','rabbit':'🐰','snake':'🐍','pig':'🐷','chicken':'🐔','elephant':'🐘','butterfly':'🦋','bee':'🐝','crab':'🦀','octopus':'🐙','lion':'🦁','panda':'🐼','penguin':'🐧','duck':'🦆','owl':'🦉','unicorn':'🦄','whale':'🐳','shark':'🦈','car':'🚗','train':'🚃','ship':'⛵','plane':'✈️','book':'📖','soccer':'⚽','rocket':'🚀','christmas':'🎄','halloween':'🎃','sakura':'🌸','bamboo':'🎋','maple':'🍁','pine':'🌲','bonsai':'🪴','tree':'🌳','flower':'🌷','rose':'🌹','tulip':'🌷','sunflower':'🌻','cactus':'🌵','mushroom':'🍄','acorn':'🌰','peach':'🍑','pear':'🍐','egg':'🥚','bread':'🍞','cheese':'🧀','sushi':'🍣','rice':'🍙','tea':'🍵','sake':'🍶','wine':'🍷','fire':'🔥','water':'💧','snow':'❄️','rain':'☔','star':'⭐','moon':'🌙','gold':'💰','love':'💗','dream':'💤','skull':'💀','cat':'🐱','dog':'🐶','fish':'🐟','bird':'🐦','frog':'🐸','dragon':'🐉','monkey':'🐵','horse':'🐴','cow':'🐮','bug':'🐛'
 };
+const FACES=['😀','😂','🥹','😍','😎','🤔','😱','🥳','😴','🤡','👻','👽','🤖','😈','🥺','😡','🤩','😇','🙃','😜'];
 function emojiFor(text,key){
   const out=[],add=e=>{if(e&&!out.includes(e))out.push(e);};
   for(const m of text.matchAll(/\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/gu))add(m[0]);
   if(out.length)return out.slice(0,4);
+  if(['顔','かお','顔文字','表情','face','faces','emoji','絵文字','えもじ'].includes(text.toLowerCase()))return FACES.slice();
   const lt=text.toLowerCase();
   if(EMO[lt])add(EMO[lt]);
   else if(EMO[key])add(EMO[key]);
@@ -361,9 +371,9 @@ function build(text){
   }
   if(emo.length&&(mode==='ok'||mode==='ufo'||mode==='giant'||mode==='face'||mode==='glyph')){
     const base=shuf(pads.filter(p=>p.kind==='blob'||p.kind==='dot').slice()),pk=()=>emo[Math.floor(rng()*emo.length)];
-    const gl=mode==='glyph';
-    if(!gl)base.slice(0,9).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.8,y:p.y+p.r*.55,r:12+rng()*4,ts:p.ts+.08,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
-    shuf(base.slice()).slice(0,gl?32+Math.min(chars.length,20)*2:16).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.7,y:p.y+(rng()-.5)*p.r*.5,r:gl?Math.max(6,p.r*1.05):7+rng()*3,ts:p.ts+.12,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
+    const gl=mode==='glyph',many=emo.length>6;
+    if(!gl)base.slice(0,many?18:9).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.8,y:p.y+p.r*.55,r:12+rng()*4,ts:p.ts+.08,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
+    shuf(base.slice()).slice(0,gl?(many?110:32+Math.min(chars.length,20)*2):(many?40:16)).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.7,y:p.y+(rng()-.5)*p.r*.5,r:gl?Math.max(many?10:6,p.r*(many?1.8:1.05)):(many?10:7)+rng()*3,ts:p.ts+.12,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
   }
   if(fate==='bloom'){
     const fp=th?th.pal:['#ffb7c5','#ffffff','#ffd54a','#ff8fab','#e57373'];
@@ -558,7 +568,7 @@ const P=a=>a[lang==='en'?1:0];
 const UI={
   title:['テキスト盆栽','Text Bonsai'],
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。','Type any text and a bonsai that suits it grows in seconds. Sometimes it won\'t grow—or turns out weird.'],
-  grow:['育てる','Grow'],try:['お試し:','Try:'],share:['共有','Share'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
+  grow:['育てる','Grow'],try:['お試し:','Try:'],share:['シェア','Share'],shareTo:['共有先を選ぶ','Share to'],close:['閉じる','Close'],mail:['メール','Email'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
   dev:['開発','Developer'],
   hist:['育てた盆栽','Your bonsai'],ph:['例：桜','e.g. cherry'],
   anal:['字形分析（実際に文字を描いて測定）','Glyph analysis (measured from the rendered text)'],
@@ -639,13 +649,20 @@ const FUNNY=[
 const stampOf=s=>({name:P(s.n),lines:P(s.l),col:s.c});
 const tierKey=n=>n>=92?'gold':n>=85?'silver':n>=78?'bronze':n>=68?'merit':n>=55?'good':n>=35?'effort':n>=20?'join':'dont';
 function drawScore(txt,age){
-  if(age<0)return;const p=Math.min(1,age/.4),e=1-Math.pow(1-p,3);
+  if(age<0)return;
+  const p=Math.min(1,age/.15);
+  const digs=[];for(let i=0;i<txt.length;i++)if(/[0-9]/.test(txt[i]))digs.push(i);
+  const per=Math.min(.2,.85/Math.max(1,digs.length)),T0=.4,fin=T0+digs.length*per,done=age>=fin;
+  let out='';
+  for(let i=0;i<txt.length;i++){const k=digs.indexOf(i);
+    out+=(k>=0&&age<T0+k*per)?String((Math.floor(age*22)*7+i*13+i*i)%10):txt[i];}
   ctx.save();ctx.globalAlpha=p;ctx.textAlign='right';ctx.textBaseline='top';
   let fs=46;ctx.font=`bold ${fs}px ${FONT}`;
   while(ctx.measureText(txt).width>270&&fs>14){fs-=2;ctx.font=`bold ${fs}px ${FONT}`;}
-  const x=628,y=14+(1-e)*-24;
-  ctx.lineJoin='round';ctx.lineWidth=7;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.strokeText(txt,x,y);
-  ctx.fillStyle='#b5382c';ctx.fillText(txt,x,y);
+  const pop=done?1+.25*Math.exp(-(age-fin)*9):1;
+  ctx.translate(628,14);ctx.scale(pop,pop);
+  ctx.lineJoin='round';ctx.lineWidth=7;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.strokeText(out,0,0);
+  ctx.fillStyle=done?'#b5382c':'#d98a00';ctx.fillText(out,0,0);
   ctx.restore();
 }
 function drawStamp(st,age,seed){
@@ -718,7 +735,7 @@ function evaluate(g){
   const tc=g.kc.find(c=>THEME[c]);
   if(g.th)cm+=L(`葉は${q(tc)}のイメージ色（${g.th.n}）。`,` The leaves take on the color associated with ${q(tc)}.`);
   else cm+=L(LEAF_N[domc][2],' '+LEAF_N[domc][3]);
-  if(g.emoText){const es=g.emo.join('');cm+=L(`${q(T)}にちなんで、枝先に${es}が咲き、実りました。収穫は早朝がおすすめです。`,` Inspired by ${q(T)}, ${es} bloomed and ripened all over the branches. Best harvested at dawn.`);if(!fate)rank=L('🌳 シュール','🌳 Surreal ')+rank;}
+  if(g.emoText){const es=g.emo.slice(0,6).join('')+(g.emo.length>6?'…':'');cm+=L(`${q(T)}にちなんで、枝先に${es}が咲き、実りました。収穫は早朝がおすすめです。`,` Inspired by ${q(T)}, ${es} bloomed and ripened all over the branches. Best harvested at dawn.`);if(!fate)rank=L('🌳 シュール','🌳 Surreal ')+rank;}
   if(g.kc.length>1&&!g.classes.every(c=>c==='latin'))cm+=L(`${g.kc.length}文字が寄り添う寄せ植えの趣も。`,` ${g.kc.length} characters huddle together like a group planting.`);
   if(fate){
     const f=FATE_N[fate];rank=P(f.r);
@@ -759,24 +776,25 @@ function evaluate(g){
 }
 
 /* ---------- 実行 ---------- */
-let G=null,R=null,start=0,last=0,shown=false,skip=false;
-const VERSION='1.1.0',BUILD='2026-11-26 11:14 JST';
+let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
+const SLOT_START=2300;
+const VERSION='1.2.0',BUILD='2026-11-26 11:20 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   drawBG(G);drawPot(G);
   if(G){
-    let t=Math.min(1,(now-start)/DURATION);if(skip)t=1;
+    let t=Math.min(1,(now-start)/DURATION);
     drawTree(G,ease(t),now/1000);
     if(t>=1){
       const wd=G.fate==='wither';
       if(GOODMODES.includes(G.mode)&&parts.length<(wd?40:G.mode==='withered'?14:10)&&Math.random()<(wd?.3:.06))spawnPart(G);
       drawParts(dt);
-      if(!shown){shown=true;R=evaluate(G);G.doneAt=now;paintResult(G);saveHist(G.text);}
     }
     drawSeal(G);
-    if(R&&G.doneAt){drawScore(R.scoreText,(now-G.doneAt)/1000-.15);drawStamp(R.stamp,(now-G.doneAt)/1000-.5,G.seed);}
+    if(R){const sa=(now-slotT0)/1000;drawScore(R.scoreText,sa);drawStamp(R.stamp,sa-1.3,G.seed);
+      if(!shown&&sa>=1.6){shown=true;paintResult(G);saveHist(G.text);}}
   }
   requestAnimationFrame(frame);
 }
@@ -799,7 +817,7 @@ function grow(text){
   text=Array.from(text.trim()).slice(0,20).join('');
   $('t').value=text;
   if(!text){$('t').focus();return;}
-  G=build(text);parts=[];shown=false;skip=false;R=null;start=performance.now();
+  G=build(text);parts=[];shown=false;start=performance.now();slotT0=start+SLOT_START;R=evaluate(G);
   $('result').classList.remove('show');
   $('t').blur();
 }
@@ -839,11 +857,34 @@ $('bCopy').onclick=async()=>{if(!ready())return;
   try{await navigator.clipboard.writeText(shareText()+' '+shareURL());toast(P(UI.copied));}catch(e){prompt(P(UI.copyPrompt),shareText()+' '+shareURL());}};
 $('bImg').onclick=async()=>{if(!ready())return;
   const b=await makeBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`textbonsai_${G.text}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000);};
-if(navigator.share){$('bNative').hidden=false;
-  $('bNative').onclick=async()=>{if(!ready())return;
+function shareTargets(){
+  const t=encodeURIComponent(shareText()),u=encodeURIComponent(shareURL()),tu=encodeURIComponent(shareText()+' '+shareURL());
+  return[['𝕏','https://twitter.com/intent/tweet?text='+t+'&url='+u],
+    ['LINE','https://social-plugins.line.me/lineit/share?url='+u+'&text='+t],
+    ['Facebook','https://www.facebook.com/sharer/sharer.php?u='+u],
+    ['Bluesky','https://bsky.app/intent/compose?text='+tu],
+    ['Threads','https://www.threads.net/intent/post?text='+tu],
+    ['Reddit','https://www.reddit.com/submit?url='+u+'&title='+t],
+    [P(UI.mail),'mailto:?subject='+encodeURIComponent(P(UI.title))+'&body='+tu]];
+}
+function openMenu(){
+  const g=$('menuGrid');g.textContent='';
+  for(const [n,h] of shareTargets()){const a=document.createElement('a');a.textContent=n;a.href=h;a.target='_blank';a.rel='noopener noreferrer';g.appendChild(a);}
+  const c=document.createElement('button');c.type='button';c.textContent=P(UI.copy);c.onclick=()=>{$('bCopy').click();closeMenu();};g.appendChild(c);
+  const im=document.createElement('button');im.type='button';im.textContent=P(UI.img);im.onclick=()=>{$('bImg').click();closeMenu();};g.appendChild(im);
+  $('menu').classList.add('on');
+}
+function closeMenu(){$('menu').classList.remove('on');}
+$('menuClose').onclick=closeMenu;
+$('menu').addEventListener('click',e=>{if(e.target===$('menu'))closeMenu();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu();});
+$('bShare').onclick=async()=>{if(!ready())return;
+  if(navigator.share){
     const d={title:P(UI.title),text:shareText()+' '+shareURL()};
     try{const f=new File([await makeBlob()],'textbonsai.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]}))d.files=[f];else d.url=shareURL();}catch(e){d.url=shareURL();}
-    try{await navigator.share(d);}catch(e){}};}
+    try{await navigator.share(d);return;}catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  openMenu();};
 
 /* ---------- 言語切り替え・初期化 ---------- */
 function applyLang(){
@@ -851,11 +892,11 @@ function applyLang(){
   document.documentElement.lang=lang;document.title=P(UI.title);
   document.querySelectorAll('[data-i]').forEach(e=>{e.textContent=P(UI[e.dataset.i]);});
   $('t').placeholder=P(UI.ph);$('lang').textContent=lang==='en'?'日本語':'EN';
-  if(G&&R){R=evaluate(G);paintResult(G);}
+  if(G){R=evaluate(G);if(shown)paintResult(G);}
 }
 $('lang').onclick=()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('mojibonsai_lang',lang);}catch(e){}applyLang();};
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
-cv.addEventListener('click',()=>{if(G&&!shown)skip=true;});
+cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n);}});
 {const box=document.querySelector('.chips');
  for(const s of['桜','松','猫','火','寿','UFO','cat','gold','sakura','あ','枯','草','顔']){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=s;b.onclick=()=>{$('t').value=s;grow(s);};box.appendChild(b);}}
 {const qs=new URLSearchParams(location.search);let l=qs.get('lang');
