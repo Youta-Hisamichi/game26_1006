@@ -772,8 +772,8 @@ function evaluate(g){
 
 /* ---------- 実行 ---------- */
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
-const SLOT_START=0,STAMP_AT=2.0;
-const VERSION='1.3.0',BUILD='2026-11-26 11:21 JST';
+const SLOT_START=0,STAMP_AT=1.0;
+const VERSION='1.3.1',BUILD='2026-11-26 11:22 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -788,7 +788,7 @@ function frame(now){
       drawParts(dt);
     }
     drawSeal(G);
-    if(R){const sa=(now-slotT0)/1000;drawScore(R.scoreText,sa);drawStamp(R.stamp,sa-STAMP_AT,G.seed);
+    if(R){const sa=(now-slotT0)/1000;drawScore(R.scoreText,sa-STAMP_AT);drawStamp(R.stamp,sa-STAMP_AT,G.seed);
       if(!shown&&sa>=STAMP_AT+.4){shown=true;paintResult(G);saveHist(G.text);}}
   }
   requestAnimationFrame(frame);
