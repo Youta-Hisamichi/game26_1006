@@ -32,6 +32,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #score{font-size:14px;opacity:.7;margin-left:6px}
 #comment{line-height:1.8;margin:6px 0 0}
 #meta{font-size:12px;opacity:.6;margin-top:6px}
+#totalTxt{font-size:13px;opacity:.8;margin-top:4px}
 #breakdown{font-size:12px;opacity:.75;margin-top:8px}
 #breakdown:empty{display:none}
 #metrics{margin-top:10px;display:grid;gap:4px;font-size:12px}
@@ -46,6 +47,8 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #menu{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:10}
 #menu.on{display:flex}
 #menu .sheet{background:var(--card);color:var(--ink);width:min(520px,100%);border-radius:16px 16px 0 0;padding:16px;display:grid;gap:10px}
+#menuImg{max-height:190px;max-width:100%;justify-self:center;border-radius:8px;border:1px solid var(--line)}
+#menuHint{margin:0;font-size:12px;opacity:.7}
 #menu h3{margin:0;font-size:16px}
 #menu .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
 #menu a,#menu button{display:block;text-align:center;text-decoration:none;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 6px;font-size:15px}
@@ -75,6 +78,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
   <p id="rank"></p>
   <div><span id="stars"></span><span id="score"></span></div>
   <p id="comment"></p>
+  <div id="totalTxt"></div>
   <div id="breakdown"></div>
   <div id="metrics"></div>
   <div id="meta"></div>
@@ -84,11 +88,11 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
     <button type="button" id="bCopy" data-i="copy">リンクをコピー</button>
   </div>
 </div>
-<div id="hist" hidden><h2 data-i="hist">育てた盆栽</h2><div id="histlist"></div></div>
+<div id="hist" hidden><h2 data-i="hist">育てた盆栽</h2><div id="histlist"></div><button type="button" id="histReset" data-i="reset">ログと累計をリセット</button></div>
 <footer id="ver"></footer>
 <div id="dev"><a href="https://x.com/Hisashi_vc" target="_blank" rel="noopener noreferrer"><span data-i="dev">開発</span>: ひさしApp</a></div>
 </main>
-<div id="menu"><div class="sheet"><h3 data-i="shareTo">共有先を選ぶ</h3><div class="grid" id="menuGrid"></div><button type="button" id="menuClose" data-i="close">閉じる</button></div></div>
+<div id="menu"><div class="sheet"><h3 data-i="shareTo">共有先を選ぶ</h3><img id="menuImg" alt=""><p id="menuHint"></p><div class="grid" id="menuGrid"></div><button type="button" id="menuClose" data-i="close">閉じる</button></div></div>
 <div id="toast"></div>
 <script>
 "use strict";
@@ -150,7 +154,8 @@ const THEME={
  '犬':T('犬毛',['#c19a6b','#a67c52','#e0c097'],'🐶'),'茸':T('茸',['#c0392b'],'🍄')
 };
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
-const WORD_GIM={'ufo':'ufo','宇宙':'ufo'}; // 言葉で必ず出るギミック
+const UFO_CH=new Set([...'星宇宙月惑彗']),UFO_EMO=new Set(['🛸','👽','🌌','⭐','🌙','🌟','🌠','🪐','🌍','🚀','☄️']);
+const UFO_W=new Set(['ufo','宇宙','宇宙人','銀河','地球','惑星','流星','彗星','星空','月','星','火星','土星','木星','金星','水星','ロケット','エイリアン','alien','aliens','space','galaxy','planet','star','stars','moon','comet','rocket','earth','mars','saturn','jupiter']); // UFOが来るのは宇宙・星・UFO関連だけ
 const WORD_FATE={'giant':'giant','巨大':'giant','枯':'wither','死':'wither'}; // 言葉で必ず起きる運命
 const ANIM=new Set([...'🐱🐶🐦🐸🐵🐴🐮🐯🐻🐰🐷🐔🐘🦋🐝🦀🐛🐞🐢🦔🐟🐙🦊🐼🐧🦉🦆🦄🐳🐉']);
 const VIS=['🐱','🐦','🦋','🐝','🐿️','🐸','🐌','🐞','🐢','🦔'],FLY=new Set(['🦋','🐝','🐦','🐞']);
@@ -223,9 +228,10 @@ function build(text){
   const emo0=emojiFor(text,key);
   const bigEmo=emo0.length>0&&(BIGW.has(low)||BIGW.has(text));
   // 周りのギミック（UFO・顔・訪問者）。盆栽自体は常に文字の形
-  let gimmick=WORD_GIM[low]||WORD_GIM[key]||null,vis=null;
+  const ufoRel=UFO_W.has(low)||UFO_W.has(text)||chars.some(c=>UFO_CH.has(c))||emo0.some(e=>UFO_EMO.has(e));
+  let gimmick=ufoRel?'ufo':null,vis=null;
   if(!gimmick&&emo0.length&&ANIM.has(emo0[0])&&seed%3===0){gimmick='visitor';vis=emo0[0];}
-  if(!gimmick&&seed%6===1)gimmick=['ufo','face','visitor','visitor','visitor'][(seed>>>6)%5];
+  if(!gimmick&&seed%6===1)gimmick=['face','visitor','visitor','visitor'][(seed>>>6)%4];
   if(bigEmo)gimmick=null;
   if(gimmick==='visitor'&&!vis)vis=VIS[(seed>>>9)%VIS.length];
   const sure=kc.some(c=>SURE_OK.has(c))||emo0.length>0;
@@ -573,7 +579,7 @@ const UI={
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。','Type any text and a bonsai that suits it grows in seconds. Sometimes it won\'t grow—or turns out weird.'],
   grow:['育てる','Grow'],try:['お試し:','Try:'],share:['シェア','Share'],shareTo:['共有先を選ぶ','Share to'],close:['閉じる','Close'],mail:['メール','Email'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
   dev:['開発','Developer'],
-  hist:['育てた盆栽','Your bonsai'],ph:['例：桜','e.g. cherry'],
+  hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
   anal:['字形分析（実際に文字を描いて測定）','Glyph analysis (measured from the rendered text)'],
   wait:['育ち終わるまでお待ちください','Please wait until it finishes growing'],copied:['コピーしました','Copied'],copyPrompt:['コピーしてください','Copy this']
 };
@@ -622,16 +628,18 @@ const FUNNY=[
 ];
 const stampOf=s=>({name:P(s.n),lines:P(s.l),col:s.c});
 const tierKey=n=>n>=92?'gold':n>=85?'silver':n>=78?'bronze':n>=68?'merit':n>=55?'good':n>=35?'effort':'join';
-function drawScore(txt,age){
+function drawScore(txt,age,sub){
   if(age<0)return;
   const p=Math.min(1,age/.2);
   ctx.save();ctx.globalAlpha=p;ctx.textAlign='right';ctx.textBaseline='top';
   let fs=46;ctx.font=`bold ${fs}px ${FONT}`;
   while(ctx.measureText(txt).width>270&&fs>14){fs-=2;ctx.font=`bold ${fs}px ${FONT}`;}
   const pop=1+.25*Math.exp(-age*9);
-  ctx.translate(628,14);ctx.scale(pop,pop);
+  ctx.translate(628,14);ctx.save();ctx.scale(pop,pop);
   ctx.lineJoin='round';ctx.lineWidth=7;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.strokeText(txt,0,0);
-  ctx.fillStyle='#b5382c';ctx.fillText(txt,0,0);
+  ctx.fillStyle='#b5382c';ctx.fillText(txt,0,0);ctx.restore();
+  if(sub){let f2=22;ctx.font=`bold ${f2}px ${FONT}`;while(ctx.measureText(sub).width>270&&f2>12){f2-=1;ctx.font=`bold ${f2}px ${FONT}`;}
+    ctx.lineWidth=5;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.strokeText(sub,0,fs*1.1+4);ctx.fillStyle='#6b4f3a';ctx.fillText(sub,0,fs*1.1+4);}
   ctx.restore();
 }
 function drawJudging(sa){
@@ -716,7 +724,7 @@ function evaluate(g){
   const age=20+Math.floor(rng()*280);
   // 賞と点数の見せ方
   let stampKey=(g.gold||fate==='gold')?'gold':fate==='rainbow'?'special':fate==='wither'?'join':tierKey(score);
-  let scoreText=pts(fmt(score)),stars=fate==='wither'?1:Math.max(1,Math.round(score/20)),breakdown=null;
+  let scoreNum=score,scoreText=pts(fmt(score)),stars=fate==='wither'?1:Math.max(1,Math.round(score/20)),breakdown=null;
   let stamp=stampOf(ST[stampKey]);
   const funnyOK=!fate||fate==='bloom'||fate==='fruit'||fate==='acorn';
   const JACK=[
@@ -728,12 +736,12 @@ function evaluate(g){
     ['1億点','100,000,000 pts',mkS('億点賞','Hundred Million Club',['億点賞'],['100M','CLUB'],'#c99a1f'),'1億点。審査員が驚いて会場から退席しました。','One hundred million points. The judges left the venue in shock.']];
   const jw=[0,0,1,1,2,2,3,3,4,5];
   if(fate!=='wither'&&!g.gold&&(g.seed>>>11)%100<6){
-    const J=JACK[jw[(g.seed>>>4)%10]];
+    const J=JACK[jw[(g.seed>>>4)%10]];scoreNum=[255,777,1000,10000,1000000,100000000][jw[(g.seed>>>4)%10]];
     scoreText=L(J[0],J[1]);stamp=stampOf(J[2]);stars=5;rank=L('伝説の一鉢','Legendary Pot');
     cm+=L('',' ')+L(J[3],J[4]);
   }else if(funnyOK&&!g.gold&&(g.seed>>>9)%100<16){
     const F=FUNNY[(g.seed>>>3)%FUNNY.length];
-    scoreText=P(F);stamp=stampOf(F[2]);stars=2+Math.floor(rng()*4);
+    scoreNum=({'100点満点中 107点':107,'59点（あと1点）':59,'42,195点':42195,'約70点（ざっくり）':70})[F[0]]||score;scoreText=P(F);stamp=stampOf(F[2]);stars=2+Math.floor(rng()*4);
   }else{
     const mxs=[30,25,20,25],parts=mxs.map(m=>Math.max(0,Math.min(m,Math.round(m*score/100+rng()*4-2))));
     let diff=score-parts.reduce((a,b)=>a+b,0);
@@ -741,7 +749,7 @@ function evaluate(g){
     const nm=[L('樹形','Shape'),L('葉','Foliage'),L('鉢映え','Pot harmony'),L('独創性','Originality')];
     breakdown=nm.map((n,i)=>`${n} ${parts[i]}/${mxs[i]}`).join('　');
   }
-  return{bad:fate==='wither',rank,scoreText,stars,comment:cm,metrics,stamp,breakdown,
+  return{bad:fate==='wither',rank,scoreText,scoreNum,stars,comment:cm,metrics,stamp,breakdown,
     meta:sty+P(STYLE_N[g.style])+(g.mode==='glyph'?L('（字形樹冠）',' (glyph crown)'):'')+(fate?L('　／　運命: ','  /  Fate: ')+P(FATE_N[fate].m):'')
       +L(`　／　推定樹齢 ${age}年（育成時間 4秒）`,`  /  Est. age ${age} yrs (grown in 4 s)`)};
 }
@@ -749,8 +757,12 @@ function evaluate(g){
 /* ---------- 実行 ---------- */
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
 const SLOT_START=0,STAMP_AT=2.0;
-const SHOW_SCORE=false; // 点数の表示を一時的にオフ（trueで復活）
-const VERSION='1.4.0',BUILD='2026-11-26 11:42 JST';
+const SHOW_SCORE=true; // 点数の表示（falseで非表示）
+const TOTAL_KEY='mojibonsai_total',fmtN=n=>Number(n).toLocaleString('en-US');
+function getTotal(){try{return parseInt(localStorage.getItem(TOTAL_KEY)||'0',10)||0;}catch(e){return 0;}}
+function setTotal(n){try{localStorage.setItem(TOTAL_KEY,String(n));}catch(e){}}
+function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts'):'';}
+const VERSION='1.5.0',BUILD='2026-11-26 11:45 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -765,8 +777,8 @@ function frame(now){
       drawParts(dt);
     }
     drawSeal(G);
-    if(R){const sa=(now-slotT0)/1000;drawJudging(sa);if(SHOW_SCORE)drawScore(R.scoreText,sa-STAMP_AT);drawStamp(R.stamp,sa-STAMP_AT,G.seed);
-      if(!shown&&sa>=STAMP_AT+.4){shown=true;paintResult(G);saveHist(G.text);}}
+    if(R){const sa=(now-slotT0)/1000;drawJudging(sa);if(SHOW_SCORE)drawScore(R.scoreText,sa-STAMP_AT,totalText());drawStamp(R.stamp,sa-STAMP_AT,G.seed);
+      if(!shown&&sa>=STAMP_AT+.4){shown=true;setTotal(G.total);paintResult(G);saveHist(G.text);}}
   }
   requestAnimationFrame(frame);
 }
@@ -774,6 +786,7 @@ function paintResult(g){
   $('rank').textContent=L(`「${g.text}」 ${R.rank}`,`"${g.text}" ${R.rank}`);
   $('stars').textContent='★'.repeat(R.stars)+'☆'.repeat(5-R.stars);
   $('score').textContent=SHOW_SCORE?R.scoreText+(R.scoreText===R.stamp.name?'':'　｜　'+R.stamp.name):R.stamp.name;
+  $('totalTxt').textContent=totalText();
   $('breakdown').textContent=SHOW_SCORE?(R.breakdown||''):'';
   $('comment').textContent=R.comment;
   $('meta').textContent=R.meta;
@@ -789,14 +802,14 @@ function grow(text){
   text=Array.from(text.trim()).slice(0,20).join('');
   $('t').value=text;
   if(!text){$('t').focus();return;}
-  G=build(text);parts=[];shown=false;start=performance.now();slotT0=start+SLOT_START;R=evaluate(G);
+  G=build(text);parts=[];shown=false;start=performance.now();slotT0=start+SLOT_START;R=evaluate(G);G.total=getTotal()+R.scoreNum;
   $('result').classList.remove('show');
   $('t').blur();
 }
 function saveHist(text){
   try{
     let h=JSON.parse(localStorage.getItem('mojibonsai')||'[]');
-    h=h.filter(x=>x.t!==text);h.unshift({t:text,s:SHOW_SCORE?R.scoreText:''});h=h.slice(0,10);
+    h=h.filter(x=>x.t!==text);h.unshift({t:text,s:SHOW_SCORE?R.scoreText:''});h=h.slice(0,30);
     localStorage.setItem('mojibonsai',JSON.stringify(h));
   }catch(e){}
   renderHist();
@@ -814,11 +827,15 @@ function shareText(){const sc=SHOW_SCORE?R.scoreText:'';return L(`「${G.text}�
 let toastT;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),1800);}
 function makeBlob(){
   return new Promise(res=>{
-    const c=document.createElement('canvas');c.width=cv.width;c.height=cv.height;
-    const x=c.getContext('2d');x.drawImage(cv,0,0);x.setTransform(DPR,0,0,DPR,0,0);
-    x.fillStyle='#fff3dc';x.textBaseline='alphabetic';
-    x.font=`bold 20px ${FONT}`;x.fillText(L(`「${G.text}」 ${R.rank}`,`"${G.text}" ${R.rank}`),16,494);
-    x.font=`14px ${FONT}`;x.fillText(`${SHOW_SCORE?R.scoreText:R.stamp.name}　${'★'.repeat(R.stars)}　${L('#テキスト盆栽','#TextBonsai')}`,16,514);
+    const bh=84*DPR,c=document.createElement('canvas');c.width=cv.width;c.height=cv.height+bh;
+    const x=c.getContext('2d');x.drawImage(cv,0,0);
+    x.fillStyle='#2b2118';x.fillRect(0,cv.height,c.width,bh);
+    x.setTransform(DPR,0,0,DPR,0,0);x.textBaseline='alphabetic';
+    const y0=520;
+    x.fillStyle='#fff3dc';x.font=`bold 22px ${FONT}`;x.fillText(L(`「${G.text}」 ${R.rank}`,`"${G.text}" ${R.rank}`),16,y0+28,608);
+    x.fillStyle='#f3d9a4';x.font=`15px ${FONT}`;
+    x.fillText(`${R.stamp.name}　${SHOW_SCORE?R.scoreText+'　'+totalText()+'　':''}${'★'.repeat(R.stars)}${'☆'.repeat(5-R.stars)}`,16,y0+52,608);
+    x.fillStyle='#bba98a';x.font=`13px ${FONT}`;x.fillText(`${P(UI.title)}  ${L('#テキスト盆栽','#TextBonsai')}  ${location.host||''}`,16,y0+72,608);
     c.toBlob(res,'image/png');
   });
 }
@@ -837,12 +854,17 @@ function shareTargets(){
     ['Reddit','https://www.reddit.com/submit?url='+u+'&title='+t],
     [P(UI.mail),'mailto:?subject='+encodeURIComponent(P(UI.title))+'&body='+tu]];
 }
-function openMenu(){
+let menuURL=null;
+async function openMenu(){
   const g=$('menuGrid');g.textContent='';
   for(const [n,h] of shareTargets()){const a=document.createElement('a');a.textContent=n;a.href=h;a.target='_blank';a.rel='noopener noreferrer';g.appendChild(a);}
-  const c=document.createElement('button');c.type='button';c.textContent=P(UI.copy);c.onclick=()=>{$('bCopy').click();closeMenu();};g.appendChild(c);
-  const im=document.createElement('button');im.type='button';im.textContent=P(UI.img);im.onclick=()=>{$('bImg').click();closeMenu();};g.appendChild(im);
+  const ci=document.createElement('button');ci.type='button';ci.textContent=P(UI.copyImg);
+  ci.onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':makeBlob()})]);toast(P(UI.copiedImg));}catch(e){toast(P(UI.copyImgFail));}};g.appendChild(ci);
+  const im=document.createElement('button');im.type='button';im.textContent=P(UI.img);im.onclick=()=>{$('bImg').click();};g.appendChild(im);
+  const c=document.createElement('button');c.type='button';c.textContent=P(UI.copy);c.onclick=()=>{$('bCopy').click();};g.appendChild(c);
+  $('menuHint').textContent=P(UI.imgHint);
   $('menu').classList.add('on');
+  try{const b=await makeBlob();if(menuURL)URL.revokeObjectURL(menuURL);menuURL=URL.createObjectURL(b);$('menuImg').src=menuURL;}catch(e){}
 }
 function closeMenu(){$('menu').classList.remove('on');}
 $('menuClose').onclick=closeMenu;
@@ -875,6 +897,7 @@ function applyLang(){
   if(G){R=evaluate(G);if(shown)paintResult(G);}
 }
 $('lang').onclick=()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('mojibonsai_lang',lang);}catch(e){}applyLang();};
+$('histReset').onclick=()=>{if(confirm(P(UI.resetAsk))){try{localStorage.removeItem('mojibonsai');localStorage.removeItem(TOTAL_KEY);}catch(e){}renderHist();}};
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
 cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-(STAMP_AT-.3)*1000);}});
 {const qs=new URLSearchParams(location.search);let l=qs.get('lang');
