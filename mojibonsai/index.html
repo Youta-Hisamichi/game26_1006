@@ -796,7 +796,7 @@ function jpNum(n){
 const fmtR=n=>lang==='ja'?jpNum(n):fmtN(n);
 const norm=t=>String(t).normalize('NFKC').toLowerCase();
 function getHist(){try{return JSON.parse(localStorage.getItem('mojibonsai')||'[]');}catch(e){return[];}}
-function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts')+(G.counted?'':'\n'+L('（加算済み）','(already added)')):'';}
+function totalText(){return G?L('累計 '+fmtR(G.total)+'点','Total '+fmtR(G.total)+' pts')+(G.counted?'':'\n'+L('（加算済み）','(already added)')):'';}
 /* みんなのランキング（Firebase Firestore REST） */
 const FB=window.TB_FIREBASE||{apiKey:'',projectId:''};
 const fbOn=()=>!!(FB.apiKey&&FB.projectId);
@@ -879,7 +879,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.7.6',BUILD='2026-11-26 12:07 JST';
+const VERSION='1.7.7',BUILD='2026-11-26 12:09 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
