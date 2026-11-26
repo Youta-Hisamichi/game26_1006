@@ -1007,7 +1007,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.9.6',BUILD='2026-11-26 22:48 JST';
+const VERSION='1.9.7',BUILD='2026-11-26 22:50 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -1144,7 +1144,13 @@ $('lang').onclick=()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('moji
 $('histReset').onclick=()=>{if(confirm(P(UI.resetAsk))){try{localStorage.removeItem('mojibonsai');localStorage.removeItem(TOTAL_KEY);localStorage.removeItem(BEST_KEY);}catch(e){}renderHist();renderRank();}};
 $('glBtn').onclick=renameGlobal;$('glRefresh').onclick=loadGlobal;
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
-cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-STAMP_AT*1000);}});
+function skipGrow(){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-STAMP_AT*1000);}
+cv.addEventListener('click',()=>{if(G&&!shown)skipGrow();});
+// 育成中の Enter はタップと同じ（育成を飛ばして完了）。日本語入力の変換確定の Enter は除く
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||e.isComposing||e.keyCode===229||!G||shown||$('menu').classList.contains('on')||(e.target&&e.target.id==='glName'))return;
+  e.preventDefault();e.stopPropagation();skipGrow();
+},true);
 {const qs=new URLSearchParams(location.search);let l=qs.get('lang');
  if(l!=='ja'&&l!=='en'){try{l=localStorage.getItem('mojibonsai_lang');}catch(e){}}
  if(l!=='ja'&&l!=='en')l=(navigator.language||'ja').toLowerCase().startsWith('ja')?'ja':'en';
