@@ -255,7 +255,7 @@ const THEME={
 機関車|機関車|#222222,#6c757d,#e63946|🚂
 地下鉄|地下鉄|#3a86ff,#8ecae6,#ffffff|🚇`.split('\n').forEach(l=>{const [k,n,p,f]=l.split('|');THEME[k]=T(n,p,f);});
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
-const DRAGON_RE=/ドラゴン|ドラクエ|どらごん|どらくえ|dragon|竜|龍/i;
+const DRAGON_RE=/ドラゴン|ドラクエ|どらごん|どらくえ|dragon|竜|龍/i,PHONE_RE=/スマホ|すまほ|スマートフォン|smartphone|iphone|携帯|ケータイ/i;
 const BLACKW=new Set(['x','𝕏','エックス','えっくす']);
 const SKYW=new Set(['twitter','ツイッター','ついったー']),SKY_EMO=['🐦','🩵','🕊️','🦜']; // 空色＋鳥系絵文字＋🩵 // 真っ黒な盆栽になる言葉
 const UFO_CH=new Set([...'星宇宙月惑彗']),UFO_EMO=new Set(['🛸','👽','🌌','⭐','🌙','🌟','🌠','🪐','🌍','🚀','☄️']);
@@ -333,7 +333,9 @@ function build(text){
   const chars=Array.from(text),seed=hashStr(text),rng=rngFrom(seed);
   const low=text.toLowerCase(),key=EN_ALIAS[low]||text,kc=Array.from(key);
   let emo0=emojiFor(text,key);
-  if(DRAGON_RE.test(text.normalize('NFKC'))&&!emo0.includes('🐉'))emo0=[...emo0,'🐉'].slice(0,4); // ドラゴン/ドラクエを含むと🐉が付く
+  {const nt0=text.normalize('NFKC');// 言葉を含むと絵文字が付く
+   if(DRAGON_RE.test(nt0)&&!emo0.includes('🐉'))emo0=[...emo0,'🐉'].slice(0,4);
+   if(PHONE_RE.test(nt0)&&!emo0.includes('📱'))emo0=[...emo0,'📱'].slice(0,4);}
   const bigEmo=emo0.length>0&&(BIGW.has(low)||BIGW.has(text));
   // 周りのギミック（UFO・顔・訪問者）。盆栽自体は常に文字の形
   const ufoRel=UFO_W.has(low)||UFO_W.has(text)||chars.some(c=>UFO_CH.has(c))||emo0.some(e=>UFO_EMO.has(e));
@@ -380,7 +382,9 @@ function build(text){
   if(gimmick==='face')style='chokkan';
   if(mode==='glyph'){if(style==='kengai')style='moyogi';if(style==='hokidachi')style='chokkan';}
   const dens=info?info.dens:.3;
-  const tw=10+dens*22;
+  const tvr=(seed>>>13)%100,thick=tvr<12?'vthick':tvr<35?'thick':tvr<50?'thin':null,tmul={vthick:2.6,thick:1.7,thin:.7}[thick]||1;
+  const tw=(10+dens*22)*tmul;
+  if(mode==='glyph'&&!bigEmo&&gimmick!=='face'&&(seed>>>17)%100<22){style='sweep';side=(seed>>>25)&1?1:-1;}
   const padPal=()=>{if(blackX)return{c:'theme',p:PAL.black};if(skyTw)return{c:'theme',p:PAL.sky};if(gimmick==='ufo')return{c:'theme',p:PAL.space};if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
     const i=Math.floor(rng()*kc.length),t=thW||THEME[kc[i]];
     if(t&&!dry)return{c:'theme',p:t.pal};
@@ -396,6 +400,7 @@ function build(text){
         else if(style==='shakan')drift=(rng()-.5)*.06;
         else if(style==='moyogi')drift=Math.sin(i*1.05)*.13*side;
         else if(style==='kengai')drift=.075*side;
+        else if(style==='sweep')drift=-side*.055+(rng()-.5)*.03;
         else drift=(rng()-.5)*.03;
       }else drift=(rng()-.5)*(o.straight?.02:.22)+(dry?.07*side:0)+(o.wobble?Math.sin(i*.8)*o.wobble:0);
       a+=drift;
@@ -445,10 +450,10 @@ function build(text){
       const t0=els[els.length-1];
       pads.push({x:t0.x1,y:t0.y1-98,r:104,ts:t0.te+.05,kind:'emoji',e:emo[0],pal:['#000'],cls:'emoji'});
     }else{
-    const big=fate==='giant';let gang=-Math.PI/2;if(style==='shakan')gang+=side*.45;
+    const big=fate==='giant';let gang=-Math.PI/2;if(style==='shakan')gang+=side*.45;if(style==='sweep')gang+=side*.75;
     const n=cinfos.length;
     const rx=n<=1?0:Math.min(270,60+Math.pow(n,.6)*38),ry=n<=1?0:Math.min(190,50+Math.sqrt(n)*30);
-    branch(0,0,gang,((big?200:150)+(n>3?20:0))*sc,gimmick==='face'?34:tw*sc*(big?1.5:1),0,0,{noKids:true,noPad:true});
+    branch(0,0,gang,((big?200:150)+(n>3?20:0))*sc*(style==='sweep'?1.3:thick==='vthick'?.85:1),gimmick==='face'?34:tw*sc*(big?1.5:1),0,0,{noKids:true,noPad:true});
     const top=els[els.length-1];
     if(gimmick==='face'){const tr=els.filter(e=>e.t),m=tr[Math.floor(tr.length*.35)];face={x:(m.x0+m.x1)/2,y:(m.y0+m.y1)/2,w:(m.w0+m.w1)/2};faceKind=['happy','sleepy','angry','surprised'][(seed>>>3)%4];}
     const base=(n<=1?215:n<=3?150:n<=6?125:n<=12?105:92)*(big?1.3:1);
@@ -502,7 +507,7 @@ function build(text){
   for(const p of pads){minX=Math.min(minX,p.x-p.r*1.1);maxX=Math.max(maxX,p.x+p.r*1.1);minY=Math.min(minY,p.y-p.r*1.1);}
   const fit=Math.min(1,285/Math.max(1,-minX,maxX),(gimmick==='ufo'?280:345)/Math.max(1,-minY));
   const potCols=['#6b4f3a','#3e5c76','#8c3b3b','#4a6b57','#7a6a8a','#c4a35a'];
-  return{thKey,gimmick,vis,fit,minY,text,chars,kc,fate,emo,bigEmo,gold:PROT.has(low)||PROT.has(text),emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
+  return{thick,thKey,gimmick,vis,fit,minY,text,chars,kc,fate,emo,bigEmo,gold:PROT.has(low)||PROT.has(text),emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
     potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,dom:classes[0]};
 }
 
@@ -696,7 +701,7 @@ const UI={
 };
 
 /* ---------- 評価 ---------- */
-const STYLE_N={chokkan:['直幹','Chokkan (upright)'],shakan:['斜幹','Shakan (slanting)'],moyogi:['曲幹','Moyogi (curvy)'],kengai:['懸崖','Kengai (cascade)'],hokidachi:['箒立ち','Hokidachi (broom)']};
+const STYLE_N={chokkan:['直幹','Chokkan (upright)'],shakan:['斜幹','Shakan (slanting)'],moyogi:['曲幹','Moyogi (curvy)'],kengai:['懸崖','Kengai (cascade)'],hokidachi:['箒立ち','Hokidachi (broom)'],sweep:['流れ幹','Sweeping trunk']};
 const STYLE_D={
   chokkan:['まっすぐ天を突く直幹。力強さと品格があります。','An upright trunk reaching straight for the sky—strong and dignified.'],
   shakan:['風に身を任せる斜幹。動きのある風情です。','A slanting trunk leaning into the wind, full of movement.'],
@@ -821,6 +826,10 @@ function evaluate(g){
   const tc=g.thKey;
   if(g.th)cm+=L(`葉は${q(tc)}のイメージ色（${g.th.n}）。`,` The leaves take on the color associated with ${q(tc)}.`);
   else cm+=L(LEAF_N[domc][2],' '+LEAF_N[domc][3]);
+  if(g.style==='sweep')cm+=L(`幹が${g.side>0?'右':'左'}へ大きく流れる、盆栽らしい斜め仕立て。`,` The trunk sweeps boldly to the ${g.side>0?'right':'left'}, a classic bonsai silhouette.`);
+  if(g.thick==='vthick')cm+=L('幹がどっしりと極太で、堂々たる風格。',' An extremely thick, imposing trunk.');
+  else if(g.thick==='thick')cm+=L('幹は太めで力強い。',' A thick, powerful trunk.');
+  else if(g.thick==='thin')cm+=L('幹は細くしなやか。',' A slim, supple trunk.');
   if(g.gimmick==='ufo')cm+=L('UFOが飛来して、枝ぶりを調査中です。牛が一頭巻き込まれています。',' A UFO arrived to study the branches. One cow got caught in the beam.');
   if(g.gimmick==='face')cm+=L(`幹にいつの間にか顔が。今日の機嫌は「${FACE_N[g.faceKind][0]}」。`,` A face appeared on the trunk. Today's mood: ${FACE_N[g.faceKind][1]}.`);
   if(g.gimmick==='visitor')cm+=L(`${g.vis}が遊びに来ました。`,` A ${g.vis} dropped by for a visit.`);
@@ -963,7 +972,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.8.3',BUILD='2026-11-26 19:44 JST';
+const VERSION='1.9.0',BUILD='2026-11-26 19:46 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
