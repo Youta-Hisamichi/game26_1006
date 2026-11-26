@@ -607,7 +607,7 @@ const BAD_N={
 const GAG_N={
   ufo:{r:['UFO遭遇賞','UFO Encounter'],c:['UFOが「%」の枝ぶりを気に入り、調査のため吸い上げ中です。牛が一頭巻き込まれています。','A UFO liked the branches of "%" and is beaming it up for study. One cow got caught in the beam.'],s:['51点','51 pts'],stars:4,m:['宇宙規模　／　回収率 87%','Cosmic  /  Retrieval rate 87%']},
   face:{r:['顔つき盆栽','Bonsai With A Face'],c:['幹にいつの間にか顔が。「%」という字に魂が宿ったようです。','A face appeared on the trunk. The soul of "%" seems to have awakened.'],s:['愛嬌 100点','Charm 100 pts'],stars:5,m:['擬人化','Personified']},
-  afro:{r:['爆発アフロ賞','Afro Explosion'],c:['「%」を植えたらアフロが生えました。サングラスは自前です。','You planted "%" and an afro grew. The sunglasses are its own.'],s:['盛り度 999点','Fluff 999 pts'],stars:5,m:['爆発','Explosive']},
+  afro:{r:['アフロ大爆発','Afro Explosion'],c:['「%」を植えたらアフロが生えました。サングラスは自前です。','You planted "%" and an afro grew. The sunglasses are its own.'],s:['盛り度 999点','Fluff 999 pts'],stars:5,m:['爆発','Explosive']},
   giant:{r:['巨木化・鉢崩壊','Giant Tree, Pot Destroyed'],c:['「%」の根が張りすぎて鉢が割れました。もはや盆栽ではなく樹木。管理人に怒られます。','The roots of "%" grew so much the pot cracked. This is a tree now, not a bonsai. The landlord will be furious.'],s:['120点','120 pts'],stars:3,m:['森','Forest']},
   bald:{r:['ハゲ判定','Bald Verdict'],c:['葉が一本を残して抜け落ちました。残った一本に哀愁が漂います。','All the leaves fell out except one. A single leaf, full of pathos.'],s:['1点','1 pt'],stars:1,m:['バーコード','Comb-over']}};
 const FACE_N={happy:['ご機嫌','cheerful'],sleepy:['おねむ','sleepy'],angry:['ご立腹','furious'],surprised:['びっくり','surprised']};
@@ -631,18 +631,16 @@ const ST={
   join:mkS('参加賞','Participation Award',['参加賞'],['THANKS FOR','PLAYING'],'#c0392b'),
   dont:mkS('ドンマイ賞','Better Luck Next Time',['ドンマイ','賞'],['BETTER LUCK','NEXT TIME'],'#5f7188'),
   special:mkS('特別賞','Special Prize',['特別賞'],['SPECIAL','PRIZE'],'#8e44ad'),
-  moyashi:mkS('もやし賞','Bean Sprout Award',['もやし','賞'],['BEAN','SPROUT'],'#4a9a3c'),
   kinoko:mkS('キノコ賞','Mushroom Award',['キノコ','賞'],['MUSHROOM','AWARD'],'#c0392b'),
   nobi:mkS('伸びしろ賞','Room To Grow',['伸びしろ','賞'],['ROOM TO','GROW'],'#4a9a3c'),
   zassou:mkS('雑草魂賞','Weed Spirit Award',['雑草魂','賞'],['WEED','SPIRIT'],'#4a9a3c'),
   uchu:mkS('宇宙賞','Cosmic Award',['宇宙賞'],['COSMIC','AWARD'],'#2a5db0'),
   aikyo:mkS('愛嬌賞','Charm Award',['愛嬌賞'],['CHARM','AWARD'],'#d6457a'),
-  afro:mkS('アフロ賞','Afro Award',['アフロ賞'],['AFRO','AWARD'],'#5a3a2a'),
   kikaku:mkS('規格外賞','Off-the-Charts',['規格外','賞'],['OFF THE','CHARTS'],'#c0392b'),
   hage:mkS('ハゲまし賞','Comb-over Award',['ハゲまし','賞'],['COMB-OVER','AWARD'],'#6b4f3a')
 };
-const BAD_ST={withered:'dont',noodle:'moyashi',mushroom:'kinoko',sprout:'nobi',weed:'zassou'};
-const GAG_ST={ufo:'uchu',face:'aikyo',afro:'afro',giant:'kikaku',bald:'hage'};
+const BAD_ST={withered:'dont',noodle:'dont',mushroom:'kinoko',sprout:'nobi',weed:'zassou'};
+const GAG_ST={ufo:'uchu',face:'aikyo',afro:'special',giant:'kikaku',bald:'hage'};
 const FUNNY=[
   ['100点満点中 107点','107 pts out of 100',mkS('審査員困惑賞','Judges Confused',['審査員','困惑賞'],['JUDGES','CONFUSED'],'#2a5db0')],
   ['-3点（減点方式）','-3 pts (deduction system)',mkS('減点王賞','Deduction King',['減点王賞'],['DEDUCTION','KING'],'#2a5db0')],
@@ -791,7 +789,7 @@ function evaluate(g){
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
 const SLOT_START=0,STAMP_AT=2.0;
 const SHOW_SCORE=false; // 点数の表示を一時的にオフ（trueで復活）
-const VERSION='1.3.10',BUILD='2026-11-26 11:35 JST';
+const VERSION='1.3.11',BUILD='2026-11-26 11:36 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
