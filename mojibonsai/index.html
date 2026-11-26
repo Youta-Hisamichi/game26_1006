@@ -32,7 +32,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #score{font-size:14px;opacity:.7;margin-left:6px}
 #comment{line-height:1.8;margin:6px 0 0}
 #meta{font-size:12px;opacity:.6;margin-top:6px}
-#totalTxt{font-size:13px;opacity:.8;margin-top:4px}
+#totalTxt{white-space:pre-line;font-size:13px;opacity:.8;margin-top:4px}
 #breakdown{font-size:12px;opacity:.75;margin-top:8px}
 #breakdown:empty{display:none}
 #metrics{margin-top:10px;display:grid;gap:4px;font-size:12px}
@@ -661,8 +661,10 @@ function drawScore(txt,age,sub){
   ctx.translate(628,14);ctx.save();ctx.scale(pop,pop);
   ctx.lineJoin='round';ctx.lineWidth=7;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.strokeText(txt,0,0);
   ctx.fillStyle='#b5382c';ctx.fillText(txt,0,0);ctx.restore();
-  if(sub){let f2=22;ctx.font=`bold ${f2}px ${FONT}`;while(ctx.measureText(sub).width>270&&f2>12){f2-=1;ctx.font=`bold ${f2}px ${FONT}`;}
-    ctx.lineWidth=5;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.strokeText(sub,0,fs*1.1+4);ctx.fillStyle='#6b4f3a';ctx.fillText(sub,0,fs*1.1+4);}
+  if(sub){const ls=sub.split('\n');let f2=22;ctx.font=`bold ${f2}px ${FONT}`;
+    while(Math.max(...ls.map(l=>ctx.measureText(l).width))>270&&f2>12){f2-=1;ctx.font=`bold ${f2}px ${FONT}`;}
+    ctx.lineWidth=5;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.fillStyle='#6b4f3a';
+    ls.forEach((l,i)=>{const y=fs*1.1+4+i*(f2+3);ctx.strokeText(l,0,y);ctx.fillText(l,0,y);});}
   ctx.restore();
 }
 function drawJudging(sa){
@@ -785,7 +787,7 @@ function getTotal(){try{return parseInt(localStorage.getItem(TOTAL_KEY)||'0',10)
 function setTotal(n){try{localStorage.setItem(TOTAL_KEY,String(n));}catch(e){}}
 const norm=t=>String(t).normalize('NFKC').toLowerCase();
 function getHist(){try{return JSON.parse(localStorage.getItem('mojibonsai')||'[]');}catch(e){return[];}}
-function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts')+(G.counted?'':L('（加算済み）',' (already added)')):'';}
+function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts')+(G.counted?'':'\n'+L('（加算済み）','(already added)')):'';}
 /* みんなのランキング（Firebase Firestore REST） */
 const FB=window.TB_FIREBASE||{apiKey:'',projectId:''};
 const fbOn=()=>!!(FB.apiKey&&FB.projectId);
@@ -868,7 +870,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtN(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.7.1',BUILD='2026-11-26 12:00 JST';
+const VERSION='1.7.2',BUILD='2026-11-26 12:01 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -939,7 +941,7 @@ function makeBlob(){
     const y0=520;
     x.fillStyle='#fff3dc';x.font=`bold 22px ${FONT}`;x.fillText(L(`「${G.text}」 ${R.rank}`,`"${G.text}" ${R.rank}`),16,y0+28,608);
     x.fillStyle='#f3d9a4';x.font=`15px ${FONT}`;
-    x.fillText(`${R.stamp.name}　${SHOW_SCORE?R.scoreText+'　'+totalText()+'　':''}${'★'.repeat(R.stars)}${'☆'.repeat(5-R.stars)}`,16,y0+52,608);
+    x.fillText(`${R.stamp.name}　${SHOW_SCORE?R.scoreText+'　'+totalText().replace('\n',' ')+'　':''}${'★'.repeat(R.stars)}${'☆'.repeat(5-R.stars)}`,16,y0+52,608);
     x.fillStyle='#bba98a';x.font=`13px ${FONT}`;x.fillText(`${P(UI.title)}  ${L('#テキスト盆栽','#TextBonsai')}  ${location.host||''}`,16,y0+72,608);
     c.toBlob(res,'image/png');
   });
