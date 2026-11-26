@@ -59,7 +59,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 <h1 data-i="title">テキスト盆栽</h1>
 <p class="sub" data-i="sub">好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。</p>
 <form id="f">
-  <input id="t" maxlength="6" placeholder="例：桜" autocomplete="off" aria-label="文字を入力">
+  <input id="t" maxlength="40" placeholder="例：桜" autocomplete="off" aria-label="文字を入力">
   <button data-i="grow">育てる</button>
 </form>
 <div class="chips"><span data-i="try">お試し:</span></div>
@@ -152,7 +152,7 @@ const STYLES=['chokkan','shakan','moyogi','kengai','hokidachi'];
 const SP={'桜':'hira','楓':'kata','紅':'kata','菊':'digit','金':'digit'};
 
 /* ---------- 字形の分析（実際に文字を描いて測る） ---------- */
-function glyphInfo(chars){
+function glyphInfo(chars,target=230){
   try{
     const n=Math.min(chars.length,6),S=120,W=S*n;
     const off=document.createElement('canvas');off.width=W;off.height=S;
@@ -167,7 +167,7 @@ function glyphInfo(chars){
     const bw=maxx-minx+1,bh=maxy-miny+1;
     let tot=0,match=0;const m=minx+maxx;
     for(let y=miny;y<=maxy;y+=2)for(let px=minx;px<=maxx;px+=2)if(lit(px,y)){tot++;if(lit(m-px,y)||lit(m-px+1,y)||lit(m-px-1,y))match++;}
-    const step=Math.max(6,Math.ceil(Math.sqrt(bw*bh/230)));
+    const step=Math.max(6,Math.ceil(Math.sqrt(bw*bh/target)));
     const pts=[];
     for(let gy=miny;gy<=maxy;gy+=step)for(let gx=minx;gx<=maxx;gx+=step){
       let c=0,t=0;for(let yy=gy;yy<gy+step;yy+=2)for(let xx=gx;xx<gx+step;xx+=2){t++;if(lit(xx,yy))c++;}
@@ -216,8 +216,10 @@ function build(text){
   else if(kc.length===1&&SURE_BAD[key])mode=SURE_BAD[key];
   else if(!sure&&seed%7===0)mode=BAD_MODES[(seed>>>8)%BAD_MODES.length];
   else if(!sure&&seed%9===4)mode=GAGS[(seed>>>6)%GAGS.length];
-  const info=(TREE_MODES.includes(mode))?glyphInfo(chars):null;
-  if(mode==='ok'&&info&&info.pts.length>8)mode='glyph';
+  const info=(TREE_MODES.includes(mode))?glyphInfo(chars.slice(0,3)):null;
+  const nc=Math.min(chars.length,20),tg=nc>12?55:nc>6?85:nc>3?140:230;
+  const cinfos=(info&&TREE_MODES.includes(mode))?chars.slice(0,20).map((c,i)=>{const gi=glyphInfo([c],tg);return gi?Object.assign(gi,{idx:i}):null;}).filter(Boolean):[];
+  if(mode==='ok'&&info&&info.pts.length>8&&cinfos.length)mode='glyph';
   const classes=kc.map(c=>SP[c]||(/\p{Extended_Pictographic}/u.test(c)?'latin':cls(c)));
   const th=kc.map(c=>THEME[c]).find(Boolean)||null;
   let fate=null;
@@ -307,21 +309,35 @@ function build(text){
     }
   }else if(mode==='glyph'){
     const big=fate==='giant';let gang=-Math.PI/2;if(style==='shakan')gang+=side*.45;
-    branch(0,0,gang,(big?200:150)*sc,tw*sc*(big?1.5:1),0,0,{noKids:true,noPad:true});
+    const n=cinfos.length;
+    const rx=n<=1?0:Math.min(270,60+Math.pow(n,.6)*38),ry=n<=1?0:Math.min(190,50+Math.sqrt(n)*30);
+    branch(0,0,gang,((big?200:150)+(n>3?20:0))*sc,tw*sc*(big?1.5:1),0,0,{noKids:true,noPad:true});
     const top=els[els.length-1];
-    const k=Math.min(big?2.8:2.1,250/info.bw,215/info.bh);
-    const ccx=top.x1,ccy=top.y1-12-info.bh*k/2;
-    const th2=th?th.pal:(palFor(classes[0],rng));
-    const pal=fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:classes[0]==='kanji'&&!th?['#3b7048','#2f5d3a','#4a7d52','#5d9468']:th2;
-    const low=info.pts.filter(p=>p.y>info.bh*.15).sort((a,b)=>b.y-a.y).slice(0,12);
-    for(let i=0;i<4&&low.length;i++){
-      const p=low[Math.floor(rng()*low.length)];
-      els.push({x0:top.x1,y0:top.y1,x1:ccx+p.x*k,y1:ccy+p.y*k,w0:6,w1:3,ts:top.te,te:top.te+.12});
+    const base=(n<=1?215:n<=3?150:n<=6?125:n<=12?105:92)*(big?1.3:1);
+    const C={x:top.x1,y:top.y1-10-ry-base*.45};
+    const pl=[];
+    for(let i=0;i<n;i++){
+      let best=null,bd=-1;
+      for(let t=0;t<(i?14:1);t++){
+        const a2=rng()*6.283,r2=Math.sqrt(rng()),px=Math.cos(a2)*r2*rx,py=Math.sin(a2)*r2*ry;
+        let md=1e9;for(const q2 of pl)md=Math.min(md,Math.hypot(q2.x-px,(q2.y-py)*1.2));
+        if(!pl.length||md>bd){bd=md;best={x:px,y:py};}
+      }
+      best.size=base*(n<=1?1:.85+rng()*.3);best.rot=n<=1?0:(rng()-.5)*.7;pl.push(best);
     }
-    for(const p of info.pts){
-      const rel=(p.y+info.bh/2)/info.bh;
-      pads.push({x:ccx+p.x*k,y:ccy+p.y*k,r:info.step*k*.78,ts:top.te+.1+(1-rel)*.35+rng()*.04,kind:'dot',cls:'dot',pal,seed:rng()});
-    }
+    const pineS=[['#3b7048','#2f5d3a','#4a7d52','#5d9468'],['#2f6b5a','#26584b','#3f8a74'],['#5a7a35','#486628','#6f9142']];
+    const dots=[];
+    cinfos.forEach((ci,i)=>{
+      const P2=pl[i],k=P2.size/Math.max(ci.bw,ci.bh),cr=Math.cos(P2.rot),sr=Math.sin(P2.rot);
+      const ki=kc[ci.idx%kc.length],t2=THEME[ki],cl=classes[ci.idx%classes.length];
+      const pal=fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:t2?t2.pal:cl==='kanji'?pineS[n>3?i%3:0]:palFor(cl,rng);
+      for(const p of ci.pts)dots.push({x:C.x+P2.x+(p.x*cr-p.y*sr)*k,y:C.y+P2.y+(p.x*sr+p.y*cr)*k,r:ci.step*k*.78,pal});
+    });
+    const low=pl.slice().sort((u,v)=>v.y-u.y).slice(0,Math.min(n,n>6?6:4));
+    for(const p of low)els.push({x0:top.x1,y0:top.y1,x1:C.x+p.x,y1:C.y+p.y+p.size*.3,w0:6,w1:3,ts:top.te,te:top.te+.12});
+    let mnY=1e9,mxY=-1e9;for(const d of dots){mnY=Math.min(mnY,d.y);mxY=Math.max(mxY,d.y);}
+    for(const d of dots){const rel=(d.y-mnY)/Math.max(1,mxY-mnY);
+      pads.push({x:d.x,y:d.y,r:d.r,ts:top.te+.1+(1-rel)*.35+rng()*.04,kind:'dot',cls:'dot',pal:d.pal,seed:rng()});}
   }else if(mode==='afro'){
     branch(0,0,-Math.PI/2,140,16,0,0,{noKids:true,straight:true,noPad:true});
     const l=els[els.length-1];
@@ -347,7 +363,7 @@ function build(text){
     const base=shuf(pads.filter(p=>p.kind==='blob'||p.kind==='dot').slice()),pk=()=>emo[Math.floor(rng()*emo.length)];
     const gl=mode==='glyph';
     if(!gl)base.slice(0,9).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.8,y:p.y+p.r*.55,r:12+rng()*4,ts:p.ts+.08,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
-    shuf(base.slice()).slice(0,gl?32:16).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.7,y:p.y+(rng()-.5)*p.r*.5,r:gl?Math.max(6,p.r*1.05):7+rng()*3,ts:p.ts+.12,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
+    shuf(base.slice()).slice(0,gl?32+Math.min(chars.length,20)*2:16).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.7,y:p.y+(rng()-.5)*p.r*.5,r:gl?Math.max(6,p.r*1.05):7+rng()*3,ts:p.ts+.12,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
   }
   if(fate==='bloom'){
     const fp=th?th.pal:['#ffb7c5','#ffffff','#ffd54a','#ff8fab','#e57373'];
@@ -571,11 +587,11 @@ const BAD_N={
   sprout:{r:['芽止まり','Stuck At Sprout'],c:['芽が出たところで満足してしまいました。成長は来世に期待しましょう。','It sprouted and decided that was enough. Growth is postponed to the next life.'],m:['双葉のまま','Still two leaves']},
   weed:{r:['ほぼ雑草','Basically A Weed'],c:['ただの雑草がぼうぼうに茂りました。たんぽぽの綿毛が一本だけ立派です。','Just plain weeds, thick and untamed. One dandelion puff stands proud.'],m:['庭の手入れが必要','Needs gardening']}};
 const GAG_N={
-  ufo:{r:['UFO遭遇賞','UFO Encounter'],c:['UFOが「%」の枝ぶりを気に入り、調査のため吸い上げ中です。牛が一頭巻き込まれています。','A UFO liked the branches of "%" and is beaming it up for study. One cow got caught in the beam.'],s:['???点','??? pts'],stars:4,m:['宇宙規模　／　回収率 87%','Cosmic  /  Retrieval rate 87%']},
+  ufo:{r:['UFO遭遇賞','UFO Encounter'],c:['UFOが「%」の枝ぶりを気に入り、調査のため吸い上げ中です。牛が一頭巻き込まれています。','A UFO liked the branches of "%" and is beaming it up for study. One cow got caught in the beam.'],s:['51点','51 pts'],stars:4,m:['宇宙規模　／　回収率 87%','Cosmic  /  Retrieval rate 87%']},
   face:{r:['顔つき盆栽','Bonsai With A Face'],c:['幹にいつの間にか顔が。「%」という字に魂が宿ったようです。','A face appeared on the trunk. The soul of "%" seems to have awakened.'],s:['愛嬌 100点','Charm 100 pts'],stars:5,m:['擬人化','Personified']},
-  afro:{r:['爆発アフロ賞','Afro Explosion'],c:['「%」を植えたらアフロが生えました。サングラスは自前です。','You planted "%" and an afro grew. The sunglasses are its own.'],s:['盛り度 ∞点','Fluff ∞ pts'],stars:5,m:['爆発','Explosive']},
-  giant:{r:['巨木化・鉢崩壊','Giant Tree, Pot Destroyed'],c:['「%」の根が張りすぎて鉢が割れました。もはや盆栽ではなく樹木。管理人に怒られます。','The roots of "%" grew so much the pot cracked. This is a tree now, not a bonsai. The landlord will be furious.'],s:['規格外','Off the charts'],stars:3,m:['森','Forest']},
-  bald:{r:['ハゲ判定','Bald Verdict'],c:['葉が一本を残して抜け落ちました。残った一本に哀愁が漂います。','All the leaves fell out except one. A single leaf, full of pathos.'],s:['1本点','1 hair'],stars:1,m:['バーコード','Comb-over']}};
+  afro:{r:['爆発アフロ賞','Afro Explosion'],c:['「%」を植えたらアフロが生えました。サングラスは自前です。','You planted "%" and an afro grew. The sunglasses are its own.'],s:['盛り度 999点','Fluff 999 pts'],stars:5,m:['爆発','Explosive']},
+  giant:{r:['巨木化・鉢崩壊','Giant Tree, Pot Destroyed'],c:['「%」の根が張りすぎて鉢が割れました。もはや盆栽ではなく樹木。管理人に怒られます。','The roots of "%" grew so much the pot cracked. This is a tree now, not a bonsai. The landlord will be furious.'],s:['120点','120 pts'],stars:3,m:['森','Forest']},
+  bald:{r:['ハゲ判定','Bald Verdict'],c:['葉が一本を残して抜け落ちました。残った一本に哀愁が漂います。','All the leaves fell out except one. A single leaf, full of pathos.'],s:['1点','1 pt'],stars:1,m:['バーコード','Comb-over']}};
 const FACE_N={happy:['ご機嫌','cheerful'],sleepy:['おねむ','sleepy'],angry:['ご立腹','furious'],surprised:['びっくり','surprised']};
 const FATE_N={
   wither:{r:['すぐ枯れ','Instantly Withered'],c:['「%」は一瞬だけ青々としましたが、あっという間に枯れ落ちました。諸行無常。','"%" was lush for a moment, then withered in no time. Nothing lasts.'],m:['儚い','Fleeting']},
@@ -619,8 +635,6 @@ const FUNNY=[
   ['3.14点','3.14 pts',mkS('円周率賞','Pi Award',['円周率賞'],['PI','AWARD'],'#2a5db0')],
   ['42.195点','42.195 pts',mkS('完走賞','Marathon Finisher',['完走賞'],['MARATHON','FINISHER'],'#2a5db0')],
   ['約70点（ざっくり）','About 70 pts (roughly)',mkS('ざっくり賞','Roughly Right',['ざっくり','賞'],['ROUGHLY','RIGHT'],'#2a5db0')],
-  ['測定不能','Unmeasurable',mkS('電卓故障賞','Calculator Broke',['電卓','故障賞'],['CALCULATOR','BROKE'],'#2a5db0')],
-  ['審査員が見ていませんでした','Judges weren\'t looking',mkS('なんとなく賞','Vibes Award',['なんとなく','賞'],['VIBES','AWARD'],'#2a5db0')]
 ];
 const stampOf=s=>({name:P(s.n),lines:P(s.l),col:s.c});
 const tierKey=n=>n>=92?'gold':n>=85?'silver':n>=78?'bronze':n>=68?'merit':n>=55?'good':n>=35?'effort':n>=20?'join':'dont';
@@ -690,7 +704,8 @@ function evaluate(g){
   let cm='';
   if(inf){
     const sp=Math.round(inf.sym*100),cxp=Math.round(Math.abs(inf.cx)*100),dp=Math.round(inf.dens*100),right=inf.cx>0,cyp=Math.round(inf.cy*100);
-    cm+=g.mode==='glyph'?L(`${q(T)}の字形そのままに樹冠が刈り込まれた“字形仕立て”です（左右対称度${sp}%）。`,`The crown was pruned into the exact shape of ${q(T)} (symmetry ${sp}%).`)
+    cm+=g.mode==='glyph'&&g.chars.length>1?L(`${g.chars.length}文字がそれぞれの字形で茂り、重なり合って複雑な樹冠になりました。`,`${g.chars.length} characters each grew in their own glyph shape and overlap into a tangled crown.`)
+    :g.mode==='glyph'?L(`${q(T)}の字形そのままに樹冠が刈り込まれた“字形仕立て”です（左右対称度${sp}%）。`,`The crown was pruned into the exact shape of ${q(T)} (symmetry ${sp}%).`)
     :{chokkan:L(`字形の左右対称度が${sp}%と整っているため、まっすぐ天を突く直幹に育ちました。`,`With ${sp}% left-right symmetry, it grew into a perfectly upright trunk.`),
       shakan:L(`字の重心が${right?'右':'左'}に${cxp}%寄っているので、${right?'右':'左'}へ傾く斜幹になりました。`,`The glyph's center of mass sits ${cxp}% to the ${right?'right':'left'}, so the trunk leans ${right?'right':'left'}.`),
       kengai:L(`字の重心が下寄り(高さ${cyp}%)なので、崖から垂れ下がる懸崖に。`,`The glyph is bottom-heavy (center at ${cyp}% height), so it cascades down a cliff.`),
@@ -745,7 +760,7 @@ function evaluate(g){
 
 /* ---------- 実行 ---------- */
 let G=null,R=null,start=0,last=0,shown=false,skip=false;
-const VERSION='1.0.0',BUILD='2026-11-26';
+const VERSION='1.1.0',BUILD='2026-11-26 11:14 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -781,7 +796,8 @@ function paintResult(g){
   $('result').classList.add('show');
 }
 function grow(text){
-  text=text.trim();
+  text=Array.from(text.trim()).slice(0,20).join('');
+  $('t').value=text;
   if(!text){$('t').focus();return;}
   G=build(text);parts=[];shown=false;skip=false;R=null;start=performance.now();
   $('result').classList.remove('show');
@@ -848,7 +864,7 @@ cv.addEventListener('click',()=>{if(G&&!shown)skip=true;});
  lang=l;applyLang();renderHist();
  requestAnimationFrame(n=>{last=n;frame(n);});
  const q=qs.get('t');
- if(q){$('t').value=q.slice(0,6);(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>grow(q.slice(0,6)));}}
+ if(q){$('t').value=Array.from(q).slice(0,20).join('');(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>grow(Array.from(q).slice(0,20).join('')));}}
 </script>
 </body>
 </html>
