@@ -169,12 +169,40 @@ function glyphInfo(chars){
   }catch(e){return null;}
 }
 
+const EMO={
+ // 植物・自然
+ '桜':'🌸','梅':'🌺','菊':'🏵️','楓':'🍁','紅':'🍁','松':'🌲','竹':'🎋','柳':'🍃','森':'🌲','林':'🌳','木':'🌳','花':'🌷','草':'🌿','葉':'🍃','福':'🧧','盆':'🪴',
+ '海':'🌊','山':'⛰️','川':'🏞️','空':'☁️','雲':'☁️','風':'🍃','日':'☀️','陽':'☀️','太':'☀️','虹':'🌈','氷':'🧊','光':'✨','雪':'❄️',
+ // 動物
+ '犬':'🐶','猫':'🐱','鳥':'🐦','魚':'🐟','虎':'🐯','熊':'🐻','兎':'🐰','蛇':'🐍','羊':'🐑','豚':'🐷','鶏':'🐔','象':'🐘','蝶':'🦋','蜂':'🐝','蟹':'🦀','蛸':'🐙','猿':'🐵','馬':'🐴','牛':'🐮','龍':'🐉','蛙':'🐸','虫':'🐛',
+ // 気持ち・不思議
+ '愛':'💗','恋':'💘','心':'❤️','夢':'💤','骨':'💀','鬼':'👹','神':'⛩️','仏':'🙏','王':'👑','金':'💰','銀':'🥈','宝':'💎','笑':'😄','泣':'😭','怒':'😠','眠':'😴','酔':'🥴','幽':'👻','星':'⭐','月':'🌙','火':'🔥','炎':'🔥','水':'💧','雷':'⚡','雨':'☔',
+ // 食べ物
+ '酒':'🍶','茶':'🍵','米':'🍙','飯':'🍚','麺':'🍜','肉':'🍖','卵':'🥚','菓':'🍪','甘':'🍬','梨':'🍐','栗':'🌰','茸':'🍄','桃':'🍑','寿':'🍣',
+ // 乗り物・文化
+ '車':'🚗','電':'🚃','船':'⛵','飛':'✈️','本':'📖','音':'🎵','楽':'🎵','歌':'🎤','球':'⚽',
+ // 単語（日本語）
+ 'りんご':'🍎','林檎':'🍎','みかん':'🍊','蜜柑':'🍊','ぶどう':'🍇','葡萄':'🍇','いちご':'🍓','苺':'🍓','すいか':'🍉','西瓜':'🍉','もも':'🍑','さくらんぼ':'🍒','レモン':'🍋','檸檬':'🍋','バナナ':'🍌','パイナップル':'🍍','メロン':'🍈','寿司':'🍣','すし':'🍣','ラーメン':'🍜','カレー':'🍛','ピザ':'🍕','ハンバーガー':'🍔','コーヒー':'☕','ビール':'🍺','ケーキ':'🍰','ドーナツ':'🍩','お金':'💰','ハート':'💗','ロケット':'🚀','ゆうれい':'👻','宇宙人':'👽','ロボット':'🤖','虹色':'🌈','太陽':'☀️','雪だるま':'⛄','クリスマス':'🎄','ハロウィン':'🎃',
+ // 英単語
+ 'apple':'🍎','lemon':'🍋','orange':'🍊','banana':'🍌','grape':'🍇','grapes':'🍇','strawberry':'🍓','melon':'🍈','watermelon':'🍉','cherry':'🍒','pineapple':'🍍','pizza':'🍕','burger':'🍔','coffee':'☕','beer':'🍺','cake':'🍰','ramen':'🍜','curry':'🍛','taco':'🌮','donut':'🍩','cookie':'🍪','candy':'🍬','icecream':'🍦','heart':'💗','smile':'😄','happy':'😄','sad':'😭','angry':'😠','sleep':'😴','ghost':'👻','alien':'👽','robot':'🤖','music':'🎵','coin':'💰','money':'💰','diamond':'💎','crown':'👑','sun':'☀️','rainbow':'🌈','cloud':'☁️','lightning':'⚡','tiger':'🐯','bear':'🐻','rabbit':'🐰','snake':'🐍','pig':'🐷','chicken':'🐔','elephant':'🐘','butterfly':'🦋','bee':'🐝','crab':'🦀','octopus':'🐙','lion':'🦁','panda':'🐼','penguin':'🐧','duck':'🦆','owl':'🦉','unicorn':'🦄','whale':'🐳','shark':'🦈','car':'🚗','train':'🚃','ship':'⛵','plane':'✈️','book':'📖','soccer':'⚽','rocket':'🚀','christmas':'🎄','halloween':'🎃','sakura':'🌸','bamboo':'🎋','maple':'🍁','pine':'🌲','bonsai':'🪴','tree':'🌳','flower':'🌷','rose':'🌹','tulip':'🌷','sunflower':'🌻','cactus':'🌵','mushroom':'🍄','acorn':'🌰','peach':'🍑','pear':'🍐','egg':'🥚','bread':'🍞','cheese':'🧀','sushi':'🍣','rice':'🍙','tea':'🍵','sake':'🍶','wine':'🍷','fire':'🔥','water':'💧','snow':'❄️','rain':'☔','star':'⭐','moon':'🌙','gold':'💰','love':'💗','dream':'💤','skull':'💀','cat':'🐱','dog':'🐶','fish':'🐟','bird':'🐦','frog':'🐸','dragon':'🐉','monkey':'🐵','horse':'🐴','cow':'🐮','bug':'🐛'
+};
+function emojiFor(text,key){
+  const out=[],add=e=>{if(e&&!out.includes(e))out.push(e);};
+  for(const m of text.matchAll(/\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/gu))add(m[0]);
+  if(out.length)return out.slice(0,4);
+  const lt=text.toLowerCase();
+  if(EMO[lt])add(EMO[lt]);
+  else if(EMO[key])add(EMO[key]);
+  else for(const c of Array.from(key)){add(EMO[c]);}
+  return out.slice(0,3);
+}
 /* ---------- 樹木生成 ---------- */
 const TREE_MODES=['ok','glyph','ufo','face','giant'];
 function build(text){
   const chars=Array.from(text),seed=hashStr(text),rng=rngFrom(seed);
   const low=text.toLowerCase(),key=EN_ALIAS[low]||text,kc=Array.from(key);
-  const sure=kc.some(c=>SURE_OK.has(c));
+  const emo0=emojiFor(text,key);
+  const sure=kc.some(c=>SURE_OK.has(c))||emo0.length>0;
   let mode='ok';
   if(WORDS[low])mode=WORDS[low];
   else if(kc.length===1&&SURE_BAD[key])mode=SURE_BAD[key];
@@ -182,7 +210,7 @@ function build(text){
   else if(!sure&&seed%9===4)mode=GAGS[(seed>>>6)%GAGS.length];
   const info=(TREE_MODES.includes(mode))?glyphInfo(chars):null;
   if(mode==='ok'&&info&&chars.length<=2&&(seed>>>10)%4===0)mode='glyph';
-  const classes=kc.map(c=>SP[c]||cls(c));
+  const classes=kc.map(c=>SP[c]||(/\p{Extended_Pictographic}/u.test(c)?'latin':cls(c)));
   const th=kc.map(c=>THEME[c]).find(Boolean)||null;
   let fate=null;
   if((mode==='ok'||mode==='glyph')&&(seed>>>14)%100<40){
@@ -190,9 +218,10 @@ function build(text){
     fate=pool[(seed>>>21)%pool.length];
   }
   if(fate==='giant'){mode='giant';fate=null;}
-  if(th&&th.f&&(fate==='fruit'||fate==='acorn'))fate=null;
+  if(emo0.length&&(fate==='fruit'||fate==='acorn'))fate=null;
   const FR=['🍎','🍊','🍇','🍒','🍋','🍐','🍑'];
-  const fruit=(mode==='ok'&&th&&th.f)?th.f:(fate==='fruit'?FR[(seed>>>5)%FR.length]:fate==='acorn'?'🌰':null);
+  const emo=emo0.length?emo0:(fate==='fruit'?[FR[(seed>>>5)%FR.length]]:fate==='acorn'?['🌰']:[]);
+  const fruit=emo[0]||null;
   const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
   const els=[],pads=[];
   const dry=mode==='withered';
@@ -267,10 +296,6 @@ function build(text){
       face={x:(m.x0+m.x1)/2,y:(m.y0+m.y1)/2,w:(m.w0+m.w1)/2};
       faceKind=['happy','sleepy','angry','surprised'][(seed>>>3)%4];
     }
-    if(fruit){
-      const c=shuf(pads.filter(p=>p.kind==='blob').slice());
-      c.slice(0,fate==='fruit'||fate==='acorn'?9:6).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.8,y:p.y+p.r*.5,r:11+rng()*4,ts:p.ts+.08,kind:'emoji',e:fruit,pal:['#000'],cls:'emoji'}));
-    }
   }else if(mode==='glyph'){
     const trunk=branch(0,0,-Math.PI/2,150*sc,tw*sc,0,0,{noKids:true,straight:true,noPad:true});
     const top=els[els.length-1];
@@ -308,6 +333,12 @@ function build(text){
     }
     pads.push({x:0,y:-110,r:20,ts:.1,kind:'puff',cls:'other',pal:['#fff'],seed:0});
   }
+  if(emo.length&&(mode==='ok'||mode==='ufo'||mode==='giant'||mode==='face'||mode==='glyph')){
+    const base=shuf(pads.filter(p=>p.kind==='blob'||p.kind==='dot').slice()),pk=()=>emo[Math.floor(rng()*emo.length)];
+    const gl=mode==='glyph';
+    if(!gl)base.slice(0,9).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.8,y:p.y+p.r*.55,r:12+rng()*4,ts:p.ts+.08,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
+    shuf(base.slice()).slice(0,gl?32:16).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.7,y:p.y+(rng()-.5)*p.r*.5,r:gl?Math.max(6,p.r*1.05):7+rng()*3,ts:p.ts+.12,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
+  }
   if(fate==='bloom'){
     const fp=th?th.pal:['#ffb7c5','#ffffff','#ffd54a','#ff8fab','#e57373'];
     shuf(pads.filter(p=>p.kind==='blob'||p.kind==='dot').slice()).slice(0,mode==='glyph'?26:18).forEach(p=>
@@ -326,7 +357,7 @@ function build(text){
   for(const p of pads){minX=Math.min(minX,p.x-p.r*1.1);maxX=Math.max(maxX,p.x+p.r*1.1);minY=Math.min(minY,p.y-p.r*1.1);}
   const fit=Math.min(1,285/Math.max(1,-minX,maxX),(mode==='ufo'?280:345)/Math.max(1,-minY));
   const potCols=['#6b4f3a','#3e5c76','#8c3b3b','#4a6b57','#7a6a8a','#c4a35a'];
-  return{fit,minY,text,chars,kc,fate,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
+  return{fit,minY,text,chars,kc,fate,emo,emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
     potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,dom:classes[0]};
 }
 
@@ -483,13 +514,14 @@ function spawnPart(g){
   const cand=g.pads.filter(p=>p.kind==='blob'||p.kind==='dot');if(!cand.length)return;
   const p=cand[Math.floor(Math.random()*cand.length)];
   const col=g.fate==='wither'?'#8a6d3b':p.pal[Math.floor(Math.random()*p.pal.length)];
-  parts.push({x:320+(320*0)+ (p.x-0)*g.fit+(Math.random()-.5)*p.r*g.fit,y:GY+p.y*g.fit,vy:18+Math.random()*20,ph:Math.random()*6.28,c:col,life:0,s:3+Math.random()*3});
+  parts.push({x:320+p.x*g.fit+(Math.random()-.5)*p.r*g.fit,y:GY+p.y*g.fit,vy:18+Math.random()*20,ph:Math.random()*6.28,c:col,life:0,s:3+Math.random()*3,e:(g.emo&&g.emo.length&&Math.random()<.6)?g.emo[Math.floor(Math.random()*g.emo.length)]:null});
 }
 function drawParts(dt){
   for(const q of parts){q.life+=dt;q.y+=q.vy*dt;q.x+=Math.sin(q.life*2+q.ph)*18*dt;
     if(q.y>GY+6){q.y=GY+6;q.vy=0;}
     ctx.fillStyle=q.c;ctx.globalAlpha=Math.max(0,1-Math.max(0,q.life-6)/2);
-    ctx.beginPath();ctx.ellipse(q.x,q.y,q.s,q.s*.6,q.life,0,6.283);ctx.fill();}
+    if(q.e){ctx.font='15px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(q.e,q.x,q.y-4);}
+    else{ctx.beginPath();ctx.ellipse(q.x,q.y,q.s,q.s*.6,q.life,0,6.283);ctx.fill();}}
   ctx.globalAlpha=1;parts=parts.filter(q=>q.life<8);
 }
 
@@ -591,8 +623,8 @@ function evaluate(g){
   const tc=g.kc.find(c=>THEME[c]);
   if(g.th)cm+=L(`葉は${q(tc)}のイメージ色（${g.th.n}）。`,` The leaves take on the color associated with ${q(tc)}.`);
   else cm+=L(LEAF_N[domc][2],' '+LEAF_N[domc][3]);
-  if(g.fruit&&!fate){cm+=L(`枝先に${g.fruit}が実りました。${q(T)}だけに。収穫は早朝がおすすめです。`,` ${g.fruit} ripened on the branches—fitting for ${q(T)}. Best harvested at dawn.`);rank=L('🌳 シュール','🌳 Surreal ')+rank;}
-  if(g.kc.length>1)cm+=L(`${g.kc.length}文字が寄り添う寄せ植えの趣も。`,` ${g.kc.length} characters huddle together like a group planting.`);
+  if(g.emoText){const es=g.emo.join('');cm+=L(`${q(T)}にちなんで、枝先に${es}が咲き、実りました。収穫は早朝がおすすめです。`,` Inspired by ${q(T)}, ${es} bloomed and ripened all over the branches. Best harvested at dawn.`);if(!fate)rank=L('🌳 シュール','🌳 Surreal ')+rank;}
+  if(g.kc.length>1&&!g.classes.every(c=>c==='latin'))cm+=L(`${g.kc.length}文字が寄り添う寄せ植えの趣も。`,` ${g.kc.length} characters huddle together like a group planting.`);
   if(fate){
     const f=FATE_N[fate];rank=P(f.r);
     const ft=P(f.c).replace('%f',g.fruit||'').replace('%',()=>T);
