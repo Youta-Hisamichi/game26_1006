@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>文字盆栽</title>
+<title>テキスト盆栽</title>
 <meta name="description" content="好きな文字を入れると、その文字らしい盆栽がすぐ育つ。Type any text and grow a bonsai. #TextBonsai">
-<meta property="og:title" content="文字盆栽">
+<meta property="og:title" content="テキスト盆栽">
 <meta property="og:description" content="好きな文字を入れると、その文字らしい盆栽がすぐ育つ。たまに育たない文字も。">
 <style>
 :root{--bg:#f3ecdc;--ink:#2b2118;--card:#fffaf0;--accent:#b5382c;--line:#d8cbb0}
@@ -32,6 +32,8 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #score{font-size:14px;opacity:.7;margin-left:6px}
 #comment{line-height:1.8;margin:6px 0 0}
 #meta{font-size:12px;opacity:.6;margin-top:6px}
+#breakdown{font-size:12px;opacity:.75;margin-top:8px}
+#breakdown:empty{display:none}
 #metrics{margin-top:10px;display:grid;gap:4px;font-size:12px}
 #metrics:empty{display:none}
 .m{display:grid;grid-template-columns:7.5em 1fr 4.5em;gap:8px;align-items:center}
@@ -51,7 +53,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 <body>
 <main>
 <button id="lang" type="button" class="langbtn">EN</button>
-<h1 data-i="title">文字盆栽</h1>
+<h1 data-i="title">テキスト盆栽</h1>
 <p class="sub" data-i="sub">好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。</p>
 <form id="f">
   <input id="t" maxlength="6" placeholder="例：桜" autocomplete="off" aria-label="文字を入力">
@@ -63,6 +65,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
   <p id="rank"></p>
   <div><span id="stars"></span><span id="score"></span></div>
   <p id="comment"></p>
+  <div id="breakdown"></div>
   <div id="metrics"></div>
   <div id="meta"></div>
   <div id="share">
@@ -530,7 +533,7 @@ let lang='ja';
 const L=(a,b)=>lang==='en'?b:a;
 const P=a=>a[lang==='en'?1:0];
 const UI={
-  title:['文字盆栽','Text Bonsai'],
+  title:['テキスト盆栽','Text Bonsai'],
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。','Type any text and a bonsai that suits it grows in seconds. Sometimes it won\'t grow—or turns out weird.'],
   grow:['育てる','Grow'],try:['お試し:','Try:'],share:['共有','Share'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
   hist:['育てた盆栽','Your bonsai'],ph:['例：桜','e.g. cherry'],
@@ -573,18 +576,76 @@ const FATE_N={
   acorn:{r:['ドングリ豊作','Acorn Season'],c:['ドングリがぼとぼと実りました。リスが集まってきます。','Acorns are dropping everywhere. Squirrels are gathering.'],m:['どんぐり','Acorn tree']},
   rainbow:{r:['虹色の奇跡','Rainbow Miracle'],c:['葉が七色に輝いています。見る角度で色が変わる珍種です。','The leaves shimmer in seven colors—a rare variety that changes with the light.'],m:['虹','Rainbow']},
   gold:{r:['黄金の名木','Golden Masterpiece'],c:['幹も葉も黄金に！売れば家が建ちますが、売ってはいけません。','Trunk and leaves turned to solid gold! You could buy a house with it—but you mustn\'t sell.'],m:['黄金','Golden']}};
+/* ---------- 賞・判子 ---------- */
+const mkS=(nj,ne,lj,le,c)=>({n:[nj,ne],l:[lj,le],c});
+const ST={
+  gold:mkS('金賞','Gold Prize',['金賞'],['GOLD','PRIZE'],'#c99a1f'),
+  silver:mkS('銀賞','Silver Prize',['銀賞'],['SILVER','PRIZE'],'#7f8c99'),
+  bronze:mkS('銅賞','Bronze Prize',['銅賞'],['BRONZE','PRIZE'],'#a0522d'),
+  merit:mkS('佳作','Honorable Mention',['佳作'],['HONORABLE','MENTION'],'#c0392b'),
+  good:mkS('よくできたで賞','Well Done Award',['よくできた','で賞'],['WELL','DONE!'],'#c0392b'),
+  effort:mkS('努力賞','Effort Award',['努力賞'],['EFFORT','AWARD'],'#c0392b'),
+  join:mkS('参加賞','Participation Award',['参加賞'],['THANKS FOR','PLAYING'],'#c0392b'),
+  dont:mkS('ドンマイ賞','Better Luck Next Time',['ドンマイ','賞'],['BETTER LUCK','NEXT TIME'],'#5f7188'),
+  special:mkS('特別賞','Special Prize',['特別賞'],['SPECIAL','PRIZE'],'#8e44ad'),
+  moyashi:mkS('もやし賞','Bean Sprout Award',['もやし','賞'],['BEAN','SPROUT'],'#4a9a3c'),
+  kinoko:mkS('キノコ賞','Mushroom Award',['キノコ','賞'],['MUSHROOM','AWARD'],'#c0392b'),
+  nobi:mkS('伸びしろ賞','Room To Grow',['伸びしろ','賞'],['ROOM TO','GROW'],'#4a9a3c'),
+  zassou:mkS('雑草魂賞','Weed Spirit Award',['雑草魂','賞'],['WEED','SPIRIT'],'#4a9a3c'),
+  uchu:mkS('宇宙賞','Cosmic Award',['宇宙賞'],['COSMIC','AWARD'],'#2a5db0'),
+  aikyo:mkS('愛嬌賞','Charm Award',['愛嬌賞'],['CHARM','AWARD'],'#d6457a'),
+  afro:mkS('アフロ賞','Afro Award',['アフロ賞'],['AFRO','AWARD'],'#5a3a2a'),
+  kikaku:mkS('規格外賞','Off-the-Charts',['規格外','賞'],['OFF THE','CHARTS'],'#c0392b'),
+  hage:mkS('ハゲまし賞','Comb-over Award',['ハゲまし','賞'],['COMB-OVER','AWARD'],'#6b4f3a')
+};
+const BAD_ST={withered:'dont',noodle:'moyashi',mushroom:'kinoko',sprout:'nobi',weed:'zassou'};
+const GAG_ST={ufo:'uchu',face:'aikyo',afro:'afro',giant:'kikaku',bald:'hage'};
+const FUNNY=[
+  ['100点満点中 107点','107 pts out of 100',mkS('審査員困惑賞','Judges Confused',['審査員','困惑賞'],['JUDGES','CONFUSED'],'#2a5db0')],
+  ['-3点（減点方式）','-3 pts (deduction system)',mkS('減点王賞','Deduction King',['減点王賞'],['DEDUCTION','KING'],'#2a5db0')],
+  ['8億点','800,000,000 pts',mkS('計測器破壊賞','Broke the Scoreboard',['計測器','破壊賞'],['BROKE THE','SCOREBOARD'],'#2a5db0')],
+  ['0.3点','0.3 pts',mkS('ほぼゼロ賞','Almost Zero',['ほぼ','ゼロ賞'],['ALMOST','ZERO'],'#2a5db0')],
+  ['59.9点（あと0.1点）','59.9 pts (0.1 short)',mkS('惜しい賞','So Close Award',['惜しい賞'],['SO CLOSE','AWARD'],'#2a5db0')],
+  ['666点','666 pts',mkS('悪魔賞','Devil\'s Award',['悪魔賞'],['DEVIL\'S','AWARD'],'#6c1a1a')],
+  ['3.14点','3.14 pts',mkS('円周率賞','Pi Award',['円周率賞'],['PI','AWARD'],'#2a5db0')],
+  ['42.195点','42.195 pts',mkS('完走賞','Marathon Finisher',['完走賞'],['MARATHON','FINISHER'],'#2a5db0')],
+  ['約70点（ざっくり）','About 70 pts (roughly)',mkS('ざっくり賞','Roughly Right',['ざっくり','賞'],['ROUGHLY','RIGHT'],'#2a5db0')],
+  ['測定不能','Unmeasurable',mkS('電卓故障賞','Calculator Broke',['電卓','故障賞'],['CALCULATOR','BROKE'],'#2a5db0')],
+  ['審査員が見ていませんでした','Judges weren\'t looking',mkS('なんとなく賞','Vibes Award',['なんとなく','賞'],['VIBES','AWARD'],'#2a5db0')]
+];
+const stampOf=s=>({name:P(s.n),lines:P(s.l),col:s.c});
+const tierKey=n=>n>=92?'gold':n>=85?'silver':n>=78?'bronze':n>=68?'merit':n>=55?'good':n>=35?'effort':n>=20?'join':'dont';
+function drawStamp(st,age,seed){
+  if(!st||age<0)return;
+  const p=Math.min(1,age/.3),e=1-Math.pow(1-p,3);
+  const sc=p<1?2.4-1.4*e:1+.06*Math.exp(-(age-.3)*7)*Math.cos((age-.3)*22);
+  ctx.save();ctx.translate(98,112);ctx.rotate(-.2);ctx.scale(sc,sc);ctx.globalAlpha=Math.min(1,p*2)*.9;
+  const col=st.col;ctx.strokeStyle=col;ctx.fillStyle=col;
+  ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,58,0,6.283);ctx.stroke();
+  ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(0,0,50,0,6.283);ctx.stroke();
+  const en=lang==='en',lines=st.lines,ml=Math.max(...lines.map(l=>l.length));
+  const fs=en?Math.min(24,Math.floor(86/(ml*.62))):Math.min(38,Math.floor(84/ml));
+  ctx.font=`bold ${fs}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';
+  const lh=fs*1.12,y0=-(lines.length-1)*lh/2;
+  lines.forEach((l,i)=>ctx.fillText(l,0,y0+i*lh+1));
+  const r=rngFrom(seed||1);ctx.fillStyle='rgba(250,242,225,.7)';
+  for(let i=0;i<26;i++){const a=r()*6.283,d=r()*56;ctx.beginPath();ctx.arc(Math.cos(a)*d,Math.sin(a)*d,.8+r()*1.4,0,6.283);ctx.fill();}
+  ctx.restore();
+}
+/* ---------- 評価 ---------- */
 function evaluate(g){
   const rng=rngFrom(g.seed^0x9e3779b9),inf=g.info,T=g.text;
-  const q=t=>L('「'+t+'」','"'+t+'"'),pts=n=>L(n+'点',n+' pts'),sty=L('樹形: ','Style: ');
+  const q=t=>L('「'+t+'」','"'+t+'"'),pts=s=>L(s+'点',s+' pts'),sty=L('樹形: ','Style: ');
+  const dec=Math.floor(rng()*10)/10,fmt=n=>(n+dec).toFixed(1);
   if(BAD_N[g.mode]){
     const b=BAD_N[g.mode],score=Math.floor(rng()*22);
-    return{bad:true,rank:P(b.r),scoreText:pts(score),stars:score>14?1:0,comment:P(b.c).replace('%',()=>T),
+    return{bad:true,rank:P(b.r),scoreText:pts(fmt(score)),stars:score>14?1:0,comment:P(b.c).replace('%',()=>T),stamp:stampOf(ST[BAD_ST[g.mode]]),
       meta:sty+P(b.m)+L('　／　どんな文字も育つとは限りません。別の文字で再挑戦！','  /  Not every text can grow. Try another!')};
   }
   if(GAG_N[g.mode]){
     const a=GAG_N[g.mode];let c=P(a.c).replace('%',()=>T);
     if(g.mode==='face')c+=L(`今日の機嫌は「${FACE_N[g.faceKind][0]}」。`,` Today's mood: ${FACE_N[g.faceKind][1]}.`);
-    return{bad:false,rank:P(a.r),scoreText:P(a.s),stars:a.stars,comment:c,meta:sty+P(a.m)};
+    return{bad:false,rank:P(a.r),scoreText:P(a.s),stars:a.stars,comment:c,meta:sty+P(a.m),stamp:stampOf(ST[GAG_ST[g.mode]])};
   }
   const fate=g.fate;
   let score,metrics=null;
@@ -631,7 +692,22 @@ function evaluate(g){
     cm=fate==='wither'?ft:cm+L('',' ')+ft;
   }
   const age=20+Math.floor(rng()*280);
-  return{bad:fate==='wither',rank,scoreText:pts(score),stars:fate==='wither'?1:Math.max(1,Math.round(score/20)),comment:cm,metrics,
+  // 賞と点数の見せ方
+  let stampKey=fate==='gold'?'gold':fate==='rainbow'?'special':fate==='wither'?(score<20?'dont':'join'):tierKey(score);
+  let scoreText=pts(fmt(score)),stars=fate==='wither'?1:Math.max(1,Math.round(score/20)),breakdown=null;
+  let stamp=stampOf(ST[stampKey]);
+  const funnyOK=!fate||fate==='bloom'||fate==='fruit'||fate==='acorn';
+  if(funnyOK&&(g.seed>>>9)%100<16){
+    const F=FUNNY[(g.seed>>>3)%FUNNY.length];
+    scoreText=P(F);stamp=stampOf(F[2]);stars=2+Math.floor(rng()*4);
+  }else{
+    const mxs=[30,25,20,25],parts=mxs.map(m=>Math.max(0,Math.min(m,Math.round(m*score/100+rng()*4-2))));
+    let diff=score-parts.reduce((a,b)=>a+b,0);
+    for(let k=0;diff!==0&&k<200;k++){const i=k%4,st=diff>0?1:-1;if(parts[i]+st>=0&&parts[i]+st<=mxs[i]){parts[i]+=st;diff-=st;}}
+    const nm=[L('樹形','Shape'),L('葉','Foliage'),L('鉢映え','Pot harmony'),L('独創性','Originality')];
+    breakdown=nm.map((n,i)=>`${n} ${parts[i]}/${mxs[i]}`).join('　')+L(`　審査員の気分 +${dec.toFixed(1)}`,`  Judges' mood +${dec.toFixed(1)}`);
+  }
+  return{bad:fate==='wither',rank,scoreText,stars,comment:cm,metrics,stamp,breakdown,
     meta:sty+P(STYLE_N[g.style])+(g.mode==='glyph'?L('（字形樹冠）',' (glyph crown)'):'')+(fate?L('　／　運命: ','  /  Fate: ')+P(FATE_N[fate].m):'')
       +L(`　／　推定樹齢 ${age}年（育成時間 4秒）`,`  /  Est. age ${age} yrs (grown in 4 s)`)};
 }
@@ -650,16 +726,18 @@ function frame(now){
       const wd=G.fate==='wither';
       if(GOODMODES.includes(G.mode)&&parts.length<(wd?40:G.mode==='withered'?14:10)&&Math.random()<(wd?.3:.06))spawnPart(G);
       drawParts(dt);
-      if(!shown){shown=true;R=evaluate(G);paintResult(G);saveHist(G.text);}
+      if(!shown){shown=true;R=evaluate(G);G.doneAt=now;paintResult(G);saveHist(G.text);}
     }
     drawSeal(G);
+    if(R&&G.doneAt)drawStamp(R.stamp,(now-G.doneAt)/1000-.5,G.seed);
   }
   requestAnimationFrame(frame);
 }
 function paintResult(g){
   $('rank').textContent=L(`「${g.text}」 ${R.rank}`,`"${g.text}" ${R.rank}`);
   $('stars').textContent='★'.repeat(R.stars)+'☆'.repeat(5-R.stars);
-  $('score').textContent=R.scoreText;
+  $('score').textContent=R.scoreText+(R.scoreText===R.stamp.name?'':'　｜　'+R.stamp.name);
+  $('breakdown').textContent=R.breakdown||'';
   $('comment').textContent=R.comment;
   $('meta').textContent=R.meta;
   const mb=$('metrics');mb.textContent='';
@@ -694,7 +772,7 @@ function renderHist(){
 
 /* ---------- シェア ---------- */
 function shareURL(){const u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('t',G.text);u.searchParams.set('lang',lang);return u.toString();}
-function shareText(){return L(`「${G.text}」を育てたら『${R.rank}』${R.scoreText}！ #文字盆栽`,`I grew "${G.text}" into a bonsai: "${R.rank}" ${R.scoreText}! #TextBonsai`);}
+function shareText(){return L(`「${G.text}」を育てたら『${R.rank}』${R.scoreText}で【${R.stamp.name}】！ #テキスト盆栽`,`I grew "${G.text}" into a bonsai: "${R.rank}" ${R.scoreText} — ${R.stamp.name}! #TextBonsai`);}
 let toastT;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),1800);}
 function makeBlob(){
   return new Promise(res=>{
@@ -702,7 +780,7 @@ function makeBlob(){
     const x=c.getContext('2d');x.drawImage(cv,0,0);x.setTransform(DPR,0,0,DPR,0,0);
     x.fillStyle='#fff3dc';x.textBaseline='alphabetic';
     x.font=`bold 20px ${FONT}`;x.fillText(L(`「${G.text}」 ${R.rank}`,`"${G.text}" ${R.rank}`),16,494);
-    x.font=`14px ${FONT}`;x.fillText(`${R.scoreText}　${'★'.repeat(R.stars)}　${L('#文字盆栽','#TextBonsai')}`,16,514);
+    x.font=`14px ${FONT}`;x.fillText(`${R.scoreText}　${'★'.repeat(R.stars)}　${L('#テキスト盆栽','#TextBonsai')}`,16,514);
     c.toBlob(res,'image/png');
   });
 }
