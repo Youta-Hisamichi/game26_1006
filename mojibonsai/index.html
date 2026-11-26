@@ -103,7 +103,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 </div>
 <div id="rk"><h2 data-i="rkh">累計ランキング（この端末）</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
 <div id="gl"><h2 data-i="glh">みんなのランキング（累計）</h2><div id="glStatus"></div>
-  <div id="glJoin"><input id="glName" maxlength="12" autocomplete="off"><button type="button" id="glBtn" data-i="glJoinBtn">参加する</button></div>
+  <div id="glJoin"><input id="glName" maxlength="50" autocomplete="off"><button type="button" id="glBtn" data-i="glJoinBtn">参加する</button></div>
   <ol id="glList"></ol><button type="button" id="glRefresh" data-i="glRefresh">更新</button></div>
 <div id="hist" hidden><h2 data-i="hist">育てた盆栽</h2><div id="histlist"></div><button type="button" id="histReset" data-i="reset">ログと累計をリセット</button></div>
 <footer id="ver"></footer>
@@ -139,6 +139,7 @@ const PAL={
   digit:['#e0b628','#f2d04b','#c99a1a','#f7e08a'],
   dry:['#8a6d3b','#a1887f','#6d4c41','#b59b6a'],
   afro:['#3b2a20','#2a1d16','#4a352a'],
+  black:['#0d0d0d','#1c1c1c','#2b2b2b','#3a3a3a','#000000'],
   space:['#2f6fd6','#4a90e2','#1e4fa3','#7fb3f0','#9fd0ff'],
   gold:['#ffd54a','#f0b400','#ffe27a','#d4a017'],
   rainbow:['#ff4d4d','#ff9f1c','#ffe14d','#4cd964','#35a7ff','#7b5cff','#e056fd']
@@ -173,6 +174,7 @@ const THEME={
  '犬':T('犬毛',['#c19a6b','#a67c52','#e0c097'],'🐶'),'茸':T('茸',['#c0392b'],'🍄')
 };
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
+const BLACKW=new Set(['x','𝕏','twitter','ツイッター','エックス','えっくす']); // 真っ黒な盆栽になる言葉
 const UFO_CH=new Set([...'星宇宙月惑彗']),UFO_EMO=new Set(['🛸','👽','🌌','⭐','🌙','🌟','🌠','🪐','🌍','🚀','☄️']);
 const UFO_W=new Set(['ufo','宇宙','宇宙人','銀河','地球','惑星','流星','彗星','星空','月','星','火星','土星','木星','金星','水星','ロケット','エイリアン','alien','aliens','space','galaxy','planet','star','stars','moon','comet','rocket','earth','mars','saturn','jupiter']); // UFOが来るのは宇宙・星・UFO関連だけ
 const WORD_FATE={'giant':'giant','巨大':'giant'}; // 言葉で必ず起きる運命
@@ -248,6 +250,7 @@ function build(text){
   const bigEmo=emo0.length>0&&(BIGW.has(low)||BIGW.has(text));
   // 周りのギミック（UFO・顔・訪問者）。盆栽自体は常に文字の形
   const ufoRel=UFO_W.has(low)||UFO_W.has(text)||chars.some(c=>UFO_CH.has(c))||emo0.some(e=>UFO_EMO.has(e));
+  const blackX=BLACKW.has(text.normalize('NFKC').toLowerCase().trim());
   let gimmick=ufoRel?'ufo':null,vis=null;
   if(!gimmick&&emo0.length&&ANIM.has(emo0[0])&&seed%3===0){gimmick='visitor';vis=emo0[0];}
   if(!gimmick&&seed%6===1)gimmick=['face','visitor','visitor','visitor'][(seed>>>6)%4];
@@ -269,7 +272,7 @@ function build(text){
   if(!bigEmo){const wf=WORD_FATE[low]||WORD_FATE[key];if(wf)fate=wf;}
   if(fate==='giant'&&mode==='ok')fate=null;
   if(emo0.length&&(fate==='fruit'||fate==='acorn'))fate=null;
-  if(gimmick==='ufo'&&(fate==='rainbow'||fate==='gold'))fate=null;
+  if((gimmick==='ufo'||blackX)&&(fate==='rainbow'||fate==='gold'))fate=null;
   const FR=['🍎','🍊','🍇','🍒','🍋','🍐','🍑'];
   const emoBase=emo0.length?emo0:(fate==='fruit'?[FR[(seed>>>5)%FR.length]]:fate==='acorn'?['🌰']:[]);
   const emo=gimmick==='ufo'?[...new Set([...emoBase,'🌏','🪐','🚀'])]:emoBase;
@@ -291,7 +294,7 @@ function build(text){
   if(mode==='glyph'){if(style==='kengai')style='moyogi';if(style==='hokidachi')style='chokkan';}
   const dens=info?info.dens:.3;
   const tw=10+dens*22;
-  const padPal=()=>{if(gimmick==='ufo')return{c:'theme',p:PAL.space};if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
+  const padPal=()=>{if(blackX)return{c:'theme',p:PAL.black};if(gimmick==='ufo')return{c:'theme',p:PAL.space};if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
     const i=Math.floor(rng()*kc.length),t=THEME[kc[i]];
     if(t&&!dry)return{c:'theme',p:t.pal};
     const c=classes[i];return{c,p:dry?PAL.dry:palFor(c,rng)};};
@@ -378,7 +381,7 @@ function build(text){
     cinfos.forEach((ci,i)=>{
       const P2=pl[i],k=P2.size/Math.max(ci.bw,ci.bh),cr=Math.cos(P2.rot),sr=Math.sin(P2.rot);
       const ki=kc[ci.idx%kc.length],t2=THEME[ki],cl=classes[ci.idx%classes.length];
-      const pal=gimmick==='ufo'?PAL.space:fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:t2?t2.pal:cl==='kanji'?pineS[n>3?i%3:0]:palFor(cl,rng);
+      const pal=blackX?PAL.black:gimmick==='ufo'?PAL.space:fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:t2?t2.pal:cl==='kanji'?pineS[n>3?i%3:0]:palFor(cl,rng);
       for(const p of ci.pts)dots.push({x:C.x+P2.x+(p.x*cr-p.y*sr)*k,y:C.y+P2.y+(p.x*sr+p.y*cr)*k,r:ci.step*k*.78,pal});
     });
     const low=pl.slice().sort((u,v)=>v.y-u.y).slice(0,Math.min(n,n>6?6:4));
@@ -600,7 +603,7 @@ const UI={
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。','Type any text and a bonsai that suits it grows in seconds. Sometimes it won\'t grow—or turns out weird.'],
   grow:['育てる','Grow'],try:['お試し:','Try:'],share:['シェア','Share'],shareTo:['共有先を選ぶ','Share to'],close:['閉じる','Close'],mail:['メール','Email'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
   dev:['開発','Developer'],
-  glh:['みんなのランキング（累計）','Global ranking (total)'],glOff:['オンラインランキングは準備中です','Online ranking is coming soon'],glJoinBtn:['参加する','Join'],glNote:['参加するとニックネームと累計点数が公開されます','Joining publishes your nickname and total score.'],glNick:['ニックネーム（12文字まで）','Nickname (max 12)'],glMe:['参加中: ','Joined as '],glErr:['ランキングに接続できません','Cannot reach the ranking server'],glRefresh:['更新','Refresh'],glRank:['あなたの順位: ','Your rank: '],glOut:['圏外','out of top 20'],rkh:['累計ランキング（この端末）','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
+  glh:['みんなのランキング（累計）','Global ranking (total)'],glOff:['オンラインランキングは準備中です','Online ranking is coming soon'],glJoinBtn:['参加する','Join'],glNote:['参加するとニックネームと累計点数が公開されます','Joining publishes your nickname and total score.'],glNick:['ニックネーム（25文字まで）','Nickname (max 25)'],glMe:['参加中: ','Joined as '],glErr:['ランキングに接続できません','Cannot reach the ranking server'],glRefresh:['更新','Refresh'],glRank:['あなたの順位: ','Your rank: '],glOut:['圏外','out of top 20'],rkh:['累計ランキング（この端末）','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
   anal:['字形分析（実際に文字を描いて測定）','Glyph analysis (measured from the rendered text)'],
   wait:['育ち終わるまでお待ちください','Please wait until it finishes growing'],copied:['コピーしました','Copied'],copyPrompt:['コピーしてください','Copy this']
 };
@@ -782,7 +785,7 @@ function getTotal(){try{return parseInt(localStorage.getItem(TOTAL_KEY)||'0',10)
 function setTotal(n){try{localStorage.setItem(TOTAL_KEY,String(n));}catch(e){}}
 const norm=t=>String(t).normalize('NFKC').toLowerCase();
 function getHist(){try{return JSON.parse(localStorage.getItem('mojibonsai')||'[]');}catch(e){return[];}}
-function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts')+(G.counted?'':L('（加算なし）',' (no gain)')):'';}
+function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts')+(G.counted?'':L('（加算済み）',' (already added)')):'';}
 /* みんなのランキング（Firebase Firestore REST） */
 const FB=window.TB_FIREBASE||{apiKey:'',projectId:''};
 const fbOn=()=>!!(FB.apiKey&&FB.projectId);
@@ -816,7 +819,7 @@ async function fbSync(){
   const a=await fbAuth(),me=await fbGetMe(a);
   const delta=parseInt(lsGet(RK_DELTA)||'0',10)||0;
   const total=(me?me.total:0)+delta,best=Math.max(me?me.best:0,(getBest()[0]||{n:0}).n);
-  const body={fields:{name:{stringValue:(lsGet(RK_NAME)||'player').slice(0,12)},total:{integerValue:String(total)},best:{integerValue:String(Math.min(best,100000000))},t:{timestampValue:new Date().toISOString()}}};
+  const body={fields:{name:{stringValue:Array.from(lsGet(RK_NAME)||'player').slice(0,25).join('')},total:{integerValue:String(total)},best:{integerValue:String(best)},t:{timestampValue:new Date().toISOString()}}};
   const r=await fetch(`${DOC()}/players/${a.uid}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+a.token},body:JSON.stringify(body)});
   if(!r.ok)throw new Error('patch');
   lsSet(RK_DELTA,'0');
@@ -842,7 +845,7 @@ function renderGlobal(){
   for(const x of glData){const li=document.createElement('li');li.textContent=`${x.name}　${fmtN(x.total)}${L('点',' pts')}`;if(x.id===uid)li.className='me';ol.appendChild(li);}
 }
 async function joinGlobal(){
-  const name=$('glName').value.trim().slice(0,12);if(!name||!fbOn())return;
+  const name=Array.from($('glName').value.trim()).slice(0,25).join('');if(!name||!fbOn())return;
   lsSet(RK_NAME,name);lsSet(RK_JOIN,'1');
   try{const a=await fbAuth(),me=await fbGetMe(a);lsSet(RK_DELTA,me?'0':String(getTotal()));await fbSync();glErr=false;}catch(e){glErr=true;}
   await loadGlobal();
@@ -865,7 +868,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtN(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.7.0',BUILD='2026-11-26 11:57 JST';
+const VERSION='1.7.1',BUILD='2026-11-26 12:00 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -888,7 +891,7 @@ function paintResult(g){
   $('rank').textContent=L(`「${g.text}」 ${R.rank}`,`"${g.text}" ${R.rank}`);
   $('stars').textContent='★'.repeat(R.stars)+'☆'.repeat(5-R.stars);
   $('score').textContent=SHOW_SCORE?R.scoreText+(R.scoreText===R.stamp.name?'':'　｜　'+R.stamp.name):R.stamp.name;
-  $('totalTxt').textContent=totalText()+(G.counted?'':L('　※最近育てた文字は累計に加算されません','  * Recently grown text does not add to the total'));
+  $('totalTxt').textContent=totalText()+(G.counted?'':L('　※最近育てた文字は加算済みのため、累計は増えません','  * Recently grown text is already counted, so the total does not increase'));
   $('breakdown').textContent=SHOW_SCORE?(R.breakdown||''):'';
   $('comment').textContent=R.comment;
   $('meta').textContent=R.meta;
