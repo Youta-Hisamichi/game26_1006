@@ -255,6 +255,7 @@ const THEME={
 機関車|機関車|#222222,#6c757d,#e63946|🚂
 地下鉄|地下鉄|#3a86ff,#8ecae6,#ffffff|🚇`.split('\n').forEach(l=>{const [k,n,p,f]=l.split('|');THEME[k]=T(n,p,f);});
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
+const DRAGON_RE=/ドラゴン|ドラクエ|どらごん|どらくえ|dragon|竜|龍/i;
 const BLACKW=new Set(['x','𝕏','エックス','えっくす']);
 const SKYW=new Set(['twitter','ツイッター','ついったー']),SKY_EMO=['🐦','🩵','🕊️','🦜']; // 空色＋鳥系絵文字＋🩵 // 真っ黒な盆栽になる言葉
 const UFO_CH=new Set([...'星宇宙月惑彗']),UFO_EMO=new Set(['🛸','👽','🌌','⭐','🌙','🌟','🌠','🪐','🌍','🚀','☄️']);
@@ -262,7 +263,7 @@ const UFO_W=new Set(['ufo','宇宙','宇宙人','銀河','地球','惑星','流�
 `spring=春,summer=夏,autumn=秋,fall=秋,winter=冬,joy=喜,happy=喜,anger=怒,angry=怒,sorrow=哀,sad=哀,fun=楽,pleasure=楽,smile=笑,laugh=笑,cry=泣,tiger=虎,bear=熊,rabbit=兎,snake=蛇,sheep=羊,pig=豚,chicken=鶏,elephant=象,butterfly=蝶,bee=蜂,crab=蟹,octopus=蛸,deer=鹿,fox=狐,wolf=狼,whale=鯨,turtle=亀,mouse=鼠,panda=パンダ,penguin=ペンギン,lion=ライオン,dolphin=イルカ,gorilla=ゴリラ,owl=フクロウ,unicorn=ユニコーン,egg=卵,mochi=餅,apple=りんご,林檎=りんご,orange=蜜柑,grape=葡萄,grapes=葡萄,strawberry=苺,watermelon=西瓜,lemon=檸檬,banana=バナナ,pear=梨,carrot=人参,eggplant=茄子,pumpkin=南瓜,tomato=トマト,corn=玉蜀黍,pepper=唐辛子,ramen=ラーメン,curry=カレー,pizza=ピザ,burger=ハンバーガー,hamburger=ハンバーガー,cake=ケーキ,donut=ドーナツ,coffee=コーヒー,beer=ビール,bread=パン,cheese=チーズ,car=車,train=電車,ship=船,boat=船,plane=飛行機,airplane=飛行機,bus=バス,bicycle=自転車,bike=自転車,motorcycle=バイク,taxi=タクシー,truck=トラック,helicopter=ヘリコプター,subway=地下鉄,ambulance=救急車,ねこ=猫,いぬ=犬,とり=鳥,さかな=魚,とら=虎,くま=熊,うさぎ=兎,へび=蛇,ひつじ=羊,ぶた=豚,にわとり=鶏,ぞう=象,ちょう=蝶,はち=蜂,かに=蟹,たこ=蛸,しか=鹿,きつね=狐,おおかみ=狼,くじら=鯨,かめ=亀,ねずみ=鼠,ふくろう=フクロウ,いるか=イルカ,たまご=卵,ごはん=飯,もち=餅,いも=芋,みかん=蜜柑,ぶどう=葡萄,いちご=苺,すいか=西瓜,れもん=檸檬,にんじん=人参,なす=茄子,かぼちゃ=南瓜,とまと=トマト,らーめん=ラーメン,かれー=カレー,ぱん=パン,くるま=車,ふね=船,ひこうき=飛行機,でんしゃ=電車,じてんしゃ=自転車,ばす=バス,はる=春,なつ=夏,あき=秋,ふゆ=冬,よろこび=喜,いかり=怒,かなしみ=哀,たのしい=楽,りんご=りんご`.split(',').forEach(p=>{const [a,b]=p.split('=');EN_ALIAS[a]=b;if(/^[ぁ-ゖー]+$/.test(a))EN_ALIAS[a.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+96))]=b;});
 const WORD_FATE={}; // 言葉で必ず起きる運命
 const ANIM=new Set([...'🐱🐶🐦🐸🐵🐴🐮🐯🐻🐰🐷🐔🐘🦋🐝🦀🐛🐞🐢🦔🐟🐙🦊🐼🐧🦉🦆🦄🐳🐉']);
-const VIS=['🐱','🐦','🦋','🐝','🐿️','🐸','🐌','🐞','🐢','🦔'],FLY=new Set(['🦋','🐝','🐦','🐞']);
+const VIS=['🐱','🐦','🦋','🐝','🐿️','🐸','🐌','🐞','🐢','🦔'],FLY=new Set(['🦋','🐝','🐦','🐞','🐉']);
 const BIGW=new Set(['プロテイン','ぷろていん','マッチョ','筋肉','筋トレ','protein','muscle','gym','うんち','うんこ','ウンチ','ウンコ','糞','poop','poo','unchi']); // 1つの巨大絵文字になる言葉
 const PROT=new Set(['プロテイン','ぷろていん','protein']); // 必ず金賞
 const SURE_OK=new Set([...'松桜竹梅菊楓柳森木林盆栽福寿']);
@@ -331,7 +332,8 @@ const TREE_MODES=['ok','glyph','ufo','face','giant'];
 function build(text){
   const chars=Array.from(text),seed=hashStr(text),rng=rngFrom(seed);
   const low=text.toLowerCase(),key=EN_ALIAS[low]||text,kc=Array.from(key);
-  const emo0=emojiFor(text,key);
+  let emo0=emojiFor(text,key);
+  if(DRAGON_RE.test(text.normalize('NFKC'))&&!emo0.includes('🐉'))emo0=[...emo0,'🐉'].slice(0,4); // ドラゴン/ドラクエを含むと🐉が付く
   const bigEmo=emo0.length>0&&(BIGW.has(low)||BIGW.has(text));
   // 周りのギミック（UFO・顔・訪問者）。盆栽自体は常に文字の形
   const ufoRel=UFO_W.has(low)||UFO_W.has(text)||chars.some(c=>UFO_CH.has(c))||emo0.some(e=>UFO_EMO.has(e));
@@ -961,7 +963,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.8.2',BUILD='2026-11-26 19:14 JST';
+const VERSION='1.8.3',BUILD='2026-11-26 19:44 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
