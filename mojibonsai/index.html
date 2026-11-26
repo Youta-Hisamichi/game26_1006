@@ -198,7 +198,7 @@ const EMO={
  // 乗り物・文化
  '車':'🚗','電':'🚃','船':'⛵','飛':'✈️','本':'📖','音':'🎵','楽':'🎵','歌':'🎤','球':'⚽',
  // 単語（日本語）
- 'りんご':'🍎','林檎':'🍎','みかん':'🍊','蜜柑':'🍊','ぶどう':'🍇','葡萄':'🍇','いちご':'🍓','苺':'🍓','すいか':'🍉','西瓜':'🍉','もも':'🍑','さくらんぼ':'🍒','レモン':'🍋','檸檬':'🍋','バナナ':'🍌','パイナップル':'🍍','メロン':'🍈','寿司':'🍣','すし':'🍣','ラーメン':'🍜','カレー':'🍛','ピザ':'🍕','ハンバーガー':'🍔','コーヒー':'☕','ビール':'🍺','ケーキ':'🍰','ドーナツ':'🍩','お金':'💰','ハート':'💗','ロケット':'🚀','ゆうれい':'👻','宇宙人':'👽','ロボット':'🤖','虹色':'🌈','太陽':'☀️','雪だるま':'⛄','クリスマス':'🎄','ハロウィン':'🎃',
+ 'プロテイン':'💪','ぷろていん':'💪','マッチョ':'💪','筋肉':'💪','筋トレ':'💪','protein':'💪','muscle':'💪','gym':'💪','りんご':'🍎','林檎':'🍎','みかん':'🍊','蜜柑':'🍊','ぶどう':'🍇','葡萄':'🍇','いちご':'🍓','苺':'🍓','すいか':'🍉','西瓜':'🍉','もも':'🍑','さくらんぼ':'🍒','レモン':'🍋','檸檬':'🍋','バナナ':'🍌','パイナップル':'🍍','メロン':'🍈','寿司':'🍣','すし':'🍣','ラーメン':'🍜','カレー':'🍛','ピザ':'🍕','ハンバーガー':'🍔','コーヒー':'☕','ビール':'🍺','ケーキ':'🍰','ドーナツ':'🍩','お金':'💰','ハート':'💗','ロケット':'🚀','ゆうれい':'👻','宇宙人':'👽','ロボット':'🤖','虹色':'🌈','太陽':'☀️','雪だるま':'⛄','クリスマス':'🎄','ハロウィン':'🎃',
  // 英単語
  'apple':'🍎','lemon':'🍋','orange':'🍊','banana':'🍌','grape':'🍇','grapes':'🍇','strawberry':'🍓','melon':'🍈','watermelon':'🍉','cherry':'🍒','pineapple':'🍍','pizza':'🍕','burger':'🍔','coffee':'☕','beer':'🍺','cake':'🍰','ramen':'🍜','curry':'🍛','taco':'🌮','donut':'🍩','cookie':'🍪','candy':'🍬','icecream':'🍦','heart':'💗','smile':'😄','happy':'😄','sad':'😭','angry':'😠','sleep':'😴','ghost':'👻','alien':'👽','robot':'🤖','music':'🎵','coin':'💰','money':'💰','diamond':'💎','crown':'👑','sun':'☀️','rainbow':'🌈','cloud':'☁️','lightning':'⚡','tiger':'🐯','bear':'🐻','rabbit':'🐰','snake':'🐍','pig':'🐷','chicken':'🐔','elephant':'🐘','butterfly':'🦋','bee':'🐝','crab':'🦀','octopus':'🐙','lion':'🦁','panda':'🐼','penguin':'🐧','duck':'🦆','owl':'🦉','unicorn':'🦄','whale':'🐳','shark':'🦈','car':'🚗','train':'🚃','ship':'⛵','plane':'✈️','book':'📖','soccer':'⚽','rocket':'🚀','christmas':'🎄','halloween':'🎃','sakura':'🌸','bamboo':'🎋','maple':'🍁','pine':'🌲','bonsai':'🪴','tree':'🌳','flower':'🌷','rose':'🌹','tulip':'🌷','sunflower':'🌻','cactus':'🌵','mushroom':'🍄','acorn':'🌰','peach':'🍑','pear':'🍐','egg':'🥚','bread':'🍞','cheese':'🧀','sushi':'🍣','rice':'🍙','tea':'🍵','sake':'🍶','wine':'🍷','fire':'🔥','water':'💧','snow':'❄️','rain':'☔','star':'⭐','moon':'🌙','gold':'💰','love':'💗','dream':'💤','skull':'💀','cat':'🐱','dog':'🐶','fish':'🐟','bird':'🐦','frog':'🐸','dragon':'🐉','monkey':'🐵','horse':'🐴','cow':'🐮','bug':'🐛'
 };
@@ -373,7 +373,7 @@ function build(text){
     const base=shuf(pads.filter(p=>p.kind==='blob'||p.kind==='dot').slice()),pk=()=>emo[Math.floor(rng()*emo.length)];
     const gl=mode==='glyph',many=emo.length>6;
     if(!gl)base.slice(0,many?18:9).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.8,y:p.y+p.r*.55,r:12+rng()*4,ts:p.ts+.08,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
-    shuf(base.slice()).slice(0,gl?(many?110:32+Math.min(chars.length,20)*2):(many?40:16)).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.7,y:p.y+(rng()-.5)*p.r*.5,r:gl?Math.max(many?10:6,p.r*(many?1.8:1.05)):(many?10:7)+rng()*3,ts:p.ts+.12,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
+    shuf(base.slice()).slice(0,gl?(many?110:32+Math.min(chars.length,20)*2):(many?40:16)).forEach(p=>pads.push({x:p.x+(rng()-.5)*p.r*.7,y:p.y+(rng()-.5)*p.r*.5,r:gl?Math.max(many?10:8,p.r*(many?1.8:1.5)):(many?10:7)+rng()*3,ts:p.ts+.12,kind:'emoji',e:pk(),pal:['#000'],cls:'emoji'}));
   }
   if(fate==='bloom'){
     const fp=th?th.pal:['#ffb7c5','#ffffff','#ffd54a','#ff8fab','#e57373'];
@@ -781,7 +781,8 @@ function evaluate(g){
 /* ---------- 実行 ---------- */
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
 const SLOT_START=0,STAMP_AT=2.0;
-const VERSION='1.3.2',BUILD='2026-11-26 11:24 JST';
+const SHOW_SCORE=false; // 点数の表示を一時的にオフ（trueで復活）
+const VERSION='1.3.3',BUILD='2026-11-26 11:27 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -796,7 +797,7 @@ function frame(now){
       drawParts(dt);
     }
     drawSeal(G);
-    if(R){const sa=(now-slotT0)/1000;drawJudging(sa);drawScore(R.scoreText,sa-STAMP_AT);drawStamp(R.stamp,sa-STAMP_AT,G.seed);
+    if(R){const sa=(now-slotT0)/1000;drawJudging(sa);if(SHOW_SCORE)drawScore(R.scoreText,sa-STAMP_AT);drawStamp(R.stamp,sa-STAMP_AT,G.seed);
       if(!shown&&sa>=STAMP_AT+.4){shown=true;paintResult(G);saveHist(G.text);}}
   }
   requestAnimationFrame(frame);
@@ -804,8 +805,8 @@ function frame(now){
 function paintResult(g){
   $('rank').textContent=L(`「${g.text}」 ${R.rank}`,`"${g.text}" ${R.rank}`);
   $('stars').textContent='★'.repeat(R.stars)+'☆'.repeat(5-R.stars);
-  $('score').textContent=R.scoreText+(R.scoreText===R.stamp.name?'':'　｜　'+R.stamp.name);
-  $('breakdown').textContent=R.breakdown||'';
+  $('score').textContent=SHOW_SCORE?R.scoreText+(R.scoreText===R.stamp.name?'':'　｜　'+R.stamp.name):R.stamp.name;
+  $('breakdown').textContent=SHOW_SCORE?(R.breakdown||''):'';
   $('comment').textContent=R.comment;
   $('meta').textContent=R.meta;
   const mb=$('metrics');mb.textContent='';
@@ -827,7 +828,7 @@ function grow(text){
 function saveHist(text){
   try{
     let h=JSON.parse(localStorage.getItem('mojibonsai')||'[]');
-    h=h.filter(x=>x.t!==text);h.unshift({t:text,s:R.scoreText});h=h.slice(0,10);
+    h=h.filter(x=>x.t!==text);h.unshift({t:text,s:SHOW_SCORE?R.scoreText:''});h=h.slice(0,10);
     localStorage.setItem('mojibonsai',JSON.stringify(h));
   }catch(e){}
   renderHist();
@@ -841,7 +842,7 @@ function renderHist(){
 
 /* ---------- シェア ---------- */
 function shareURL(){const u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('t',G.text);u.searchParams.set('lang',lang);return u.toString();}
-function shareText(){return L(`「${G.text}」を育てたら『${R.rank}』${R.scoreText}で【${R.stamp.name}】！ #テキスト盆栽`,`I grew "${G.text}" into a bonsai: "${R.rank}" ${R.scoreText} — ${R.stamp.name}! #TextBonsai`);}
+function shareText(){const sc=SHOW_SCORE?R.scoreText:'';return L(`「${G.text}」を育てたら『${R.rank}』${sc}で【${R.stamp.name}】！ #テキスト盆栽`,`I grew "${G.text}" into a bonsai: "${R.rank}" ${sc} — ${R.stamp.name}! #TextBonsai`);}
 let toastT;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),1800);}
 function makeBlob(){
   return new Promise(res=>{
@@ -849,7 +850,7 @@ function makeBlob(){
     const x=c.getContext('2d');x.drawImage(cv,0,0);x.setTransform(DPR,0,0,DPR,0,0);
     x.fillStyle='#fff3dc';x.textBaseline='alphabetic';
     x.font=`bold 20px ${FONT}`;x.fillText(L(`「${G.text}」 ${R.rank}`,`"${G.text}" ${R.rank}`),16,494);
-    x.font=`14px ${FONT}`;x.fillText(`${R.scoreText}　${'★'.repeat(R.stars)}　${L('#テキスト盆栽','#TextBonsai')}`,16,514);
+    x.font=`14px ${FONT}`;x.fillText(`${SHOW_SCORE?R.scoreText:R.stamp.name}　${'★'.repeat(R.stars)}　${L('#テキスト盆栽','#TextBonsai')}`,16,514);
     c.toBlob(res,'image/png');
   });
 }
