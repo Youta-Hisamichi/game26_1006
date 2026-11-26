@@ -148,7 +148,7 @@ const PAL={
 function palFor(c,rng){if(c==='other'){const h=rng()*360;return[`hsl(${h},70%,60%)`,`hsl(${(h+70)%360},70%,60%)`,`hsl(${(h+150)%360},70%,60%)`,`hsl(${(h+230)%360},70%,60%)`];}return PAL[c];}
 
 /* 文字の意味に合わせた色・実り (n=色の呼び名, f=枝先に実る絵文字) */
-const T=(n,pal,f)=>({n,pal,f});
+const T=(n,pal,f)=>({n,pal:typeof pal==='string'?pal.split(','):pal,f});
 const THEME={
  '赤':T('真っ赤',['#d62828','#e5383b','#ba181b']),'紅':T('紅',['#d62828','#e5383b','#ba181b']),'朱':T('朱',['#e4572e','#f26b3a']),
  '青':T('青',['#1e6fd9','#3a8ee6','#5aa9f0']),'蒼':T('蒼',['#1e6fd9','#3a8ee6','#5aa9f0']),
@@ -174,11 +174,92 @@ const THEME={
  '猿':T('猿',['#8d6e63','#a1887f','#bcaaa4'],'🐵'),'鯛':T('鯛',['#f08080','#f4a6a6','#e57373'],'🐟'),
  '犬':T('犬毛',['#c19a6b','#a67c52','#e0c097'],'🐶'),'茸':T('茸',['#c0392b'],'🍄')
 };
+/* 季節・感情・動物・食べ物・乗り物の色と絵文字（キー|名前|葉の色|絵文字） */
+`春|春|#ffb7c5,#ff8fab,#9bd67a,#ffe0e8|🌸
+夏|夏|#2fbf4a,#ffd43b,#1e9e3a,#7be07b|🌻
+秋|秋|#e67e22,#c0392b,#f1c40f,#a0522d|🍂
+冬|冬|#ffffff,#dbeafe,#bfdbfe,#e0f2fe|⛄
+喜|喜び|#ffd43b,#ffb703,#ff9f1c,#ffe066|😆
+怒|怒り|#e63946,#d62828,#ff4d4d,#9d0208|😡
+哀|哀しみ|#4a90e2,#5aa9f0,#6c8cd5,#3a6ea5|😢
+楽|楽しさ|#ff7eb6,#ffd166,#4cd7a4,#6ec6ff|🎶
+笑|笑い|#ffd43b,#ffe066,#ffb703|😄
+泣|涙|#4a90e2,#8ecae6,#5aa9f0|😭
+虎|虎縞|#f5a623,#222222,#ffb84d|🐯
+熊|熊|#8b5a2b,#6f4e37,#a47148|🐻
+兎|兎|#ffffff,#ffd6e0,#f1f1f1|🐰
+蛇|蛇|#4f9d3a,#6bbf59,#2f6b2a|🐍
+羊|羊毛|#ffffff,#f5f0e6,#e8e0d0|🐑
+豚|豚|#ffb3c7,#ff8fab,#ffd1dc|🐷
+鶏|鶏|#e63946,#ffd43b,#f4a261|🐔
+象|象|#9aa5b1,#7d8793,#b8c0c8|🐘
+蝶|蝶|#7b5cff,#35a7ff,#e056fd|🦋
+蜂|蜂|#ffd43b,#222222,#ffb703|🐝
+蟹|蟹|#e63946,#ff6b6b,#c1121f|🦀
+蛸|蛸|#ff8fab,#ff6b9d,#e5989b|🐙
+鹿|鹿|#a47148,#c68e5f,#8b5a2b|🦌
+狐|狐|#ff8c1a,#ffb347,#ffffff|🦊
+狼|狼|#8d99ae,#6c757d,#adb5bd|🐺
+鯨|鯨|#3a86ff,#5aa9f0,#264653|🐳
+亀|亀|#4f9d3a,#6bbf59,#2f6b2a|🐢
+鼠|鼠|#9aa5b1,#b8c0c8,#8d99ae|🐭
+パンダ|パンダ|#ffffff,#222222,#f1f1f1|🐼
+ペンギン|ペンギン|#1d3557,#ffffff,#ffb703|🐧
+ライオン|ライオン|#f4a261,#e9a23b,#c97b3d|🦁
+イルカ|イルカ|#3a86ff,#8ecae6,#5aa9f0|🐬
+ゴリラ|ゴリラ|#3d3d3d,#555555,#222222|🦍
+フクロウ|梟|#a47148,#8b5a2b,#d9b38c|🦉
+ユニコーン|ユニコーン|#ffb3c7,#c9a7e0,#a0dcff|🦄
+卵|卵|#fff3c4,#ffe08a,#fffbe6|🥚
+飯|ご飯|#ffffff,#fff8ee,#f1ece0|🍚
+餅|餅|#ffffff,#fff1f2,#e8f5e9|🍡
+芋|芋|#a05a8c,#c77dba,#e0a96d|🍠
+りんご|りんご|#e63946,#ff6b6b,#c1121f|🍎
+蜜柑|みかん|#ff9f1c,#ffbf69,#ff8c00|🍊
+葡萄|ぶどう|#7b2cbf,#9d4edd,#5a189a|🍇
+苺|いちご|#ff4d6d,#ff758f,#c9184a|🍓
+西瓜|すいか|#2d6a4f,#e63946,#40916c|🍉
+檸檬|レモン|#ffe66d,#fff3b0,#ffd60a|🍋
+バナナ|バナナ|#ffe135,#fff176,#ffd60a|🍌
+梨|梨|#e9e08a,#d6d27a,#f4efb0|🍐
+人参|にんじん|#ff8c1a,#ff6b00,#6bbf59|🥕
+茄子|なす|#5a2a82,#7b3fa0,#3d1a5b|🍆
+南瓜|かぼちゃ|#ff8c00,#e67e00,#ffb347|🎃
+トマト|トマト|#e63946,#ff6b6b,#4f9d3a|🍅
+玉蜀黍|とうもろこし|#ffd43b,#ffe066,#6bbf59|🌽
+唐辛子|とうがらし|#d62828,#ff4d4d,#4f9d3a|🌶️
+ラーメン|ラーメン|#e8c765,#f0d58c,#8b5a2b|🍜
+カレー|カレー|#a0522d,#d2a24c,#ffd166|🍛
+ピザ|ピザ|#f4a261,#e63946,#ffd166|🍕
+ハンバーガー|ハンバーガー|#c97b3d,#6aa84f,#f4a261|🍔
+ケーキ|ケーキ|#ffb3c7,#fff1f5,#ff6b9d|🍰
+ドーナツ|ドーナツ|#e5989b,#ffcdb2,#b5838d|🍩
+コーヒー|コーヒー|#6f4e37,#8b5a2b,#4a2f1f|☕
+ビール|ビール|#f2b632,#ffd166,#fff3b0|🍺
+パン|パン|#d9a066,#e8b97a,#c98a4b|🍞
+チーズ|チーズ|#ffd43b,#ffe066,#ffb703|🧀
+車|車|#e63946,#c1121f,#ff6b6b|🚗
+電車|電車|#2a9d8f,#a8dadc,#f1faee|🚃
+船|船|#3a86ff,#8ecae6,#ffffff|⛵
+飛行機|飛行機|#bde0fe,#a2d2ff,#ffffff|✈️
+バス|バス|#ffd166,#f4a261,#e63946|🚌
+自転車|自転車|#2a9d8f,#4cd7a4,#264653|🚲
+バイク|バイク|#e63946,#222222,#adb5bd|🏍️
+新幹線|新幹線|#e0f2fe,#3a86ff,#ffffff|🚄
+タクシー|タクシー|#ffd43b,#ffe066,#222222|🚕
+パトカー|パトカー|#1d3557,#ffffff,#e63946|🚓
+消防車|消防車|#e63946,#ff6b6b,#ffffff|🚒
+救急車|救急車|#ffffff,#e63946,#a8dadc|🚑
+トラック|トラック|#4a90e2,#ffffff,#adb5bd|🚚
+ヘリコプター|ヘリコプター|#8d99ae,#adb5bd,#e63946|🚁
+機関車|機関車|#222222,#6c757d,#e63946|🚂
+地下鉄|地下鉄|#3a86ff,#8ecae6,#ffffff|🚇`.split('\n').forEach(l=>{const [k,n,p,f]=l.split('|');THEME[k]=T(n,p,f);});
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
 const BLACKW=new Set(['x','𝕏','エックス','えっくす']);
 const SKYW=new Set(['twitter','ツイッター','ついったー']),SKY_EMO=['🐦','🩵','🕊️','🦜']; // 空色＋鳥系絵文字＋🩵 // 真っ黒な盆栽になる言葉
 const UFO_CH=new Set([...'星宇宙月惑彗']),UFO_EMO=new Set(['🛸','👽','🌌','⭐','🌙','🌟','🌠','🪐','🌍','🚀','☄️']);
 const UFO_W=new Set(['ufo','宇宙','宇宙人','銀河','地球','惑星','流星','彗星','星空','月','星','火星','土星','木星','金星','水星','ロケット','エイリアン','alien','aliens','space','galaxy','planet','star','stars','moon','comet','rocket','earth','mars','saturn','jupiter']); // UFOが来るのは宇宙・星・UFO関連だけ
+`spring=春,summer=夏,autumn=秋,fall=秋,winter=冬,joy=喜,happy=喜,anger=怒,angry=怒,sorrow=哀,sad=哀,fun=楽,pleasure=楽,smile=笑,laugh=笑,cry=泣,tiger=虎,bear=熊,rabbit=兎,snake=蛇,sheep=羊,pig=豚,chicken=鶏,elephant=象,butterfly=蝶,bee=蜂,crab=蟹,octopus=蛸,deer=鹿,fox=狐,wolf=狼,whale=鯨,turtle=亀,mouse=鼠,panda=パンダ,penguin=ペンギン,lion=ライオン,dolphin=イルカ,gorilla=ゴリラ,owl=フクロウ,unicorn=ユニコーン,egg=卵,mochi=餅,apple=りんご,林檎=りんご,orange=蜜柑,grape=葡萄,grapes=葡萄,strawberry=苺,watermelon=西瓜,lemon=檸檬,banana=バナナ,pear=梨,carrot=人参,eggplant=茄子,pumpkin=南瓜,tomato=トマト,corn=玉蜀黍,pepper=唐辛子,ramen=ラーメン,curry=カレー,pizza=ピザ,burger=ハンバーガー,hamburger=ハンバーガー,cake=ケーキ,donut=ドーナツ,coffee=コーヒー,beer=ビール,bread=パン,cheese=チーズ,car=車,train=電車,ship=船,boat=船,plane=飛行機,airplane=飛行機,bus=バス,bicycle=自転車,bike=自転車,motorcycle=バイク,taxi=タクシー,truck=トラック,helicopter=ヘリコプター,subway=地下鉄,ambulance=救急車,ねこ=猫,いぬ=犬,とり=鳥,さかな=魚,とら=虎,くま=熊,うさぎ=兎,へび=蛇,ひつじ=羊,ぶた=豚,にわとり=鶏,ぞう=象,ちょう=蝶,はち=蜂,かに=蟹,たこ=蛸,しか=鹿,きつね=狐,おおかみ=狼,くじら=鯨,かめ=亀,ねずみ=鼠,ふくろう=フクロウ,いるか=イルカ,たまご=卵,ごはん=飯,もち=餅,いも=芋,みかん=蜜柑,ぶどう=葡萄,いちご=苺,すいか=西瓜,れもん=檸檬,にんじん=人参,なす=茄子,かぼちゃ=南瓜,とまと=トマト,らーめん=ラーメン,かれー=カレー,ぱん=パン,くるま=車,ふね=船,ひこうき=飛行機,でんしゃ=電車,じてんしゃ=自転車,ばす=バス,はる=春,なつ=夏,あき=秋,ふゆ=冬,よろこび=喜,いかり=怒,かなしみ=哀,たのしい=楽,りんご=りんご`.split(',').forEach(p=>{const [a,b]=p.split('=');EN_ALIAS[a]=b;if(/^[ぁ-ゖー]+$/.test(a))EN_ALIAS[a.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+96))]=b;});
 const WORD_FATE={}; // 言葉で必ず起きる運命
 const ANIM=new Set([...'🐱🐶🐦🐸🐵🐴🐮🐯🐻🐰🐷🐔🐘🦋🐝🦀🐛🐞🐢🦔🐟🐙🦊🐼🐧🦉🦆🦄🐳🐉']);
 const VIS=['🐱','🐦','🦋','🐝','🐿️','🐸','🐌','🐞','🐢','🦔'],FLY=new Set(['🦋','🐝','🐦','🐞']);
@@ -241,7 +322,8 @@ function emojiFor(text,key){
   const lt=text.toLowerCase();
   if(EMO[lt])add(EMO[lt]);
   else if(EMO[key])add(EMO[key]);
-  else for(const c of Array.from(key)){add(EMO[c]);}
+  else if(THEME[key]&&THEME[key].f)add(THEME[key].f);
+  else for(const c of Array.from(key)){add(EMO[c]||(THEME[c]&&THEME[c].f));}
   return out.slice(0,3);
 }
 /* ---------- 樹木生成 ---------- */
@@ -266,7 +348,7 @@ function build(text){
   const cinfos=(info&&TREE_MODES.includes(mode))?chars.slice(0,20).map((c,i)=>{const gi=glyphInfo([c],tg);return gi?Object.assign(gi,{idx:i}):null;}).filter(Boolean):[];
   if(mode==='ok'&&(bigEmo||(info&&info.pts.length>8&&cinfos.length)))mode='glyph';
   const classes=kc.map(c=>SP[c]||(/\p{Extended_Pictographic}/u.test(c)?'latin':cls(c)));
-  const th=kc.map(c=>THEME[c]).find(Boolean)||null;
+  const thW=THEME[key]||null,thKey=thW?key:(kc.find(c=>THEME[c])||null),th=thKey?THEME[thKey]:null;
   let fate=null;
   if(!bigEmo&&(mode==='ok'||mode==='glyph')&&(seed>>>14)%100<40){
     const pool=['bloom','fruit','acorn','rainbow','gold'];
@@ -298,7 +380,7 @@ function build(text){
   const dens=info?info.dens:.3;
   const tw=10+dens*22;
   const padPal=()=>{if(blackX)return{c:'theme',p:PAL.black};if(skyTw)return{c:'theme',p:PAL.sky};if(gimmick==='ufo')return{c:'theme',p:PAL.space};if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
-    const i=Math.floor(rng()*kc.length),t=THEME[kc[i]];
+    const i=Math.floor(rng()*kc.length),t=thW||THEME[kc[i]];
     if(t&&!dry)return{c:'theme',p:t.pal};
     const c=classes[i];return{c,p:dry?PAL.dry:palFor(c,rng)};};
 
@@ -383,7 +465,7 @@ function build(text){
     const dots=[];
     cinfos.forEach((ci,i)=>{
       const P2=pl[i],k=P2.size/Math.max(ci.bw,ci.bh),cr=Math.cos(P2.rot),sr=Math.sin(P2.rot);
-      const ki=kc[ci.idx%kc.length],t2=THEME[ki],cl=classes[ci.idx%classes.length];
+      const ki=kc[ci.idx%kc.length],t2=thW||THEME[ki],cl=classes[ci.idx%classes.length];
       const pal=blackX?PAL.black:skyTw?PAL.sky:gimmick==='ufo'?PAL.space:fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:t2?t2.pal:cl==='kanji'?pineS[n>3?i%3:0]:palFor(cl,rng);
       for(const p of ci.pts)dots.push({x:C.x+P2.x+(p.x*cr-p.y*sr)*k,y:C.y+P2.y+(p.x*sr+p.y*cr)*k,r:ci.step*k*.78,pal});
     });
@@ -418,7 +500,7 @@ function build(text){
   for(const p of pads){minX=Math.min(minX,p.x-p.r*1.1);maxX=Math.max(maxX,p.x+p.r*1.1);minY=Math.min(minY,p.y-p.r*1.1);}
   const fit=Math.min(1,285/Math.max(1,-minX,maxX),(gimmick==='ufo'?280:345)/Math.max(1,-minY));
   const potCols=['#6b4f3a','#3e5c76','#8c3b3b','#4a6b57','#7a6a8a','#c4a35a'];
-  return{gimmick,vis,fit,minY,text,chars,kc,fate,emo,bigEmo,gold:PROT.has(low)||PROT.has(text),emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
+  return{thKey,gimmick,vis,fit,minY,text,chars,kc,fate,emo,bigEmo,gold:PROT.has(low)||PROT.has(text),emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
     potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,dom:classes[0]};
 }
 
@@ -734,7 +816,7 @@ function evaluate(g){
       :dp<22?L(`インク密度${dp}%、すっきりした字らしく幹は細身で葉も軽やか。`,` Ink density ${dp}%: a light glyph gives a slim trunk and airy leaves.`)
       :L(`インク密度${dp}%、幹と葉のバランスは良好。`,` Ink density ${dp}%: trunk and leaves are well balanced.`);
   }else cm+=P(STYLE_D[g.style]);
-  const tc=g.kc.find(c=>THEME[c]);
+  const tc=g.thKey;
   if(g.th)cm+=L(`葉は${q(tc)}のイメージ色（${g.th.n}）。`,` The leaves take on the color associated with ${q(tc)}.`);
   else cm+=L(LEAF_N[domc][2],' '+LEAF_N[domc][3]);
   if(g.gimmick==='ufo')cm+=L('UFOが飛来して、枝ぶりを調査中です。牛が一頭巻き込まれています。',' A UFO arrived to study the branches. One cow got caught in the beam.');
@@ -879,7 +961,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.7.7',BUILD='2026-11-26 12:09 JST';
+const VERSION='1.8.0',BUILD='2026-11-26 12:15 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
