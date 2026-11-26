@@ -382,7 +382,7 @@ function build(text){
   if(gimmick==='face')style='chokkan';
   if(mode==='glyph'){if(style==='kengai')style='moyogi';if(style==='hokidachi')style='chokkan';}
   const dens=info?info.dens:.3;
-  const tvr=(seed>>>13)%100,thick=tvr<12?'vthick':tvr<35?'thick':tvr<50?'thin':null,tmul={vthick:2.6,thick:1.7,thin:.7}[thick]||1;
+  const tvr=(seed>>>13)%100,thick=key==='桜'?null:tvr<12?'vthick':tvr<35?'thick':tvr<50?'thin':null,tmul={vthick:2.6,thick:1.7,thin:.7}[thick]||1;
   const tw=(10+dens*22)*tmul;
   if(mode==='glyph'&&!bigEmo&&gimmick!=='face'&&(seed>>>17)%100<22){style='sweep';side=(seed>>>25)&1?1:-1;}
   const padPal=()=>{if(blackX)return{c:'theme',p:PAL.black};if(skyTw)return{c:'theme',p:PAL.sky};if(gimmick==='ufo')return{c:'theme',p:PAL.space};if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
@@ -972,7 +972,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.9.1',BUILD='2026-11-26 19:48 JST';
+const VERSION='1.9.2',BUILD='2026-11-26 19:49 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
