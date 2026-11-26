@@ -153,6 +153,7 @@ const THEME={
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
 const WORDS={'giant':'giant','ufo':'ufo','宇宙':'ufo','アフロ':'afro','afro':'afro','ハゲ':'bald','はげ':'bald','禿':'bald'};
 const BIGW=new Set(['プロテイン','ぷろていん','マッチョ','筋肉','筋トレ','protein','muscle','gym','うんち','うんこ','ウンチ','ウンコ','糞','poop','poo','unchi']); // 1つの巨大絵文字になる言葉
+const PROT=new Set(['プロテイン','ぷろていん','protein']); // 必ず金賞
 const SURE_OK=new Set([...'松桜竹梅菊楓柳森木林盆栽福寿']);
 const SURE_BAD={'枯':'withered','死':'withered','無':'withered','空':'withered','草':'weed','雑':'weed','茸':'mushroom','菌':'mushroom','芽':'sprout','ん':'sprout','0':'sprout','０':'sprout'};
 const BAD_MODES=['withered','noodle','mushroom','sprout','weed'];
@@ -401,7 +402,7 @@ function build(text){
   for(const p of pads){minX=Math.min(minX,p.x-p.r*1.1);maxX=Math.max(maxX,p.x+p.r*1.1);minY=Math.min(minY,p.y-p.r*1.1);}
   const fit=Math.min(1,285/Math.max(1,-minX,maxX),(mode==='ufo'?280:345)/Math.max(1,-minY));
   const potCols=['#6b4f3a','#3e5c76','#8c3b3b','#4a6b57','#7a6a8a','#c4a35a'];
-  return{fit,minY,text,chars,kc,fate,emo,bigEmo,emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
+  return{fit,minY,text,chars,kc,fate,emo,bigEmo,gold:PROT.has(low)||PROT.has(text),emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
     potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,dom:classes[0]};
 }
 
@@ -726,6 +727,7 @@ function evaluate(g){
   else if(fate==='acorn')score=Math.min(99,score+4);
   else if(fate==='rainbow')score=91+Math.floor(rng()*8);
   else if(fate==='gold')score=95+Math.floor(rng()*4);
+  if(g.gold)score=Math.max(score,96);
   let rank=score>=92?L('国風展 大賞','Grand Prize'):score>=82?L('名木','Masterpiece'):score>=70?L('上品','Elegant'):score>=55?L('愛らしい一鉢','Charming Little Pot'):L('素朴な味わい','Rustic Charm');
   const cnt={};g.classes.forEach(c=>cnt[c]=(cnt[c]||0)+1);
   const domc=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
@@ -755,7 +757,7 @@ function evaluate(g){
   }
   const age=20+Math.floor(rng()*280);
   // 賞と点数の見せ方
-  let stampKey=fate==='gold'?'gold':fate==='rainbow'?'special':fate==='wither'?(score<20?'dont':'join'):tierKey(score);
+  let stampKey=(g.gold||fate==='gold')?'gold':fate==='rainbow'?'special':fate==='wither'?(score<20?'dont':'join'):tierKey(score);
   let scoreText=pts(fmt(score)),stars=fate==='wither'?1:Math.max(1,Math.round(score/20)),breakdown=null;
   let stamp=stampOf(ST[stampKey]);
   const funnyOK=!fate||fate==='bloom'||fate==='fruit'||fate==='acorn';
@@ -767,11 +769,11 @@ function evaluate(g){
     ['100万点','1,000,000 pts',mkS('百万点賞','Million Club',['百万点','賞'],['MILLION','CLUB'],'#c99a1f'),'100万点。もはや盆栽の概念を超えました。','A million points. This has transcended the concept of bonsai.'],
     ['1億点','100,000,000 pts',mkS('億点賞','Hundred Million Club',['億点賞'],['100M','CLUB'],'#c99a1f'),'1億点。審査員が驚いて会場から退席しました。','One hundred million points. The judges left the venue in shock.']];
   const jw=[0,0,1,1,2,2,3,3,4,5];
-  if(fate!=='wither'&&(g.seed>>>11)%100<6){
+  if(fate!=='wither'&&!g.gold&&(g.seed>>>11)%100<6){
     const J=JACK[jw[(g.seed>>>4)%10]];
     scoreText=L(J[0],J[1]);stamp=stampOf(J[2]);stars=5;rank=L('伝説の一鉢','Legendary Pot');
     cm+=L('',' ')+L(J[3],J[4]);
-  }else if(funnyOK&&(g.seed>>>9)%100<16){
+  }else if(funnyOK&&!g.gold&&(g.seed>>>9)%100<16){
     const F=FUNNY[(g.seed>>>3)%FUNNY.length];
     scoreText=P(F);stamp=stampOf(F[2]);stars=2+Math.floor(rng()*4);
   }else{
@@ -790,7 +792,7 @@ function evaluate(g){
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
 const SLOT_START=0,STAMP_AT=2.0;
 const SHOW_SCORE=false; // 点数の表示を一時的にオフ（trueで復活）
-const VERSION='1.3.6',BUILD='2026-11-26 11:29 JST';
+const VERSION='1.3.7',BUILD='2026-11-26 11:30 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
