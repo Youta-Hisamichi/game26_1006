@@ -58,6 +58,10 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #dev a{color:inherit;opacity:.65;text-decoration:underline}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:8px 16px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.3s}
 #toast.on{opacity:.92}
+#rk{margin-top:16px;font-size:13px}
+#rk h2{font-size:14px;margin:0 0 4px;opacity:.7}
+#rk ol{margin:6px 0 0;padding-left:1.6em}
+#rk li{padding:1px 0}
 #hist{margin-top:14px;font-size:13px}
 #hist h2{font-size:14px;margin:0 0 4px;opacity:.7}
 #hist button{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:3px 10px;font-size:14px;margin:0 6px 6px 0}
@@ -88,6 +92,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
     <button type="button" id="bCopy" data-i="copy">リンクをコピー</button>
   </div>
 </div>
+<div id="rk"><h2 data-i="rkh">累計ランキング（この端末）</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
 <div id="hist" hidden><h2 data-i="hist">育てた盆栽</h2><div id="histlist"></div><button type="button" id="histReset" data-i="reset">ログと累計をリセット</button></div>
 <footer id="ver"></footer>
 <div id="dev"><a href="https://x.com/Hisashi_vc" target="_blank" rel="noopener noreferrer"><span data-i="dev">開発</span>: ひさしApp</a></div>
@@ -582,7 +587,7 @@ const UI={
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。','Type any text and a bonsai that suits it grows in seconds. Sometimes it won\'t grow—or turns out weird.'],
   grow:['育てる','Grow'],try:['お試し:','Try:'],share:['シェア','Share'],shareTo:['共有先を選ぶ','Share to'],close:['閉じる','Close'],mail:['メール','Email'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
   dev:['開発','Developer'],
-  hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
+  rkh:['累計ランキング（この端末）','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
   anal:['字形分析（実際に文字を描いて測定）','Glyph analysis (measured from the rendered text)'],
   wait:['育ち終わるまでお待ちください','Please wait until it finishes growing'],copied:['コピーしました','Copied'],copyPrompt:['コピーしてください','Copy this']
 };
@@ -764,8 +769,28 @@ const SHOW_SCORE=true; // 点数の表示（falseで非表示）
 const TOTAL_KEY='mojibonsai_total',fmtN=n=>Number(n).toLocaleString('en-US');
 function getTotal(){try{return parseInt(localStorage.getItem(TOTAL_KEY)||'0',10)||0;}catch(e){return 0;}}
 function setTotal(n){try{localStorage.setItem(TOTAL_KEY,String(n));}catch(e){}}
-function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts'):'';}
-const VERSION='1.5.1',BUILD='2026-11-26 11:47 JST';
+const norm=t=>String(t).normalize('NFKC').toLowerCase();
+function getHist(){try{return JSON.parse(localStorage.getItem('mojibonsai')||'[]');}catch(e){return[];}}
+function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts')+(G.counted?'':L('（加算なし）',' (no gain)')):'';}
+/* 累計ランキング（この端末内） */
+const BEST_KEY='mojibonsai_best';
+const TITLES=[[0,'見習い盆栽家','Bonsai Apprentice'],[300,'盆栽ビギナー','Bonsai Beginner'],[1000,'町の盆栽家','Local Bonsai Fan'],[3000,'盆栽名人','Bonsai Expert'],[10000,'盆栽マイスター','Bonsai Meister'],[100000,'盆栽仙人','Bonsai Sage'],[1000000,'盆栽の神','Bonsai God'],[100000000,'宇宙盆栽王','Cosmic Bonsai King']];
+function getBest(){try{return JSON.parse(localStorage.getItem(BEST_KEY)||'[]');}catch(e){return[];}}
+function saveBest(){
+  let b=getBest().filter(x=>norm(x.t)!==norm(G.text));b.push({t:G.text,n:R.scoreNum});
+  b.sort((p,q)=>q.n-p.n);b=b.slice(0,10);
+  try{localStorage.setItem(BEST_KEY,JSON.stringify(b));}catch(e){}
+}
+function renderRank(){
+  const tot=getTotal();let i=0;while(i+1<TITLES.length&&tot>=TITLES[i+1][0])i++;
+  const cur=TITLES[i],nxt=TITLES[i+1];
+  $('rkTitle').textContent=L(`累計 ${fmtN(tot)}点　称号「${cur[1]}」`,`Total ${fmtN(tot)} pts  Title: ${cur[2]}`)
+    +(nxt?L(`　／　次の「${nxt[1]}」まであと ${fmtN(nxt[0]-tot)}点`,`  /  ${fmtN(nxt[0]-tot)} pts to ${nxt[2]}`):L('　／　最高称号！','  /  Top title!'));
+  const ol=$('rkList');ol.textContent='';
+  for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtN(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
+  $('rkEmpty').hidden=getBest().length>0;
+}
+const VERSION='1.6.0',BUILD='2026-11-26 11:52 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -781,7 +806,7 @@ function frame(now){
     }
     drawSeal(G);
     if(R){const sa=(now-slotT0)/1000;drawJudging(sa);if(SHOW_SCORE)drawScore(R.scoreText,sa-STAMP_AT,totalText());drawStamp(R.stamp,sa-STAMP_AT,G.seed);
-      if(!shown&&sa>=STAMP_AT+.4){shown=true;setTotal(G.total);paintResult(G);saveHist(G.text);}}
+      if(!shown&&sa>=STAMP_AT+.4){shown=true;setTotal(G.total);saveBest();paintResult(G);saveHist(G.text);renderRank();}}
   }
   requestAnimationFrame(frame);
 }
@@ -789,7 +814,7 @@ function paintResult(g){
   $('rank').textContent=L(`「${g.text}」 ${R.rank}`,`"${g.text}" ${R.rank}`);
   $('stars').textContent='★'.repeat(R.stars)+'☆'.repeat(5-R.stars);
   $('score').textContent=SHOW_SCORE?R.scoreText+(R.scoreText===R.stamp.name?'':'　｜　'+R.stamp.name):R.stamp.name;
-  $('totalTxt').textContent=totalText();
+  $('totalTxt').textContent=totalText()+(G.counted?'':L('　※最近育てた文字は累計に加算されません','  * Recently grown text does not add to the total'));
   $('breakdown').textContent=SHOW_SCORE?(R.breakdown||''):'';
   $('comment').textContent=R.comment;
   $('meta').textContent=R.meta;
@@ -805,7 +830,7 @@ function grow(text){
   text=Array.from(text.trim()).slice(0,20).join('');
   $('t').value=text;
   if(!text){$('t').focus();return;}
-  G=build(text);parts=[];shown=false;start=performance.now();slotT0=start+SLOT_START;R=evaluate(G);G.total=getTotal()+R.scoreNum;
+  G=build(text);parts=[];shown=false;start=performance.now();slotT0=start+SLOT_START;R=evaluate(G);G.counted=!getHist().some(x=>norm(x.t)===norm(text));G.total=getTotal()+(G.counted?R.scoreNum:0);
   $('result').classList.remove('show');
   $('t').blur();
 }
@@ -892,7 +917,7 @@ function renderChips(){
   for(const v of CHIPS[lang]){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=v;b.onclick=()=>{$('t').value=v;grow(v);};box.appendChild(b);}
 }
 function applyLang(){
-  renderChips();
+  renderChips();renderRank();
   $('ver').textContent=`${P(UI.title)}  v${VERSION}  (${BUILD})`;
   document.documentElement.lang=lang;document.title=P(UI.title);
   document.querySelectorAll('[data-i]').forEach(e=>{e.textContent=P(UI[e.dataset.i]);});
@@ -900,7 +925,7 @@ function applyLang(){
   if(G){R=evaluate(G);if(shown)paintResult(G);}
 }
 $('lang').onclick=()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('mojibonsai_lang',lang);}catch(e){}applyLang();};
-$('histReset').onclick=()=>{if(confirm(P(UI.resetAsk))){try{localStorage.removeItem('mojibonsai');localStorage.removeItem(TOTAL_KEY);}catch(e){}renderHist();}};
+$('histReset').onclick=()=>{if(confirm(P(UI.resetAsk))){try{localStorage.removeItem('mojibonsai');localStorage.removeItem(TOTAL_KEY);localStorage.removeItem(BEST_KEY);}catch(e){}renderHist();renderRank();}};
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
 cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-STAMP_AT*1000);}});
 {const qs=new URLSearchParams(location.search);let l=qs.get('lang');
