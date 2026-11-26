@@ -963,17 +963,28 @@ async function renameGlobal(){
   lsSet(RK_NAME,name);
   if(joined()){try{await fbSync();glErr=false;}catch(e){glErr=true;}await loadGlobal();}else renderGlobal();
 }
-/* 名前の設定なしでも、スコアを自動でランキングへ送る（初回は ななし#1234 のような名前で登録） */
+/* アクセスしただけで、0点（既存の累計があればその値）でランキングに自動登録。名前は ななし#1234 のように自動で付く */
+let regP=null;
+function ensureJoined(base){
+  if(joined())return Promise.resolve();
+  if(!regP)regP=(async()=>{
+    const a=await fbAuth(),me=await fbGetMe(a);
+    if(!lsGet(RK_NAME))lsSet(RK_NAME,defaultName());
+    lsSet(RK_DELTA,me?'0':String(base));lsSet(RK_JOIN,'1');
+    if(!me)await fbSync();
+  })().finally(()=>{regP=null;});
+  return regP;
+}
+async function autoRegister(){
+  if(!fbOn()||joined())return;
+  try{await ensureJoined(getTotal());glErr=false;}catch(e){glErr=true;}
+  await loadGlobal();
+}
 async function autoSubmit(score){
   if(!fbOn())return;
   try{
-    let fresh=false;
-    if(!joined()){
-      const a=await fbAuth(),me=await fbGetMe(a);
-      if(!lsGet(RK_NAME))lsSet(RK_NAME,defaultName());
-      lsSet(RK_DELTA,me?'0':String(getTotal()));lsSet(RK_JOIN,'1');fresh=!me;
-    }
-    if(!fresh)lsSet(RK_DELTA,String((parseInt(lsGet(RK_DELTA)||'0',10)||0)+score));
+    await ensureJoined(G.total-score);
+    lsSet(RK_DELTA,String((parseInt(lsGet(RK_DELTA)||'0',10)||0)+score));
     await fbSync();glErr=false;
   }catch(e){glErr=true;}
   await loadGlobal();
@@ -996,7 +1007,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.9.5',BUILD='2026-11-26 22:45 JST';
+const VERSION='1.9.6',BUILD='2026-11-26 22:48 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -1137,7 +1148,7 @@ cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=M
 {const qs=new URLSearchParams(location.search);let l=qs.get('lang');
  if(l!=='ja'&&l!=='en'){try{l=localStorage.getItem('mojibonsai_lang');}catch(e){}}
  if(l!=='ja'&&l!=='en')l=(navigator.language||'ja').toLowerCase().startsWith('ja')?'ja':'en';
- lang=l;applyLang();renderHist();loadGlobal();
+ lang=l;applyLang();renderHist();if(fbOn()&&!joined())autoRegister();else loadGlobal();
  requestAnimationFrame(n=>{last=n;frame(n);});
  const q=qs.get('t');
  if(q){$('t').value=Array.from(q).slice(0,20).join('');(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>grow(Array.from(q).slice(0,20).join('')));}}
