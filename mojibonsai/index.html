@@ -179,7 +179,7 @@ const BLACKW=new Set(['x','𝕏','エックス','えっくす']);
 const SKYW=new Set(['twitter','ツイッター','ついったー']),SKY_EMO=['🐦','🩵','🕊️','🦜']; // 空色＋鳥系絵文字＋🩵 // 真っ黒な盆栽になる言葉
 const UFO_CH=new Set([...'星宇宙月惑彗']),UFO_EMO=new Set(['🛸','👽','🌌','⭐','🌙','🌟','🌠','🪐','🌍','🚀','☄️']);
 const UFO_W=new Set(['ufo','宇宙','宇宙人','銀河','地球','惑星','流星','彗星','星空','月','星','火星','土星','木星','金星','水星','ロケット','エイリアン','alien','aliens','space','galaxy','planet','star','stars','moon','comet','rocket','earth','mars','saturn','jupiter']); // UFOが来るのは宇宙・星・UFO関連だけ
-const WORD_FATE={'giant':'giant','巨大':'giant'}; // 言葉で必ず起きる運命
+const WORD_FATE={}; // 言葉で必ず起きる運命
 const ANIM=new Set([...'🐱🐶🐦🐸🐵🐴🐮🐯🐻🐰🐷🐔🐘🦋🐝🦀🐛🐞🐢🦔🐟🐙🦊🐼🐧🦉🦆🦄🐳🐉']);
 const VIS=['🐱','🐦','🦋','🐝','🐿️','🐸','🐌','🐞','🐢','🦔'],FLY=new Set(['🦋','🐝','🐦','🐞']);
 const BIGW=new Set(['プロテイン','ぷろていん','マッチョ','筋肉','筋トレ','protein','muscle','gym','うんち','うんこ','ウンチ','ウンコ','糞','poop','poo','unchi']); // 1つの巨大絵文字になる言葉
@@ -269,7 +269,7 @@ function build(text){
   const th=kc.map(c=>THEME[c]).find(Boolean)||null;
   let fate=null;
   if(!bigEmo&&(mode==='ok'||mode==='glyph')&&(seed>>>14)%100<40){
-    const pool=['bloom','fruit','acorn','giant','rainbow','gold'];
+    const pool=['bloom','fruit','acorn','rainbow','gold'];
     fate=pool[(seed>>>21)%pool.length];
   }
   if(!bigEmo){const wf=WORD_FATE[low]||WORD_FATE[key];if(wf)fate=wf;}
@@ -632,7 +632,6 @@ const FATE_N={
   fruit:{r:['豊作','Bumper Harvest'],c:['枝先に%fがたわわに実りました。普通においしそうです。','Ripe %f hang from every branch. Looks perfectly edible.'],m:['果樹','Fruit tree']},
   acorn:{r:['ドングリ豊作','Acorn Season'],c:['ドングリがぼとぼと実りました。リスが集まってきます。','Acorns are dropping everywhere. Squirrels are gathering.'],m:['どんぐり','Acorn tree']},
   rainbow:{r:['虹色の奇跡','Rainbow Miracle'],c:['葉が七色に輝いています。見る角度で色が変わる珍種です。','The leaves shimmer in seven colors—a rare variety that changes with the light.'],m:['虹','Rainbow']},
-  giant:{r:['巨木化','Giant Tree'],c:['「%」の形のまま巨大化し、根が張りすぎて鉢が割れました。もはや盆栽ではなく樹木。','It grew huge in the very shape of "%" and cracked the pot with its roots. A tree now, not a bonsai.'],m:['巨木','Giant']},
   gold:{r:['黄金の名木','Golden Masterpiece'],c:['幹も葉も黄金に！売れば家が建ちますが、売ってはいけません。','Trunk and leaves turned to solid gold! You could buy a house with it—but you mustn\'t sell.'],m:['黄金','Golden']}};
 /* ---------- 賞・判子 ---------- */
 const mkS=(nj,ne,lj,le,c)=>({n:[nj,ne],l:[lj,le],c});
@@ -667,7 +666,7 @@ function drawScore(txt,age,sub){
   if(sub){const ls=sub.split('\n');let f2=22;ctx.font=`bold ${f2}px ${FONT}`;
     while(Math.max(...ls.map(l=>ctx.measureText(l).width))>270&&f2>12){f2-=1;ctx.font=`bold ${f2}px ${FONT}`;}
     ctx.lineWidth=5;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.fillStyle='#6b4f3a';
-    ls.forEach((l,i)=>{const y=fs*1.1+4+i*(f2+3);ctx.strokeText(l,0,y);ctx.fillText(l,0,y);});}
+    ls.forEach((l,i)=>{ctx.font=`bold ${i?Math.round(f2*.68):f2}px ${FONT}`;ctx.lineWidth=i?4:5;const y=fs*1.1+4+i*(f2+1);ctx.strokeText(l,0,y);ctx.fillText(l,0,y);});}
   ctx.restore();
 }
 function drawJudging(sa){
@@ -873,7 +872,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtN(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.7.3',BUILD='2026-11-26 12:02 JST';
+const VERSION='1.7.4',BUILD='2026-11-26 12:04 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
