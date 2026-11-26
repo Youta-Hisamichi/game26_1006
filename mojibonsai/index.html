@@ -150,13 +150,13 @@ const THEME={
  '犬':T('犬毛',['#c19a6b','#a67c52','#e0c097'],'🐶'),'茸':T('茸',['#c0392b'],'🍄')
 };
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
-const WORDS={'giant':'giant','ufo':'ufo','宇宙':'ufo','アフロ':'afro','afro':'afro','ハゲ':'bald','はげ':'bald','禿':'bald'};
+const WORD_GIM={'ufo':'ufo','宇宙':'ufo'}; // 言葉で必ず出るギミック
+const WORD_FATE={'giant':'giant','巨大':'giant','枯':'wither','死':'wither'}; // 言葉で必ず起きる運命
+const ANIM=new Set([...'🐱🐶🐦🐸🐵🐴🐮🐯🐻🐰🐷🐔🐘🦋🐝🦀🐛🐞🐢🦔🐟🐙🦊🐼🐧🦉🦆🦄🐳🐉']);
+const VIS=['🐱','🐦','🦋','🐝','🐿️','🐸','🐌','🐞','🐢','🦔'],FLY=new Set(['🦋','🐝','🐦','🐞']);
 const BIGW=new Set(['プロテイン','ぷろていん','マッチョ','筋肉','筋トレ','protein','muscle','gym','うんち','うんこ','ウンチ','ウンコ','糞','poop','poo','unchi']); // 1つの巨大絵文字になる言葉
 const PROT=new Set(['プロテイン','ぷろていん','protein']); // 必ず金賞
 const SURE_OK=new Set([...'松桜竹梅菊楓柳森木林盆栽福寿']);
-const SURE_BAD={'枯':'withered','死':'withered','無':'withered','空':'withered','草':'weed','雑':'weed','茸':'mushroom','菌':'mushroom','芽':'sprout','ん':'sprout','0':'sprout','０':'sprout'};
-const BAD_MODES=['withered','noodle','mushroom','sprout','weed'];
-const GAGS=['ufo','face','afro','giant','bald'];
 const STYLES=['chokkan','shakan','moyogi','kengai','hokidachi'];
 const SP={'桜':'hira','楓':'kata','紅':'kata','菊':'digit','金':'digit'};
 
@@ -199,7 +199,7 @@ const EMO={
  // 乗り物・文化
  '車':'🚗','電':'🚃','船':'⛵','飛':'✈️','本':'📖','音':'🎵','楽':'🎵','歌':'🎤','球':'⚽',
  // 単語（日本語）
- 'うんち':'💩','うんこ':'💩','ウンチ':'💩','ウンコ':'💩','糞':'💩','poop':'💩','poo':'💩','unchi':'💩','プロテイン':'💪','ぷろていん':'💪','マッチョ':'💪','筋肉':'💪','筋トレ':'💪','protein':'💪','muscle':'💪','gym':'💪','りんご':'🍎','林檎':'🍎','みかん':'🍊','蜜柑':'🍊','ぶどう':'🍇','葡萄':'🍇','いちご':'🍓','苺':'🍓','すいか':'🍉','西瓜':'🍉','もも':'🍑','さくらんぼ':'🍒','レモン':'🍋','檸檬':'🍋','バナナ':'🍌','パイナップル':'🍍','メロン':'🍈','寿司':'🍣','すし':'🍣','ラーメン':'🍜','カレー':'🍛','ピザ':'🍕','ハンバーガー':'🍔','コーヒー':'☕','ビール':'🍺','ケーキ':'🍰','ドーナツ':'🍩','お金':'💰','ハート':'💗','ロケット':'🚀','ゆうれい':'👻','宇宙人':'👽','ロボット':'🤖','虹色':'🌈','太陽':'☀️','雪だるま':'⛄','クリスマス':'🎄','ハロウィン':'🎃',
+ 'うんち':'💩','うんこ':'💩','ウンチ':'💩','ウンコ':'💩','糞':'💩','poop':'💩','poo':'💩','unchi':'💩','プロテイン':'💪','ぷろていん':'💪','マッチョ':'💪','筋肉':'💪','筋トレ':'💪','protein':'💪','muscle':'💪','gym':'💪','アフロ':'😎','afro':'😎','ハゲ':'🧑‍🦲','はげ':'🧑‍🦲','禿':'🧑‍🦲','bald':'🧑‍🦲','ufo':'🛸','宇宙':'🛸','りんご':'🍎','林檎':'🍎','みかん':'🍊','蜜柑':'🍊','ぶどう':'🍇','葡萄':'🍇','いちご':'🍓','苺':'🍓','すいか':'🍉','西瓜':'🍉','もも':'🍑','さくらんぼ':'🍒','レモン':'🍋','檸檬':'🍋','バナナ':'🍌','パイナップル':'🍍','メロン':'🍈','寿司':'🍣','すし':'🍣','ラーメン':'🍜','カレー':'🍛','ピザ':'🍕','ハンバーガー':'🍔','コーヒー':'☕','ビール':'🍺','ケーキ':'🍰','ドーナツ':'🍩','お金':'💰','ハート':'💗','ロケット':'🚀','ゆうれい':'👻','宇宙人':'👽','ロボット':'🤖','虹色':'🌈','太陽':'☀️','雪だるま':'⛄','クリスマス':'🎄','ハロウィン':'🎃',
  // 英単語
  'apple':'🍎','lemon':'🍋','orange':'🍊','banana':'🍌','grape':'🍇','grapes':'🍇','strawberry':'🍓','melon':'🍈','watermelon':'🍉','cherry':'🍒','pineapple':'🍍','pizza':'🍕','burger':'🍔','coffee':'☕','beer':'🍺','cake':'🍰','ramen':'🍜','curry':'🍛','taco':'🌮','donut':'🍩','cookie':'🍪','candy':'🍬','icecream':'🍦','heart':'💗','smile':'😄','happy':'😄','sad':'😭','angry':'😠','sleep':'😴','ghost':'👻','alien':'👽','robot':'🤖','music':'🎵','coin':'💰','money':'💰','diamond':'💎','crown':'👑','sun':'☀️','rainbow':'🌈','cloud':'☁️','lightning':'⚡','tiger':'🐯','bear':'🐻','rabbit':'🐰','snake':'🐍','pig':'🐷','chicken':'🐔','elephant':'🐘','butterfly':'🦋','bee':'🐝','crab':'🦀','octopus':'🐙','lion':'🦁','panda':'🐼','penguin':'🐧','duck':'🦆','owl':'🦉','unicorn':'🦄','whale':'🐳','shark':'🦈','car':'🚗','train':'🚃','ship':'⛵','plane':'✈️','book':'📖','soccer':'⚽','rocket':'🚀','christmas':'🎄','halloween':'🎃','sakura':'🌸','bamboo':'🎋','maple':'🍁','pine':'🌲','bonsai':'🪴','tree':'🌳','flower':'🌷','rose':'🌹','tulip':'🌷','sunflower':'🌻','cactus':'🌵','mushroom':'🍄','acorn':'🌰','peach':'🍑','pear':'🍐','egg':'🥚','bread':'🍞','cheese':'🧀','sushi':'🍣','rice':'🍙','tea':'🍵','sake':'🍶','wine':'🍷','fire':'🔥','water':'💧','snow':'❄️','rain':'☔','star':'⭐','moon':'🌙','gold':'💰','love':'💗','dream':'💤','skull':'💀','cat':'🐱','dog':'🐶','fish':'🐟','bird':'🐦','frog':'🐸','dragon':'🐉','monkey':'🐵','horse':'🐴','cow':'🐮','bug':'🐛'
 };
@@ -222,12 +222,14 @@ function build(text){
   const low=text.toLowerCase(),key=EN_ALIAS[low]||text,kc=Array.from(key);
   const emo0=emojiFor(text,key);
   const bigEmo=emo0.length>0&&(BIGW.has(low)||BIGW.has(text));
+  // 周りのギミック（UFO・顔・訪問者）。盆栽自体は常に文字の形
+  let gimmick=WORD_GIM[low]||WORD_GIM[key]||null,vis=null;
+  if(!gimmick&&emo0.length&&ANIM.has(emo0[0])&&seed%3===0){gimmick='visitor';vis=emo0[0];}
+  if(!gimmick&&seed%6===1)gimmick=['ufo','face','visitor','visitor','visitor'][(seed>>>6)%5];
+  if(bigEmo)gimmick=null;
+  if(gimmick==='visitor'&&!vis)vis=VIS[(seed>>>9)%VIS.length];
   const sure=kc.some(c=>SURE_OK.has(c))||emo0.length>0;
   let mode='ok';
-  if(WORDS[low])mode=WORDS[low];
-  else if(kc.length===1&&SURE_BAD[key])mode=SURE_BAD[key];
-  else if(!sure&&seed%7===0)mode=BAD_MODES[(seed>>>8)%BAD_MODES.length];
-  else if(!sure&&seed%9===4)mode=GAGS[(seed>>>6)%GAGS.length];
   const info=(TREE_MODES.includes(mode))?glyphInfo(chars.slice(0,3)):null;
   const nc=Math.min(chars.length,20),tg=nc>12?55:nc>6?85:nc>3?140:230;
   const cinfos=(info&&TREE_MODES.includes(mode))?chars.slice(0,20).map((c,i)=>{const gi=glyphInfo([c],tg);return gi?Object.assign(gi,{idx:i}):null;}).filter(Boolean):[];
@@ -239,7 +241,8 @@ function build(text){
     const pool=['wither','bloom','fruit','acorn','giant','rainbow','gold'];
     fate=pool[(seed>>>21)%pool.length];
   }
-  if(fate==='giant'&&mode==='ok'){mode='giant';fate=null;}
+  if(!bigEmo){const wf=WORD_FATE[low]||WORD_FATE[key];if(wf)fate=wf;}
+  if(fate==='giant'&&mode==='ok')fate=null;
   if(emo0.length&&(fate==='fruit'||fate==='acorn'))fate=null;
   const FR=['🍎','🍊','🍇','🍒','🍋','🍐','🍑'];
   const emo=emo0.length?emo0:(fate==='fruit'?[FR[(seed>>>5)%FR.length]]:fate==='acorn'?['🌰']:[]);
@@ -257,7 +260,7 @@ function build(text){
     else if(info.sym>0.8)style=info.dens>0.36?'hokidachi':'chokkan';
     else style='moyogi';
   }
-  if(mode==='face'||mode==='afro')style='chokkan';
+  if(gimmick==='face')style='chokkan';
   if(mode==='glyph'){if(style==='kengai')style='moyogi';if(style==='hokidachi')style='chokkan';}
   const dens=info?info.dens:.3;
   const tw=10+dens*22;
@@ -328,8 +331,9 @@ function build(text){
     const big=fate==='giant';let gang=-Math.PI/2;if(style==='shakan')gang+=side*.45;
     const n=cinfos.length;
     const rx=n<=1?0:Math.min(270,60+Math.pow(n,.6)*38),ry=n<=1?0:Math.min(190,50+Math.sqrt(n)*30);
-    branch(0,0,gang,((big?200:150)+(n>3?20:0))*sc,tw*sc*(big?1.5:1),0,0,{noKids:true,noPad:true});
+    branch(0,0,gang,((big?200:150)+(n>3?20:0))*sc,gimmick==='face'?34:tw*sc*(big?1.5:1),0,0,{noKids:true,noPad:true});
     const top=els[els.length-1];
+    if(gimmick==='face'){const tr=els.filter(e=>e.t),m=tr[Math.floor(tr.length*.35)];face={x:(m.x0+m.x1)/2,y:(m.y0+m.y1)/2,w:(m.w0+m.w1)/2};faceKind=['happy','sleepy','angry','surprised'][(seed>>>3)%4];}
     const base=(n<=1?215:n<=3?150:n<=6?125:n<=12?105:92)*(big?1.3:1);
     const C={x:top.x1,y:top.y1-10-ry-base*.45};
     const pl=[];
@@ -356,26 +360,6 @@ function build(text){
     for(const d of dots){const rel=(d.y-mnY)/Math.max(1,mxY-mnY);
       pads.push({x:d.x,y:d.y,r:d.r,ts:top.te+.1+(1-rel)*.35+rng()*.04,kind:'dot',cls:'dot',pal:d.pal,seed:rng()});}
     }
-  }else if(mode==='afro'){
-    branch(0,0,-Math.PI/2,140,16,0,0,{noKids:true,straight:true,noPad:true});
-    const l=els[els.length-1];
-    pads.push({x:l.x1,y:l.y1-62,r:108,ts:l.te,kind:'blob',cls:'afro',pal:PAL.afro,seed:rng(),nb:22});
-    pads.push({x:l.x1,y:l.y1-56,r:40,ts:l.te+.08,kind:'emoji',e:'😎',pal:['#000'],cls:'emoji'});
-  }else if(mode==='bald'){
-    branch(0,0,-Math.PI/2,120,15,0,0,{noKids:true,straight:true,forcePad:true,kind:'leaf'});
-  }else if(mode==='noodle'){
-    branch(0,0,-Math.PI/2,330,4,0,0,{noKids:true,wobble:.16,color:'#6b8e4e',forcePad:true,kind:'leaf',straight:true});
-  }else if(mode==='mushroom'){
-    const m=(x,len,w,r)=>{const b=branch(x,0,-Math.PI/2+(rng()-.5)*.15,len,w,0,0,{noKids:true,color:'#f1e6cf',noPad:true,straight:true});
-      pads.push({x:b.x,y:b.y,r,ts:b.end,kind:'cap',cls:'other',pal:['#c0392b'],seed:rng()});};
-    m(0,48,16,64);m(-66,26,9,34);m(62,32,10,38);
-  }else if(mode==='sprout'){
-    branch(0,0,-Math.PI/2,34,3.5,0,0,{noKids:true,color:'#7cb342',straight:true,forcePad:true,kind:'pair'});
-  }else if(mode==='weed'){
-    for(let k=0;k<16;k++){
-      branch((rng()-.5)*90,0,-Math.PI/2+(rng()-.5)*1.7,50+rng()*70,2.5,0,k*0.01,{noKids:true,color:['#6a8f3a','#7cb342','#558b2f'][k%3],noPad:true,wobble:.05,straight:true});
-    }
-    pads.push({x:0,y:-110,r:20,ts:.1,kind:'puff',cls:'other',pal:['#fff'],seed:0});
   }
   if(emo.length&&(mode==='ok'||mode==='ufo'||mode==='giant'||mode==='face'||mode==='glyph')){
     const base=shuf(pads.filter(p=>p.kind==='blob'||p.kind==='dot').slice()),pk=()=>emo[Math.floor(rng()*emo.length)];
@@ -399,9 +383,9 @@ function build(text){
   let minX=0,maxX=0,minY=0;
   for(const e of els){minX=Math.min(minX,e.x1);maxX=Math.max(maxX,e.x1);minY=Math.min(minY,e.y1);}
   for(const p of pads){minX=Math.min(minX,p.x-p.r*1.1);maxX=Math.max(maxX,p.x+p.r*1.1);minY=Math.min(minY,p.y-p.r*1.1);}
-  const fit=Math.min(1,285/Math.max(1,-minX,maxX),(mode==='ufo'?280:345)/Math.max(1,-minY));
+  const fit=Math.min(1,285/Math.max(1,-minX,maxX),(gimmick==='ufo'?280:345)/Math.max(1,-minY));
   const potCols=['#6b4f3a','#3e5c76','#8c3b3b','#4a6b57','#7a6a8a','#c4a35a'];
-  return{fit,minY,text,chars,kc,fate,emo,bigEmo,gold:PROT.has(low)||PROT.has(text),emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
+  return{gimmick,vis,fit,minY,text,chars,kc,fate,emo,bigEmo,gold:PROT.has(low)||PROT.has(text),emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
     potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,dom:classes[0]};
 }
 
@@ -522,10 +506,20 @@ function drawUFO(g,t,tm){
   for(let i=-2;i<=2;i++){ctx.fillStyle=(Math.floor(tm*3)+i)%2?'#ffe66d':'#ff6b6b';ctx.beginPath();ctx.arc(ux+i*16,uy+5+Math.abs(i)*.8,3,0,6.283);ctx.fill();}
   ctx.restore();
 }
+function drawVisitor(g,t,tm){
+  if(t<.85)return;
+  const a=Math.min(1,(t-.85)/.15),e=g.vis,fly=FLY.has(e);
+  ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=(fly?34:42)+'px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
+  let x,y,dir;
+  if(fly){const cy=GY+g.minY*g.fit*.7;x=320+Math.sin(tm*.7)*170+Math.sin(tm*2.3)*14;y=cy+Math.sin(tm*1.3)*40+Math.sin(tm*5)*5;dir=Math.cos(tm*.7)>0?-1:1;}
+  else{x=320+Math.sin(tm*.45)*190;y=GY+92+Math.abs(Math.sin(tm*4))*-6;dir=Math.cos(tm*.45)>0?-1:1;}
+  ctx.translate(x,y);ctx.scale(dir,1);ctx.fillText(e,0,0);ctx.restore();
+}
 function drawTree(g,t,tm){
   ctx.save();ctx.translate(320,GY);ctx.scale(g.fit,g.fit);ctx.translate(-320,-GY);
   ctx.lineCap='round';
-  const gold=g.fate==='gold',shadeB=g.mode==='withered'?'#5b4a3c':gold?'#a67c00':'#4a3322';
+  const gold=g.fate==='gold',shadeB=(g.mode==='withered'||g.fate==='wither')?'#5b4a3c':gold?'#a67c00':'#4a3322';
   for(let pass=0;pass<2;pass++){
     for(const e of g.els){
       if(t<=e.ts)continue;
@@ -533,7 +527,7 @@ function drawTree(g,t,tm){
       const x1=e.x0+(e.x1-e.x0)*p,y1=e.y0+(e.y1-e.y0)*p,w=e.w0+(e.w1-e.w0)*p;
       if(e.c){if(pass===0)continue;ctx.strokeStyle=e.c;ctx.lineWidth=w;}
       else if(pass===0){ctx.strokeStyle=shadeB;ctx.lineWidth=w;}
-      else{ctx.strokeStyle=g.mode==='withered'?'#8a7766':gold?'#ffe27a':'#7a5a3e';ctx.lineWidth=w*.4;}
+      else{ctx.strokeStyle=(g.mode==='withered'||g.fate==='wither')?'#8a7766':gold?'#ffe27a':'#7a5a3e';ctx.lineWidth=w*.4;}
       const o=(!e.c&&pass)?w*.15:0;
       ctx.beginPath();ctx.moveTo(320+e.x0-o,GY+e.y0);ctx.lineTo(320+x1-o,GY+y1);ctx.stroke();
     }
@@ -549,7 +543,8 @@ function drawTree(g,t,tm){
     }
   }
   ctx.restore();
-  if(g.mode==='ufo')drawUFO(g,t,tm);
+  if(g.gimmick==='ufo')drawUFO(g,t,tm);
+  if(g.gimmick==='visitor')drawVisitor(g,t,tm);
 }
 
 /* ---------- 舞い散る葉 ---------- */
@@ -598,18 +593,6 @@ const LEAF_N={
   latin:['若葉','Fresh leaves','異国の風を受けたような、瑞々しい若葉です。','Fresh young leaves, as if swept in by a foreign breeze.'],
   digit:['黄金葉','Golden leaves','数の力が黄金色の葉になりました。金運も上々。','The power of numbers turned into golden leaves. Good for your fortune.'],
   other:['七色葉','Rainbow leaves','見たことのない虹色の葉。新種かもしれません。','Rainbow leaves nobody has seen before. A new species, maybe.']};
-const BAD_N={
-  withered:{r:['枯れ盆栽','Withered Bonsai'],c:['「%」は育つ前に枯れてしまいました…。水やりのタイミングが合わなかったようです。','"%" withered before it could grow... The watering was badly timed.'],m:['枯山水の気配','A hint of a dry garden']},
-  noodle:{r:['もやし級','Bean-Sprout Class'],c:['ひょろひょろ伸びすぎました。これは盆栽というより…もやし？ 先端に一枚だけ葉が。','It shot up long and flimsy. Is this a bonsai or... a bean sprout? One leaf at the tip.'],m:['背ばかり高い','All height, no substance']},
-  mushroom:{r:['キノコ名人','Mushroom Master'],c:['木ではなくキノコが生えました。これはこれで味わい深い。食べないでください。','Mushrooms grew instead of a tree. Charming in its own way. Please don\'t eat it.'],m:['菌類の勝利','Victory of the fungi']},
-  sprout:{r:['芽止まり','Stuck At Sprout'],c:['芽が出たところで満足してしまいました。成長は来世に期待しましょう。','It sprouted and decided that was enough. Growth is postponed to the next life.'],m:['双葉のまま','Still two leaves']},
-  weed:{r:['ほぼ雑草','Basically A Weed'],c:['ただの雑草がぼうぼうに茂りました。たんぽぽの綿毛が一本だけ立派です。','Just plain weeds, thick and untamed. One dandelion puff stands proud.'],m:['庭の手入れが必要','Needs gardening']}};
-const GAG_N={
-  ufo:{r:['UFO遭遇賞','UFO Encounter'],c:['UFOが「%」の枝ぶりを気に入り、調査のため吸い上げ中です。牛が一頭巻き込まれています。','A UFO liked the branches of "%" and is beaming it up for study. One cow got caught in the beam.'],s:['51点','51 pts'],stars:4,m:['宇宙規模　／　回収率 87%','Cosmic  /  Retrieval rate 87%']},
-  face:{r:['顔つき盆栽','Bonsai With A Face'],c:['幹にいつの間にか顔が。「%」という字に魂が宿ったようです。','A face appeared on the trunk. The soul of "%" seems to have awakened.'],s:['愛嬌 100点','Charm 100 pts'],stars:5,m:['擬人化','Personified']},
-  afro:{r:['アフロ大爆発','Afro Explosion'],c:['「%」を植えたらアフロが生えました。サングラスは自前です。','You planted "%" and an afro grew. The sunglasses are its own.'],s:['盛り度 999点','Fluff 999 pts'],stars:5,m:['爆発','Explosive']},
-  giant:{r:['巨木化・鉢崩壊','Giant Tree, Pot Destroyed'],c:['「%」の根が張りすぎて鉢が割れました。もはや盆栽ではなく樹木。管理人に怒られます。','The roots of "%" grew so much the pot cracked. This is a tree now, not a bonsai. The landlord will be furious.'],s:['120点','120 pts'],stars:3,m:['森','Forest']},
-  bald:{r:['ハゲ判定','Bald Verdict'],c:['葉が一本を残して抜け落ちました。残った一本に哀愁が漂います。','All the leaves fell out except one. A single leaf, full of pathos.'],s:['1点','1 pt'],stars:1,m:['バーコード','Comb-over']}};
 const FACE_N={happy:['ご機嫌','cheerful'],sleepy:['おねむ','sleepy'],angry:['ご立腹','furious'],surprised:['びっくり','surprised']};
 const FATE_N={
   wither:{r:['すぐ枯れ','Instantly Withered'],c:['「%」は一瞬だけ青々としましたが、あっという間に枯れ落ちました。諸行無常。','"%" was lush for a moment, then withered in no time. Nothing lasts.'],m:['儚い','Fleeting']},
@@ -629,31 +612,16 @@ const ST={
   good:mkS('よくできたで賞','Well Done Award',['よくできた','で賞'],['WELL','DONE!'],'#c0392b'),
   effort:mkS('努力賞','Effort Award',['努力賞'],['EFFORT','AWARD'],'#c0392b'),
   join:mkS('参加賞','Participation Award',['参加賞'],['THANKS FOR','PLAYING'],'#c0392b'),
-  dont:mkS('ドンマイ賞','Better Luck Next Time',['ドンマイ','賞'],['BETTER LUCK','NEXT TIME'],'#5f7188'),
   special:mkS('特別賞','Special Prize',['特別賞'],['SPECIAL','PRIZE'],'#8e44ad'),
-  kinoko:mkS('キノコ賞','Mushroom Award',['キノコ','賞'],['MUSHROOM','AWARD'],'#c0392b'),
-  nobi:mkS('伸びしろ賞','Room To Grow',['伸びしろ','賞'],['ROOM TO','GROW'],'#4a9a3c'),
-  zassou:mkS('雑草魂賞','Weed Spirit Award',['雑草魂','賞'],['WEED','SPIRIT'],'#4a9a3c'),
-  uchu:mkS('宇宙賞','Cosmic Award',['宇宙賞'],['COSMIC','AWARD'],'#2a5db0'),
-  aikyo:mkS('愛嬌賞','Charm Award',['愛嬌賞'],['CHARM','AWARD'],'#d6457a'),
-  kikaku:mkS('規格外賞','Off-the-Charts',['規格外','賞'],['OFF THE','CHARTS'],'#c0392b'),
-  hage:mkS('ハゲまし賞','Comb-over Award',['ハゲまし','賞'],['COMB-OVER','AWARD'],'#6b4f3a')
 };
-const BAD_ST={withered:'dont',noodle:'dont',mushroom:'kinoko',sprout:'nobi',weed:'zassou'};
-const GAG_ST={ufo:'uchu',face:'aikyo',afro:'special',giant:'kikaku',bald:'hage'};
 const FUNNY=[
   ['100点満点中 107点','107 pts out of 100',mkS('審査員困惑賞','Judges Confused',['審査員','困惑賞'],['JUDGES','CONFUSED'],'#2a5db0')],
-  ['-3点（減点方式）','-3 pts (deduction system)',mkS('減点王賞','Deduction King',['減点王賞'],['DEDUCTION','KING'],'#2a5db0')],
-  ['8億点','800,000,000 pts',mkS('計測器破壊賞','Broke the Scoreboard',['計測器','破壊賞'],['BROKE THE','SCOREBOARD'],'#2a5db0')],
-  ['0点（ほぼゼロ）','0 pts (practically)',mkS('ほぼゼロ賞','Almost Zero',['ほぼ','ゼロ賞'],['ALMOST','ZERO'],'#2a5db0')],
   ['59点（あと1点）','59 pts (1 short)',mkS('惜しい賞','So Close Award',['惜しい賞'],['SO CLOSE','AWARD'],'#2a5db0')],
-  ['666点','666 pts',mkS('悪魔賞','Devil\'s Award',['悪魔賞'],['DEVIL\'S','AWARD'],'#6c1a1a')],
-  ['314点','314 pts',mkS('円周率賞','Pi Award',['円周率賞'],['PI','AWARD'],'#2a5db0')],
   ['42,195点','42,195 pts',mkS('完走賞','Marathon Finisher',['完走賞'],['MARATHON','FINISHER'],'#2a5db0')],
   ['約70点（ざっくり）','About 70 pts (roughly)',mkS('ざっくり賞','Roughly Right',['ざっくり','賞'],['ROUGHLY','RIGHT'],'#2a5db0')],
 ];
 const stampOf=s=>({name:P(s.n),lines:P(s.l),col:s.c});
-const tierKey=n=>n>=92?'gold':n>=85?'silver':n>=78?'bronze':n>=68?'merit':n>=55?'good':n>=35?'effort':n>=20?'join':'dont';
+const tierKey=n=>n>=92?'gold':n>=85?'silver':n>=78?'bronze':n>=68?'merit':n>=55?'good':n>=35?'effort':'join';
 function drawScore(txt,age){
   if(age<0)return;
   const p=Math.min(1,age/.2);
@@ -696,16 +664,6 @@ function evaluate(g){
   const rng=rngFrom(g.seed^0x9e3779b9),inf=g.info,T=g.text;
   const q=t=>L('「'+t+'」','"'+t+'"'),pts=s=>L(s+'点',s+' pts'),sty=L('樹形: ','Style: ');
   const fmt=n=>String(n);
-  if(BAD_N[g.mode]){
-    const b=BAD_N[g.mode],score=Math.floor(rng()*22);
-    return{bad:true,rank:P(b.r),scoreText:pts(fmt(score)),stars:score>14?1:0,comment:P(b.c).replace('%',()=>T),stamp:stampOf(ST[BAD_ST[g.mode]]),
-      meta:sty+P(b.m)+L('　／　どんな文字も育つとは限りません。別の文字で再挑戦！','  /  Not every text can grow. Try another!')};
-  }
-  if(GAG_N[g.mode]){
-    const a=GAG_N[g.mode];let c=P(a.c).replace('%',()=>T);
-    if(g.mode==='face')c+=L(`今日の機嫌は「${FACE_N[g.faceKind][0]}」。`,` Today's mood: ${FACE_N[g.faceKind][1]}.`);
-    return{bad:false,rank:P(a.r),scoreText:P(a.s),stars:a.stars,comment:c,meta:sty+P(a.m),stamp:stampOf(ST[GAG_ST[g.mode]])};
-  }
   const fate=g.fate;
   let score,metrics=null;
   const bonus=(g.kc.some(c=>SURE_OK.has(c))?8:0)+Math.min(g.kc.length-1,4)*2;
@@ -745,6 +703,9 @@ function evaluate(g){
   const tc=g.kc.find(c=>THEME[c]);
   if(g.th)cm+=L(`葉は${q(tc)}のイメージ色（${g.th.n}）。`,` The leaves take on the color associated with ${q(tc)}.`);
   else cm+=L(LEAF_N[domc][2],' '+LEAF_N[domc][3]);
+  if(g.gimmick==='ufo')cm+=L('UFOが飛来して、枝ぶりを調査中です。牛が一頭巻き込まれています。',' A UFO arrived to study the branches. One cow got caught in the beam.');
+  if(g.gimmick==='face')cm+=L(`幹にいつの間にか顔が。今日の機嫌は「${FACE_N[g.faceKind][0]}」。`,` A face appeared on the trunk. Today's mood: ${FACE_N[g.faceKind][1]}.`);
+  if(g.gimmick==='visitor')cm+=L(`${g.vis}が遊びに来ました。`,` A ${g.vis} dropped by for a visit.`);
   if(g.emoText){const es=g.emo.slice(0,6).join('')+(g.emo.length>6?'…':'');cm+=L(`${q(T)}にちなんで、枝先に${es}が咲き、実りました。収穫は早朝がおすすめです。`,` Inspired by ${q(T)}, ${es} bloomed and ripened all over the branches. Best harvested at dawn.`);if(!fate)rank=L('🌳 シュール','🌳 Surreal ')+rank;}
   if(g.kc.length>1&&!g.classes.every(c=>c==='latin'))cm+=L(`${g.kc.length}文字が寄り添う寄せ植えの趣も。`,` ${g.kc.length} characters huddle together like a group planting.`);
   if(fate){
@@ -754,7 +715,7 @@ function evaluate(g){
   }
   const age=20+Math.floor(rng()*280);
   // 賞と点数の見せ方
-  let stampKey=(g.gold||fate==='gold')?'gold':fate==='rainbow'?'special':fate==='wither'?(score<20?'dont':'join'):tierKey(score);
+  let stampKey=(g.gold||fate==='gold')?'gold':fate==='rainbow'?'special':fate==='wither'?'join':tierKey(score);
   let scoreText=pts(fmt(score)),stars=fate==='wither'?1:Math.max(1,Math.round(score/20)),breakdown=null;
   let stamp=stampOf(ST[stampKey]);
   const funnyOK=!fate||fate==='bloom'||fate==='fruit'||fate==='acorn';
@@ -789,7 +750,7 @@ function evaluate(g){
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
 const SLOT_START=0,STAMP_AT=2.0;
 const SHOW_SCORE=false; // 点数の表示を一時的にオフ（trueで復活）
-const VERSION='1.3.11',BUILD='2026-11-26 11:36 JST';
+const VERSION='1.4.0',BUILD='2026-11-26 11:42 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
