@@ -787,6 +787,13 @@ const SHOW_SCORE=true; // 点数の表示（falseで非表示）
 const TOTAL_KEY='mojibonsai_total',fmtN=n=>Number(n).toLocaleString('en-US');
 function getTotal(){try{return parseInt(localStorage.getItem(TOTAL_KEY)||'0',10)||0;}catch(e){return 0;}}
 function setTotal(n){try{localStorage.setItem(TOTAL_KEY,String(n));}catch(e){}}
+/* ランキング用の数表記（日本語は 億・万 付き） */
+function jpNum(n){
+  n=Math.floor(Number(n));if(n<10000)return fmtN(n);
+  let out='',r=n;for(const [u,l] of [[1e12,'兆'],[1e8,'億'],[1e4,'万']]){if(r>=u){out+=Math.floor(r/u)+l;r%=u;}}
+  return out+(r>0?r:'');
+}
+const fmtR=n=>lang==='ja'?jpNum(n):fmtN(n);
 const norm=t=>String(t).normalize('NFKC').toLowerCase();
 function getHist(){try{return JSON.parse(localStorage.getItem('mojibonsai')||'[]');}catch(e){return[];}}
 function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts')+(G.counted?'':'\n'+L('（加算済み）','(already added)')):'';}
@@ -846,7 +853,7 @@ function renderGlobal(){
   $('glStatus').textContent=st;
   $('glJoin').hidden=off||joined();$('glRefresh').hidden=off;$('glName').placeholder=P(UI.glNick);
   const ol=$('glList');ol.textContent='';
-  for(const x of glData){const li=document.createElement('li');li.textContent=`${x.name}　${fmtN(x.total)}${L('点',' pts')}`;if(x.id===uid)li.className='me';ol.appendChild(li);}
+  for(const x of glData){const li=document.createElement('li');li.textContent=`${x.name}　${fmtR(x.total)}${L('点',' pts')}`;if(x.id===uid)li.className='me';ol.appendChild(li);}
 }
 async function joinGlobal(){
   const name=Array.from($('glName').value.trim()).slice(0,25).join('');if(!name||!fbOn())return;
@@ -866,13 +873,13 @@ function saveBest(){
 function renderRank(){
   const tot=getTotal();let i=0;while(i+1<TITLES.length&&tot>=TITLES[i+1][0])i++;
   const cur=TITLES[i],nxt=TITLES[i+1];
-  $('rkTitle').textContent=L(`累計 ${fmtN(tot)}点　称号「${cur[1]}」`,`Total ${fmtN(tot)} pts  Title: ${cur[2]}`)
-    +(nxt?L(`　／　次の「${nxt[1]}」まであと ${fmtN(nxt[0]-tot)}点`,`  /  ${fmtN(nxt[0]-tot)} pts to ${nxt[2]}`):L('　／　最高称号！','  /  Top title!'));
+  $('rkTitle').textContent=L(`累計 ${fmtR(tot)}点　称号「${cur[1]}」`,`Total ${fmtR(tot)} pts  Title: ${cur[2]}`)
+    +(nxt?L(`　／　次の「${nxt[1]}」まであと ${fmtR(nxt[0]-tot)}点`,`  /  ${fmtR(nxt[0]-tot)} pts to ${nxt[2]}`):L('　／　最高称号！','  /  Top title!'));
   const ol=$('rkList');ol.textContent='';
-  for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtN(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
+  for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.7.5',BUILD='2026-11-26 12:07 JST';
+const VERSION='1.7.6',BUILD='2026-11-26 12:07 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
