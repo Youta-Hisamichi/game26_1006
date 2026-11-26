@@ -639,30 +639,25 @@ const FUNNY=[
   ['100点満点中 107点','107 pts out of 100',mkS('審査員困惑賞','Judges Confused',['審査員','困惑賞'],['JUDGES','CONFUSED'],'#2a5db0')],
   ['-3点（減点方式）','-3 pts (deduction system)',mkS('減点王賞','Deduction King',['減点王賞'],['DEDUCTION','KING'],'#2a5db0')],
   ['8億点','800,000,000 pts',mkS('計測器破壊賞','Broke the Scoreboard',['計測器','破壊賞'],['BROKE THE','SCOREBOARD'],'#2a5db0')],
-  ['0.3点','0.3 pts',mkS('ほぼゼロ賞','Almost Zero',['ほぼ','ゼロ賞'],['ALMOST','ZERO'],'#2a5db0')],
-  ['59.9点（あと0.1点）','59.9 pts (0.1 short)',mkS('惜しい賞','So Close Award',['惜しい賞'],['SO CLOSE','AWARD'],'#2a5db0')],
+  ['0点（ほぼゼロ）','0 pts (practically)',mkS('ほぼゼロ賞','Almost Zero',['ほぼ','ゼロ賞'],['ALMOST','ZERO'],'#2a5db0')],
+  ['59点（あと1点）','59 pts (1 short)',mkS('惜しい賞','So Close Award',['惜しい賞'],['SO CLOSE','AWARD'],'#2a5db0')],
   ['666点','666 pts',mkS('悪魔賞','Devil\'s Award',['悪魔賞'],['DEVIL\'S','AWARD'],'#6c1a1a')],
-  ['3.14点','3.14 pts',mkS('円周率賞','Pi Award',['円周率賞'],['PI','AWARD'],'#2a5db0')],
-  ['42.195点','42.195 pts',mkS('完走賞','Marathon Finisher',['完走賞'],['MARATHON','FINISHER'],'#2a5db0')],
+  ['314点','314 pts',mkS('円周率賞','Pi Award',['円周率賞'],['PI','AWARD'],'#2a5db0')],
+  ['42,195点','42,195 pts',mkS('完走賞','Marathon Finisher',['完走賞'],['MARATHON','FINISHER'],'#2a5db0')],
   ['約70点（ざっくり）','About 70 pts (roughly)',mkS('ざっくり賞','Roughly Right',['ざっくり','賞'],['ROUGHLY','RIGHT'],'#2a5db0')],
 ];
 const stampOf=s=>({name:P(s.n),lines:P(s.l),col:s.c});
 const tierKey=n=>n>=92?'gold':n>=85?'silver':n>=78?'bronze':n>=68?'merit':n>=55?'good':n>=35?'effort':n>=20?'join':'dont';
 function drawScore(txt,age){
   if(age<0)return;
-  const p=Math.min(1,age/.15);
-  const digs=[];for(let i=0;i<txt.length;i++)if(/[0-9]/.test(txt[i]))digs.push(i);
-  const per=Math.min(.2,.85/Math.max(1,digs.length)),T0=.4,fin=T0+digs.length*per,done=age>=fin;
-  let out='';
-  for(let i=0;i<txt.length;i++){const k=digs.indexOf(i);
-    out+=(k>=0&&age<T0+k*per)?String((Math.floor(age*22)*7+i*13+i*i)%10):txt[i];}
+  const p=Math.min(1,age/.2);
   ctx.save();ctx.globalAlpha=p;ctx.textAlign='right';ctx.textBaseline='top';
   let fs=46;ctx.font=`bold ${fs}px ${FONT}`;
   while(ctx.measureText(txt).width>270&&fs>14){fs-=2;ctx.font=`bold ${fs}px ${FONT}`;}
-  const pop=done?1+.25*Math.exp(-(age-fin)*9):1;
+  const pop=1+.25*Math.exp(-age*9);
   ctx.translate(628,14);ctx.scale(pop,pop);
-  ctx.lineJoin='round';ctx.lineWidth=7;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.strokeText(out,0,0);
-  ctx.fillStyle=done?'#b5382c':'#d98a00';ctx.fillText(out,0,0);
+  ctx.lineJoin='round';ctx.lineWidth=7;ctx.strokeStyle='rgba(255,248,230,.95)';ctx.strokeText(txt,0,0);
+  ctx.fillStyle='#b5382c';ctx.fillText(txt,0,0);
   ctx.restore();
 }
 function drawStamp(st,age,seed){
@@ -686,7 +681,7 @@ function drawStamp(st,age,seed){
 function evaluate(g){
   const rng=rngFrom(g.seed^0x9e3779b9),inf=g.info,T=g.text;
   const q=t=>L('「'+t+'」','"'+t+'"'),pts=s=>L(s+'点',s+' pts'),sty=L('樹形: ','Style: ');
-  const dec=Math.floor(rng()*10)/10,fmt=n=>(n+dec).toFixed(1);
+  const fmt=n=>String(n);
   if(BAD_N[g.mode]){
     const b=BAD_N[g.mode],score=Math.floor(rng()*22);
     return{bad:true,rank:P(b.r),scoreText:pts(fmt(score)),stars:score>14?1:0,comment:P(b.c).replace('%',()=>T),stamp:stampOf(ST[BAD_ST[g.mode]]),
@@ -768,7 +763,7 @@ function evaluate(g){
     let diff=score-parts.reduce((a,b)=>a+b,0);
     for(let k=0;diff!==0&&k<200;k++){const i=k%4,st=diff>0?1:-1;if(parts[i]+st>=0&&parts[i]+st<=mxs[i]){parts[i]+=st;diff-=st;}}
     const nm=[L('樹形','Shape'),L('葉','Foliage'),L('鉢映え','Pot harmony'),L('独創性','Originality')];
-    breakdown=nm.map((n,i)=>`${n} ${parts[i]}/${mxs[i]}`).join('　')+L(`　審査員の気分 +${dec.toFixed(1)}`,`  Judges' mood +${dec.toFixed(1)}`);
+    breakdown=nm.map((n,i)=>`${n} ${parts[i]}/${mxs[i]}`).join('　');
   }
   return{bad:fate==='wither',rank,scoreText,stars,comment:cm,metrics,stamp,breakdown,
     meta:sty+P(STYLE_N[g.style])+(g.mode==='glyph'?L('（字形樹冠）',' (glyph crown)'):'')+(fate?L('　／　運命: ','  /  Fate: ')+P(FATE_N[fate].m):'')
@@ -777,8 +772,8 @@ function evaluate(g){
 
 /* ---------- 実行 ---------- */
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
-const SLOT_START=2300;
-const VERSION='1.2.0',BUILD='2026-11-26 11:20 JST';
+const SLOT_START=0,STAMP_AT=2.0;
+const VERSION='1.3.0',BUILD='2026-11-26 11:21 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -793,8 +788,8 @@ function frame(now){
       drawParts(dt);
     }
     drawSeal(G);
-    if(R){const sa=(now-slotT0)/1000;drawScore(R.scoreText,sa);drawStamp(R.stamp,sa-1.3,G.seed);
-      if(!shown&&sa>=1.6){shown=true;paintResult(G);saveHist(G.text);}}
+    if(R){const sa=(now-slotT0)/1000;drawScore(R.scoreText,sa);drawStamp(R.stamp,sa-STAMP_AT,G.seed);
+      if(!shown&&sa>=STAMP_AT+.4){shown=true;paintResult(G);saveHist(G.text);}}
   }
   requestAnimationFrame(frame);
 }
@@ -896,7 +891,7 @@ function applyLang(){
 }
 $('lang').onclick=()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('mojibonsai_lang',lang);}catch(e){}applyLang();};
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
-cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n);}});
+cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-(STAMP_AT-.3)*1000);}});
 {const box=document.querySelector('.chips');
  for(const s of['桜','松','猫','火','寿','UFO','cat','gold','sakura','あ','枯','草','顔']){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=s;b.onclick=()=>{$('t').value=s;grow(s);};box.appendChild(b);}}
 {const qs=new URLSearchParams(location.search);let l=qs.get('lang');
