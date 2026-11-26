@@ -212,15 +212,15 @@ function build(text){
   else if(!sure&&seed%7===0)mode=BAD_MODES[(seed>>>8)%BAD_MODES.length];
   else if(!sure&&seed%9===4)mode=GAGS[(seed>>>6)%GAGS.length];
   const info=(TREE_MODES.includes(mode))?glyphInfo(chars):null;
-  if(mode==='ok'&&info&&chars.length<=2&&(seed>>>10)%4===0)mode='glyph';
+  if(mode==='ok'&&info&&info.pts.length>8)mode='glyph';
   const classes=kc.map(c=>SP[c]||(/\p{Extended_Pictographic}/u.test(c)?'latin':cls(c)));
   const th=kc.map(c=>THEME[c]).find(Boolean)||null;
   let fate=null;
   if((mode==='ok'||mode==='glyph')&&(seed>>>14)%100<40){
-    const pool=mode==='glyph'?['wither','bloom','rainbow','gold']:['wither','bloom','fruit','acorn','giant','rainbow','gold'];
+    const pool=['wither','bloom','fruit','acorn','giant','rainbow','gold'];
     fate=pool[(seed>>>21)%pool.length];
   }
-  if(fate==='giant'){mode='giant';fate=null;}
+  if(fate==='giant'&&mode==='ok'){mode='giant';fate=null;}
   if(emo0.length&&(fate==='fruit'||fate==='acorn'))fate=null;
   const FR=['🍎','🍊','🍇','🍒','🍋','🍐','🍑'];
   const emo=emo0.length?emo0:(fate==='fruit'?[FR[(seed>>>5)%FR.length]]:fate==='acorn'?['🌰']:[]);
@@ -238,7 +238,8 @@ function build(text){
     else if(info.sym>0.8)style=info.dens>0.36?'hokidachi':'chokkan';
     else style='moyogi';
   }
-  if(mode==='glyph'||mode==='face'||mode==='afro')style='chokkan';
+  if(mode==='face'||mode==='afro')style='chokkan';
+  if(mode==='glyph'){if(style==='kengai')style='moyogi';if(style==='hokidachi')style='chokkan';}
   const dens=info?info.dens:.3;
   const tw=10+dens*22;
   const padPal=()=>{if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
@@ -300,9 +301,10 @@ function build(text){
       faceKind=['happy','sleepy','angry','surprised'][(seed>>>3)%4];
     }
   }else if(mode==='glyph'){
-    const trunk=branch(0,0,-Math.PI/2,150*sc,tw*sc,0,0,{noKids:true,straight:true,noPad:true});
+    const big=fate==='giant';let gang=-Math.PI/2;if(style==='shakan')gang+=side*.45;
+    branch(0,0,gang,(big?200:150)*sc,tw*sc*(big?1.5:1),0,0,{noKids:true,noPad:true});
     const top=els[els.length-1];
-    const k=Math.min(2.1,250/info.bw,215/info.bh);
+    const k=Math.min(big?2.8:2.1,250/info.bw,215/info.bh);
     const ccx=top.x1,ccy=top.y1-12-info.bh*k/2;
     const th2=th?th.pal:(palFor(classes[0],rng));
     const pal=fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:classes[0]==='kanji'&&!th?['#3b7048','#2f5d3a','#4a7d52','#5d9468']:th2;
@@ -390,7 +392,7 @@ function drawPot(g){
   ctx.fillStyle=shade(c,30);ctx.fillRect(-top-6,2,top*2+12,12);
   ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(-top+10,18,16,h-24);
   ctx.fillStyle=shade(c,-25);ctx.fillRect(-bot+8,6+h,26,8);ctx.fillRect(bot-34,6+h,26,8);
-  if(g&&g.mode==='giant'){ // 鉢が割れる
+  if(g&&(g.mode==='giant'||g.fate==='giant')){ // 鉢が割れる
     ctx.strokeStyle='#1b120b';ctx.lineWidth=3;ctx.lineJoin='round';ctx.beginPath();
     ctx.moveTo(-10,8);ctx.lineTo(-2,28);ctx.lineTo(-18,44);ctx.lineTo(-6,62);ctx.lineTo(-14,76);ctx.stroke();
     ctx.beginPath();ctx.moveTo(40,8);ctx.lineTo(34,24);ctx.lineTo(48,38);ctx.stroke();
@@ -575,6 +577,7 @@ const FATE_N={
   fruit:{r:['豊作','Bumper Harvest'],c:['枝先に%fがたわわに実りました。普通においしそうです。','Ripe %f hang from every branch. Looks perfectly edible.'],m:['果樹','Fruit tree']},
   acorn:{r:['ドングリ豊作','Acorn Season'],c:['ドングリがぼとぼと実りました。リスが集まってきます。','Acorns are dropping everywhere. Squirrels are gathering.'],m:['どんぐり','Acorn tree']},
   rainbow:{r:['虹色の奇跡','Rainbow Miracle'],c:['葉が七色に輝いています。見る角度で色が変わる珍種です。','The leaves shimmer in seven colors—a rare variety that changes with the light.'],m:['虹','Rainbow']},
+  giant:{r:['巨木化','Giant Tree'],c:['「%」の形のまま巨大化し、根が張りすぎて鉢が割れました。もはや盆栽ではなく樹木。','It grew huge in the very shape of "%" and cracked the pot with its roots. A tree now, not a bonsai.'],m:['巨木','Giant']},
   gold:{r:['黄金の名木','Golden Masterpiece'],c:['幹も葉も黄金に！売れば家が建ちますが、売ってはいけません。','Trunk and leaves turned to solid gold! You could buy a house with it—but you mustn\'t sell.'],m:['黄金','Golden']}};
 /* ---------- 賞・判子 ---------- */
 const mkS=(nj,ne,lj,le,c)=>({n:[nj,ne],l:[lj,le],c});
@@ -697,7 +700,19 @@ function evaluate(g){
   let scoreText=pts(fmt(score)),stars=fate==='wither'?1:Math.max(1,Math.round(score/20)),breakdown=null;
   let stamp=stampOf(ST[stampKey]);
   const funnyOK=!fate||fate==='bloom'||fate==='fruit'||fate==='acorn';
-  if(funnyOK&&(g.seed>>>9)%100<16){
+  const JACK=[
+    ['255点','255 pts',mkS('8ビット賞','8-bit Award',['8ビット','賞'],['8-BIT','AWARD'],'#c99a1f'),'255は8ビット整数の最大値。どこかでバグを引き当てたようです。','255 is the max of an 8-bit integer. You may have hit a bug somewhere.'],
+    ['777点','777 pts',mkS('大当たり賞','Jackpot',['大当たり','賞'],['JACKPOT'],'#c99a1f'),'スロットなら大当たりです。','A jackpot, slot-machine style.'],
+    ['1,000点','1,000 pts',mkS('千点賞','1,000 Club',['千点賞'],['1,000','CLUB'],'#c99a1f'),'ついに4桁の大台に乗りました。','You finally broke into four digits.'],
+    ['1万点','10,000 pts',mkS('万点賞','10K Club',['万点賞'],['10K','CLUB'],'#c99a1f'),'1万点！審査員がざわついています。','Ten thousand points! The judges are buzzing.'],
+    ['100万点','1,000,000 pts',mkS('百万点賞','Million Club',['百万点','賞'],['MILLION','CLUB'],'#c99a1f'),'100万点。もはや盆栽の概念を超えました。','A million points. This has transcended the concept of bonsai.'],
+    ['1億点','100,000,000 pts',mkS('億点賞','Hundred Million Club',['億点賞'],['100M','CLUB'],'#c99a1f'),'1億点。審査員が驚いて会場から退席しました。','One hundred million points. The judges left the venue in shock.']];
+  const jw=[0,0,1,1,2,2,3,3,4,5];
+  if(fate!=='wither'&&(g.seed>>>11)%100<6){
+    const J=JACK[jw[(g.seed>>>4)%10]];
+    scoreText=L(J[0],J[1]);stamp=stampOf(J[2]);stars=5;rank=L('伝説の一鉢','Legendary Pot');
+    cm+=L('',' ')+L(J[3],J[4]);
+  }else if(funnyOK&&(g.seed>>>9)%100<16){
     const F=FUNNY[(g.seed>>>3)%FUNNY.length];
     scoreText=P(F);stamp=stampOf(F[2]);stars=2+Math.floor(rng()*4);
   }else{
