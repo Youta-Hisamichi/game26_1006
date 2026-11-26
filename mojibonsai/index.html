@@ -961,7 +961,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.8.1',BUILD='2026-11-26 12:17 JST';
+const VERSION='1.8.2',BUILD='2026-11-26 19:14 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
