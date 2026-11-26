@@ -41,7 +41,8 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent)}
 .m b{text-align:right;font-weight:normal}
-#share{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#share{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;transition:opacity .3s}
+#share:not(.ready){opacity:.45}
 #share button{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:7px 14px;font-size:14px}
 #share .primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 #menu{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:10}
@@ -87,6 +88,11 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 </form>
 <div class="chips"><span data-i="try">お試し:</span></div>
 <canvas id="c" width="640" height="520"></canvas>
+<div id="share">
+  <button type="button" id="bShare" class="primary" data-i="share">シェア</button>
+  <button type="button" id="bImg" data-i="img">画像を保存</button>
+  <button type="button" id="bCopy" data-i="copy">リンクをコピー</button>
+</div>
 <div id="result">
   <p id="rank"></p>
   <div><span id="stars"></span><span id="score"></span></div>
@@ -95,11 +101,6 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
   <div id="breakdown"></div>
   <div id="metrics"></div>
   <div id="meta"></div>
-  <div id="share">
-    <button type="button" id="bShare" class="primary" data-i="share">シェア</button>
-    <button type="button" id="bImg" data-i="img">画像を保存</button>
-    <button type="button" id="bCopy" data-i="copy">リンクをコピー</button>
-  </div>
 </div>
 <div id="rk"><h2 data-i="rkh">この端末ランキング</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
 <div id="gl"><h2 data-i="glh">みんなのランキング（累計）</h2><div id="glStatus"></div>
@@ -972,7 +973,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.9.2',BUILD='2026-11-26 19:49 JST';
+const VERSION='1.9.3',BUILD='2026-11-26 19:57 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -1005,14 +1006,14 @@ function paintResult(g){
       r.innerHTML='<span></span><div class="bar"><i></i></div><b></b>';
       r.children[0].textContent=m.l;r.children[1].firstChild.style.width=Math.max(2,m.p)+'%';r.children[2].textContent=m.v;mb.appendChild(r);}}
   $('result').classList.toggle('bad',R.bad);
-  $('result').classList.add('show');
+  $('result').classList.add('show');$('share').classList.add('ready');
 }
 function grow(text){
   text=Array.from(text.trim()).slice(0,20).join('');
   $('t').value=text;
   if(!text){$('t').focus();return;}
   G=build(text);parts=[];shown=false;start=performance.now();slotT0=start+SLOT_START;R=evaluate(G);G.counted=!getHist().some(x=>norm(x.t)===norm(text));G.total=getTotal()+(G.counted?R.scoreNum:0);
-  $('result').classList.remove('show');
+  $('result').classList.remove('show');$('share').classList.remove('ready');
   $('t').blur();
 }
 function saveHist(text){
