@@ -66,9 +66,9 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #glJoin{display:flex;gap:6px;margin:6px 0}
 #glJoin[hidden]{display:none}
 #glJoin input{font-size:14px;padding:6px 8px;border-radius:8px}
-#glJoin button,#glRefresh{font-size:13px;padding:6px 12px}
-#glRefresh{background:var(--card);color:var(--ink);border:1px solid var(--line)}
-#gl ol{margin:6px 0;padding-left:2em}
+#glJoin button,#glRefresh,#glMore{font-size:13px;padding:6px 12px}
+#glMore,#glRefresh{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+#gl ol{margin:6px 0;padding-left:2.4em;max-height:480px;overflow:auto}
 #glCount{font-weight:bold;margin:2px 0}
 #glCount:empty{display:none}
 #gl li.me{font-weight:bold;color:var(--accent)}
@@ -107,7 +107,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 <div id="rk"><h2 data-i="rkh">この端末ランキング</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
 <div id="gl"><h2 data-i="glh">みんなのランキング（累計）</h2><div id="glStatus"></div><div id="glCount"></div>
   <div id="glJoin"><input id="glName" maxlength="50" autocomplete="off"><button type="button" id="glBtn" data-i="glRename">名前を変更</button></div>
-  <ol id="glList"></ol><button type="button" id="glRefresh" data-i="glRefresh">更新</button></div>
+  <ol id="glList"></ol><button type="button" id="glMore" data-i="glMore">もっと見る</button> <button type="button" id="glRefresh" data-i="glRefresh">更新</button></div>
 <div id="hist" hidden><h2 data-i="hist">育てた盆栽</h2><div id="histlist"></div><button type="button" id="histReset" data-i="reset">ログと累計をリセット</button></div>
 <footer id="ver"></footer>
 <div id="dev"><a href="https://x.com/Hisashi_vc" target="_blank" rel="noopener noreferrer"><span data-i="dev">開発</span>: ひさしApp</a></div>
@@ -698,7 +698,7 @@ const UI={
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。100万点や1億点のテキスト盆栽を探してね。','Type any text and a bonsai that suits it grows in seconds. Can you find a Text Bonsai worth 1,000,000 or 100,000,000 points?'],
   grow:['育てる','Grow'],try:['お試し:','Try:'],share:['シェア','Share'],shareTo:['共有先を選ぶ','Share to'],close:['閉じる','Close'],mail:['メール','Email'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
   dev:['開発','Developer'],
-  glh:['みんなのランキング（累計）','Global ranking (total)'],glOff:['オンラインランキングは準備中です','Online ranking is coming soon'],glCount:['総プレイヤー数 ','Total players '],glRename:['名前を変更','Change name'],glNote:['名前の設定なしでも、スコアは自動でランキングに送信されます（ニックネームと累計点数が公開されます）','Scores are sent to the ranking automatically, even without a name (your nickname and total score are public).'],glNick:['ニックネーム（25文字まで）','Nickname (max 25)'],glMe:['参加中: ','Joined as '],glErr:['ランキングに接続できません','Cannot reach the ranking server'],glRefresh:['更新','Refresh'],glRank:['あなたの順位: ','Your rank: '],glOut:['圏外','out of top 20'],rkh:['この端末ランキング','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
+  glh:['みんなのランキング（累計）','Global ranking (total)'],glOff:['オンラインランキングは準備中です','Online ranking is coming soon'],glMore:['もっと見る','Show more'],glCount:['総プレイヤー数 ','Total players '],glRename:['名前を変更','Change name'],glNote:['名前の設定なしでも、スコアは自動でランキングに送信されます（ニックネームと累計点数が公開されます）','Scores are sent to the ranking automatically, even without a name (your nickname and total score are public).'],glNick:['ニックネーム（25文字まで）','Nickname (max 25)'],glMe:['参加中: ','Joined as '],glErr:['ランキングに接続できません','Cannot reach the ranking server'],glRefresh:['更新','Refresh'],glRank:['あなたの順位: ','Your rank: '],glOut:['圏外','out of top 20'],rkh:['この端末ランキング','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
   anal:['字形分析（実際に文字を描いて測定）','Glyph analysis (measured from the rendered text)'],
   wait:['育ち終わるまでお待ちください','Please wait until it finishes growing'],copied:['コピーしました','Copied'],copyPrompt:['コピーしてください','Copy this']
 };
@@ -899,7 +899,7 @@ const fbOn=()=>!!(FB.apiKey&&FB.projectId);
 const RK_NAME='mojibonsai_name',RK_AUTH='mojibonsai_auth',RK_DELTA='mojibonsai_delta',RK_JOIN='mojibonsai_join';
 const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}},lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
 const joined=()=>lsGet(RK_JOIN)==='1';
-let glData=[],glErr=false,glCount=null;
+let glData=[],glErr=false,glCount=null,glLimit=20,glMyRank=null;
 const DOC=()=>`https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents`;
 async function fbAuth(){
   let a=null;try{a=JSON.parse(lsGet(RK_AUTH)||'null');}catch(e){}
@@ -934,11 +934,22 @@ async function fbSync(){
 async function loadGlobal(){
   if(!fbOn())return renderGlobal();
   try{
-    const r=await fetch(`${DOC()}:runQuery`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'players'}],orderBy:[{field:{fieldPath:'total'},direction:'DESCENDING'}],limit:20}})});
+    const r=await fetch(`${DOC()}:runQuery`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'players'}],orderBy:[{field:{fieldPath:'total'},direction:'DESCENDING'}],limit:glLimit}})});
     if(!r.ok)throw new Error('query');
     glData=(await r.json()).filter(x=>x.document).map(x=>{const f=x.document.fields||{};return{id:x.document.name.split('/').pop(),name:(f.name||{}).stringValue||'?',total:+((f.total||{}).integerValue||0)};});
     glErr=false;
   }catch(e){glErr=true;}
+  try{ // 圏外のときの自分の順位（自分より累計が多い人数 + 1）
+    glMyRank=null;
+    if(joined()){
+      const a=await fbAuth();
+      if(!glData.some(x=>x.id===a.uid)){
+        const me=await fbGetMe(a);
+        if(me){const r3=await fetch(`${DOC()}:runAggregationQuery`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredAggregationQuery:{structuredQuery:{from:[{collectionId:'players'}],where:{fieldFilter:{field:{fieldPath:'total'},op:'GREATER_THAN',value:{integerValue:String(me.total)}}}},aggregations:[{alias:'n',count:{}}]}})});
+          if(r3.ok){const j3=await r3.json();glMyRank=parseInt(j3[0].result.aggregateFields.n.integerValue,10)+1;}}
+      }
+    }
+  }catch(e){}
   try{ // 総プレイヤー数（players の件数）
     const r2=await fetch(`${DOC()}:runAggregationQuery`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredAggregationQuery:{structuredQuery:{from:[{collectionId:'players'}]},aggregations:[{alias:'n',count:{}}]}})});
     if(r2.ok){const j=await r2.json();glCount=parseInt((((j[0]||{}).result||{}).aggregateFields||{}).n.integerValue,10);}
@@ -949,10 +960,10 @@ function renderGlobal(){
   const off=!fbOn();
   let uid='';try{uid=(JSON.parse(lsGet(RK_AUTH)||'null')||{}).uid||'';}catch(e){}
   let st=off?P(UI.glOff):glErr?P(UI.glErr):joined()?P(UI.glMe)+(lsGet(RK_NAME)||''):P(UI.glNote)+(lsGet(RK_NAME)?'　'+P(UI.glMe)+lsGet(RK_NAME):'');
-  if(!off&&!glErr&&joined()){const i=glData.findIndex(x=>x.id===uid);st+='　'+P(UI.glRank)+(i>=0?(i+1)+(lang==='en'?'':'位'):P(UI.glOut));}
+  if(!off&&!glErr&&joined()){const i=glData.findIndex(x=>x.id===uid);st+='　'+P(UI.glRank)+(i>=0?(i+1)+(lang==='en'?'':'位'):(glMyRank?glMyRank+(lang==='en'?'':'位'):P(UI.glOut)));}
   $('glStatus').textContent=st;
   $('glCount').textContent=(!off&&glCount!=null&&!isNaN(glCount))?P(UI.glCount)+fmtR(glCount)+L('人',''):'';
-  $('glJoin').hidden=off;$('glRefresh').hidden=off;$('glName').placeholder=P(UI.glNick);
+  $('glJoin').hidden=off;$('glRefresh').hidden=off;$('glMore').hidden=off||glData.length<glLimit||glLimit>=1000;$('glName').placeholder=P(UI.glNick);
   if(document.activeElement!==$('glName')&&!$('glName').value)$('glName').value=lsGet(RK_NAME)||'';
   const ol=$('glList');ol.textContent='';
   for(const x of glData){const li=document.createElement('li');li.textContent=`${x.name}　${fmtR(x.total)}${L('点',' pts')}`;if(x.id===uid)li.className='me';ol.appendChild(li);}
@@ -1007,7 +1018,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.9.7',BUILD='2026-11-26 22:50 JST';
+const VERSION='1.10.0',BUILD='2026-11-26 23:17 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -1142,7 +1153,7 @@ function applyLang(){
 }
 $('lang').onclick=()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('mojibonsai_lang',lang);}catch(e){}applyLang();};
 $('histReset').onclick=()=>{if(confirm(P(UI.resetAsk))){try{localStorage.removeItem('mojibonsai');localStorage.removeItem(TOTAL_KEY);localStorage.removeItem(BEST_KEY);}catch(e){}renderHist();renderRank();}};
-$('glBtn').onclick=renameGlobal;$('glRefresh').onclick=loadGlobal;
+$('glBtn').onclick=renameGlobal;$('glRefresh').onclick=loadGlobal;$('glMore').onclick=()=>{glLimit=Math.min(1000,glLimit+50);loadGlobal();};
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
 function skipGrow(){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-STAMP_AT*1000);}
 cv.addEventListener('click',()=>{if(G&&!shown)skipGrow();});
