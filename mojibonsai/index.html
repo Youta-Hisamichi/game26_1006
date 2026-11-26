@@ -140,6 +140,7 @@ const PAL={
   dry:['#8a6d3b','#a1887f','#6d4c41','#b59b6a'],
   afro:['#3b2a20','#2a1d16','#4a352a'],
   black:['#0d0d0d','#1c1c1c','#2b2b2b','#3a3a3a','#000000'],
+  sky:['#6ec6ff','#8fd3ff','#b3e5ff','#4fb3f6','#a0dcff'],
   space:['#2f6fd6','#4a90e2','#1e4fa3','#7fb3f0','#9fd0ff'],
   gold:['#ffd54a','#f0b400','#ffe27a','#d4a017'],
   rainbow:['#ff4d4d','#ff9f1c','#ffe14d','#4cd964','#35a7ff','#7b5cff','#e056fd']
@@ -174,7 +175,8 @@ const THEME={
  '犬':T('犬毛',['#c19a6b','#a67c52','#e0c097'],'🐶'),'茸':T('茸',['#c0392b'],'🍄')
 };
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
-const BLACKW=new Set(['x','𝕏','twitter','ツイッター','エックス','えっくす']); // 真っ黒な盆栽になる言葉
+const BLACKW=new Set(['x','𝕏','エックス','えっくす']);
+const SKYW=new Set(['twitter','ツイッター','ついったー']),SKY_EMO=['🐦','🩵','🕊️','🦜']; // 空色＋鳥系絵文字＋🩵 // 真っ黒な盆栽になる言葉
 const UFO_CH=new Set([...'星宇宙月惑彗']),UFO_EMO=new Set(['🛸','👽','🌌','⭐','🌙','🌟','🌠','🪐','🌍','🚀','☄️']);
 const UFO_W=new Set(['ufo','宇宙','宇宙人','銀河','地球','惑星','流星','彗星','星空','月','星','火星','土星','木星','金星','水星','ロケット','エイリアン','alien','aliens','space','galaxy','planet','star','stars','moon','comet','rocket','earth','mars','saturn','jupiter']); // UFOが来るのは宇宙・星・UFO関連だけ
 const WORD_FATE={'giant':'giant','巨大':'giant'}; // 言葉で必ず起きる運命
@@ -231,6 +233,7 @@ const EMO={
 };
 const FACES=['😀','😂','🥹','😍','😎','🤔','😱','🥳','😴','🤡','👻','👽','🤖','😈','🥺','😡','🤩','😇','🙃','😜'];
 function emojiFor(text,key){
+  if(SKYW.has(text.normalize('NFKC').toLowerCase().trim()))return SKY_EMO.slice();
   const out=[],add=e=>{if(e&&!out.includes(e))out.push(e);};
   for(const m of text.matchAll(/\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/gu))add(m[0]);
   if(out.length)return out.slice(0,4);
@@ -250,7 +253,7 @@ function build(text){
   const bigEmo=emo0.length>0&&(BIGW.has(low)||BIGW.has(text));
   // 周りのギミック（UFO・顔・訪問者）。盆栽自体は常に文字の形
   const ufoRel=UFO_W.has(low)||UFO_W.has(text)||chars.some(c=>UFO_CH.has(c))||emo0.some(e=>UFO_EMO.has(e));
-  const blackX=BLACKW.has(text.normalize('NFKC').toLowerCase().trim());
+  const nt=text.normalize('NFKC').toLowerCase().trim(),blackX=BLACKW.has(nt),skyTw=SKYW.has(nt);
   let gimmick=ufoRel?'ufo':null,vis=null;
   if(!gimmick&&emo0.length&&ANIM.has(emo0[0])&&seed%3===0){gimmick='visitor';vis=emo0[0];}
   if(!gimmick&&seed%6===1)gimmick=['face','visitor','visitor','visitor'][(seed>>>6)%4];
@@ -272,7 +275,7 @@ function build(text){
   if(!bigEmo){const wf=WORD_FATE[low]||WORD_FATE[key];if(wf)fate=wf;}
   if(fate==='giant'&&mode==='ok')fate=null;
   if(emo0.length&&(fate==='fruit'||fate==='acorn'))fate=null;
-  if((gimmick==='ufo'||blackX)&&(fate==='rainbow'||fate==='gold'))fate=null;
+  if((gimmick==='ufo'||blackX||skyTw)&&(fate==='rainbow'||fate==='gold'))fate=null;
   const FR=['🍎','🍊','🍇','🍒','🍋','🍐','🍑'];
   const emoBase=emo0.length?emo0:(fate==='fruit'?[FR[(seed>>>5)%FR.length]]:fate==='acorn'?['🌰']:[]);
   const emo=gimmick==='ufo'?[...new Set([...emoBase,'🌏','🪐','🚀'])]:emoBase;
@@ -294,7 +297,7 @@ function build(text){
   if(mode==='glyph'){if(style==='kengai')style='moyogi';if(style==='hokidachi')style='chokkan';}
   const dens=info?info.dens:.3;
   const tw=10+dens*22;
-  const padPal=()=>{if(blackX)return{c:'theme',p:PAL.black};if(gimmick==='ufo')return{c:'theme',p:PAL.space};if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
+  const padPal=()=>{if(blackX)return{c:'theme',p:PAL.black};if(skyTw)return{c:'theme',p:PAL.sky};if(gimmick==='ufo')return{c:'theme',p:PAL.space};if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
     const i=Math.floor(rng()*kc.length),t=THEME[kc[i]];
     if(t&&!dry)return{c:'theme',p:t.pal};
     const c=classes[i];return{c,p:dry?PAL.dry:palFor(c,rng)};};
@@ -381,7 +384,7 @@ function build(text){
     cinfos.forEach((ci,i)=>{
       const P2=pl[i],k=P2.size/Math.max(ci.bw,ci.bh),cr=Math.cos(P2.rot),sr=Math.sin(P2.rot);
       const ki=kc[ci.idx%kc.length],t2=THEME[ki],cl=classes[ci.idx%classes.length];
-      const pal=blackX?PAL.black:gimmick==='ufo'?PAL.space:fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:t2?t2.pal:cl==='kanji'?pineS[n>3?i%3:0]:palFor(cl,rng);
+      const pal=blackX?PAL.black:skyTw?PAL.sky:gimmick==='ufo'?PAL.space:fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:t2?t2.pal:cl==='kanji'?pineS[n>3?i%3:0]:palFor(cl,rng);
       for(const p of ci.pts)dots.push({x:C.x+P2.x+(p.x*cr-p.y*sr)*k,y:C.y+P2.y+(p.x*sr+p.y*cr)*k,r:ci.step*k*.78,pal});
     });
     const low=pl.slice().sort((u,v)=>v.y-u.y).slice(0,Math.min(n,n>6?6:4));
@@ -870,7 +873,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtN(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.7.2',BUILD='2026-11-26 12:01 JST';
+const VERSION='1.7.3',BUILD='2026-11-26 12:02 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
