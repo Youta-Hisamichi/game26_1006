@@ -899,7 +899,7 @@ const fbOn=()=>!!(FB.apiKey&&FB.projectId);
 const RK_NAME='mojibonsai_name',RK_AUTH='mojibonsai_auth',RK_DELTA='mojibonsai_delta',RK_JOIN='mojibonsai_join';
 const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}},lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
 const joined=()=>lsGet(RK_JOIN)==='1';
-let glData=[],glErr=false,glCount=null,glLimit=20,glMyRank=null;
+let glData=[],glErr=false,glCount=null,glLimit=100,glMyRank=null,glLoadedAt=0,glSeen=false; // 100位まで表示。画面に入るまで読み込まず、60秒は再読込しない（無料枠の節約）
 const DOC=()=>`https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents`;
 async function fbAuth(){
   let a=null;try{a=JSON.parse(lsGet(RK_AUTH)||'null');}catch(e){}
@@ -931,13 +931,14 @@ async function fbSync(){
   if(!r.ok)throw new Error('patch');
   lsSet(RK_DELTA,'0');
 }
-async function loadGlobal(){
+async function loadGlobal(force){
   if(!fbOn())return renderGlobal();
-  try{
+  if(!glSeen&&!force)return renderGlobal();
+  if(force||!glLoadedAt||Date.now()-glLoadedAt>60000)try{
     const r=await fetch(`${DOC()}:runQuery`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'players'}],orderBy:[{field:{fieldPath:'total'},direction:'DESCENDING'}],limit:glLimit}})});
     if(!r.ok)throw new Error('query');
     glData=(await r.json()).filter(x=>x.document).map(x=>{const f=x.document.fields||{};return{id:x.document.name.split('/').pop(),name:(f.name||{}).stringValue||'?',total:+((f.total||{}).integerValue||0)};});
-    glErr=false;
+    glErr=false;glLoadedAt=Date.now();
   }catch(e){glErr=true;}
   try{ // 圏外のときの自分の順位（自分より累計が多い人数 + 1）
     glMyRank=null;
@@ -960,7 +961,7 @@ function renderGlobal(){
   const off=!fbOn();
   let uid='';try{uid=(JSON.parse(lsGet(RK_AUTH)||'null')||{}).uid||'';}catch(e){}
   let st=off?P(UI.glOff):glErr?P(UI.glErr):joined()?P(UI.glMe)+(lsGet(RK_NAME)||''):P(UI.glNote)+(lsGet(RK_NAME)?'　'+P(UI.glMe)+lsGet(RK_NAME):'');
-  if(!off&&!glErr&&joined()){const i=glData.findIndex(x=>x.id===uid);st+='　'+P(UI.glRank)+(i>=0?(i+1)+(lang==='en'?'':'位'):(glMyRank?glMyRank+(lang==='en'?'':'位'):P(UI.glOut)));}
+  if(!off&&!glErr&&joined()&&glLoadedAt){const i=glData.findIndex(x=>x.id===uid);st+='　'+P(UI.glRank)+(i>=0?(i+1)+(lang==='en'?'':'位'):(glMyRank?glMyRank+(lang==='en'?'':'位'):P(UI.glOut)));}
   $('glStatus').textContent=st;
   $('glCount').textContent=(!off&&glCount!=null&&!isNaN(glCount))?P(UI.glCount)+fmtR(glCount)+L('人',''):'';
   $('glJoin').hidden=off;$('glRefresh').hidden=off;$('glMore').hidden=off||glData.length<glLimit||glLimit>=1000;$('glName').placeholder=P(UI.glNick);
@@ -1018,7 +1019,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.10.0',BUILD='2026-11-26 23:17 JST';
+const VERSION='1.10.1',BUILD='2026-11-26 23:20 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -1153,7 +1154,7 @@ function applyLang(){
 }
 $('lang').onclick=()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('mojibonsai_lang',lang);}catch(e){}applyLang();};
 $('histReset').onclick=()=>{if(confirm(P(UI.resetAsk))){try{localStorage.removeItem('mojibonsai');localStorage.removeItem(TOTAL_KEY);localStorage.removeItem(BEST_KEY);}catch(e){}renderHist();renderRank();}};
-$('glBtn').onclick=renameGlobal;$('glRefresh').onclick=loadGlobal;$('glMore').onclick=()=>{glLimit=Math.min(1000,glLimit+50);loadGlobal();};
+$('glBtn').onclick=renameGlobal;$('glRefresh').onclick=loadGlobal;$('glMore').onclick=()=>{glLimit=Math.min(1000,glLimit+100);loadGlobal(true);};
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
 function skipGrow(){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-STAMP_AT*1000);}
 cv.addEventListener('click',()=>{if(G&&!shown)skipGrow();});
@@ -1166,6 +1167,7 @@ document.addEventListener('keydown',e=>{
  if(l!=='ja'&&l!=='en'){try{l=localStorage.getItem('mojibonsai_lang');}catch(e){}}
  if(l!=='ja'&&l!=='en')l=(navigator.language||'ja').toLowerCase().startsWith('ja')?'ja':'en';
  lang=l;applyLang();renderHist();if(fbOn()&&!joined())autoRegister();else loadGlobal();
+ try{new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)&&!glSeen){glSeen=true;loadGlobal(true);}}).observe($('gl'));}catch(e){glSeen=true;loadGlobal(true);}
  requestAnimationFrame(n=>{last=n;frame(n);});
  const q=qs.get('t');
  if(q){$('t').value=Array.from(q).slice(0,20).join('');(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>grow(Array.from(q).slice(0,20).join('')));}}
