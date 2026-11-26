@@ -152,6 +152,7 @@ const THEME={
 };
 const EN_ALIAS={cat:'猫',dog:'犬',fish:'魚',fire:'火',flame:'炎',water:'水',sea:'海',ocean:'海',gold:'金',silver:'銀',red:'赤',blue:'青',green:'緑',yellow:'黄',white:'白',black:'黒',night:'夜',moon:'月',star:'星',love:'愛',dream:'夢',rain:'雨',snow:'雪',thunder:'雷',dragon:'龍',bird:'鳥',frog:'蛙',tea:'茶',sake:'酒',meat:'肉',rice:'米',noodle:'麺',noodles:'麺',sushi:'寿',flower:'花',bug:'虫',monkey:'猿',horse:'馬',cow:'牛',oni:'鬼',bone:'骨',pink:'桃',peach:'桃',purple:'紫',sakura:'桜',cherry:'桜',pine:'松',bamboo:'竹',plum:'梅',maple:'楓',willow:'柳',forest:'森',tree:'木',bonsai:'盆',luck:'福',dead:'枯',death:'死',nothing:'無',void:'無',empty:'空',weed:'草',mushroom:'茸',sprout:'芽',fungus:'菌'};
 const WORDS={'giant':'giant','ufo':'ufo','宇宙':'ufo','アフロ':'afro','afro':'afro','ハゲ':'bald','はげ':'bald','禿':'bald'};
+const BIGW=new Set(['プロテイン','ぷろていん','マッチョ','筋肉','筋トレ','protein','muscle','gym']); // 1つの巨大絵文字になる言葉
 const SURE_OK=new Set([...'松桜竹梅菊楓柳森木林盆栽福寿']);
 const SURE_BAD={'枯':'withered','死':'withered','無':'withered','空':'withered','草':'weed','雑':'weed','茸':'mushroom','菌':'mushroom','芽':'sprout','ん':'sprout','0':'sprout','０':'sprout'};
 const BAD_MODES=['withered','noodle','mushroom','sprout','weed'];
@@ -220,6 +221,7 @@ function build(text){
   const chars=Array.from(text),seed=hashStr(text),rng=rngFrom(seed);
   const low=text.toLowerCase(),key=EN_ALIAS[low]||text,kc=Array.from(key);
   const emo0=emojiFor(text,key);
+  const bigEmo=emo0.length>0&&(BIGW.has(low)||BIGW.has(text));
   const sure=kc.some(c=>SURE_OK.has(c))||emo0.length>0;
   let mode='ok';
   if(WORDS[low])mode=WORDS[low];
@@ -229,11 +231,11 @@ function build(text){
   const info=(TREE_MODES.includes(mode))?glyphInfo(chars.slice(0,3)):null;
   const nc=Math.min(chars.length,20),tg=nc>12?55:nc>6?85:nc>3?140:230;
   const cinfos=(info&&TREE_MODES.includes(mode))?chars.slice(0,20).map((c,i)=>{const gi=glyphInfo([c],tg);return gi?Object.assign(gi,{idx:i}):null;}).filter(Boolean):[];
-  if(mode==='ok'&&info&&info.pts.length>8&&cinfos.length)mode='glyph';
+  if(mode==='ok'&&(bigEmo||(info&&info.pts.length>8&&cinfos.length)))mode='glyph';
   const classes=kc.map(c=>SP[c]||(/\p{Extended_Pictographic}/u.test(c)?'latin':cls(c)));
   const th=kc.map(c=>THEME[c]).find(Boolean)||null;
   let fate=null;
-  if((mode==='ok'||mode==='glyph')&&(seed>>>14)%100<40){
+  if(!bigEmo&&(mode==='ok'||mode==='glyph')&&(seed>>>14)%100<40){
     const pool=['wither','bloom','fruit','acorn','giant','rainbow','gold'];
     fate=pool[(seed>>>21)%pool.length];
   }
@@ -318,6 +320,11 @@ function build(text){
       faceKind=['happy','sleepy','angry','surprised'][(seed>>>3)%4];
     }
   }else if(mode==='glyph'){
+    if(bigEmo){
+      branch(0,0,-Math.PI/2,150*sc,tw*sc,0,0,{noKids:true,noPad:true,straight:true});
+      const t0=els[els.length-1];
+      pads.push({x:t0.x1,y:t0.y1-98,r:104,ts:t0.te+.05,kind:'emoji',e:emo[0],pal:['#000'],cls:'emoji'});
+    }else{
     const big=fate==='giant';let gang=-Math.PI/2;if(style==='shakan')gang+=side*.45;
     const n=cinfos.length;
     const rx=n<=1?0:Math.min(270,60+Math.pow(n,.6)*38),ry=n<=1?0:Math.min(190,50+Math.sqrt(n)*30);
@@ -348,6 +355,7 @@ function build(text){
     let mnY=1e9,mxY=-1e9;for(const d of dots){mnY=Math.min(mnY,d.y);mxY=Math.max(mxY,d.y);}
     for(const d of dots){const rel=(d.y-mnY)/Math.max(1,mxY-mnY);
       pads.push({x:d.x,y:d.y,r:d.r,ts:top.te+.1+(1-rel)*.35+rng()*.04,kind:'dot',cls:'dot',pal:d.pal,seed:rng()});}
+    }
   }else if(mode==='afro'){
     branch(0,0,-Math.PI/2,140,16,0,0,{noKids:true,straight:true,noPad:true});
     const l=els[els.length-1];
@@ -393,7 +401,7 @@ function build(text){
   for(const p of pads){minX=Math.min(minX,p.x-p.r*1.1);maxX=Math.max(maxX,p.x+p.r*1.1);minY=Math.min(minY,p.y-p.r*1.1);}
   const fit=Math.min(1,285/Math.max(1,-minX,maxX),(mode==='ufo'?280:345)/Math.max(1,-minY));
   const potCols=['#6b4f3a','#3e5c76','#8c3b3b','#4a6b57','#7a6a8a','#c4a35a'];
-  return{fit,minY,text,chars,kc,fate,emo,emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
+  return{fit,minY,text,chars,kc,fate,emo,bigEmo,emoText:emo0.length>0,seed,mode,style,classes,els,pads,info,th,fruit,face,faceKind,side,
     potCol:potCols[(seed>>>12)%6],potShape:(seed>>>16)%3,dom:classes[0]};
 }
 
@@ -724,7 +732,7 @@ function evaluate(g){
   let cm='';
   if(inf){
     const sp=Math.round(inf.sym*100),cxp=Math.round(Math.abs(inf.cx)*100),dp=Math.round(inf.dens*100),right=inf.cx>0,cyp=Math.round(inf.cy*100);
-    cm+=g.mode==='glyph'&&g.chars.length>1?L(`${g.chars.length}文字がそれぞれの字形で茂り、重なり合って複雑な樹冠になりました。`,`${g.chars.length} characters each grew in their own glyph shape and overlap into a tangled crown.`)
+    cm+=g.bigEmo?L(`${q(T)}は、大きな${g.emo[0]}ひとつになりました。`,`${q(T)} became one giant ${g.emo[0]}.`):g.mode==='glyph'&&g.chars.length>1?L(`${g.chars.length}文字がそれぞれの字形で茂り、重なり合って複雑な樹冠になりました。`,`${g.chars.length} characters each grew in their own glyph shape and overlap into a tangled crown.`)
     :g.mode==='glyph'?L(`${q(T)}の字形そのままに樹冠が刈り込まれた“字形仕立て”です（左右対称度${sp}%）。`,`The crown was pruned into the exact shape of ${q(T)} (symmetry ${sp}%).`)
     :{chokkan:L(`字形の左右対称度が${sp}%と整っているため、まっすぐ天を突く直幹に育ちました。`,`With ${sp}% left-right symmetry, it grew into a perfectly upright trunk.`),
       shakan:L(`字の重心が${right?'右':'左'}に${cxp}%寄っているので、${right?'右':'左'}へ傾く斜幹になりました。`,`The glyph's center of mass sits ${cxp}% to the ${right?'right':'left'}, so the trunk leans ${right?'right':'left'}.`),
@@ -782,7 +790,7 @@ function evaluate(g){
 let G=null,R=null,start=0,last=0,shown=false,slotT0=0;
 const SLOT_START=0,STAMP_AT=2.0;
 const SHOW_SCORE=false; // 点数の表示を一時的にオフ（trueで復活）
-const VERSION='1.3.4',BUILD='2026-11-26 11:28 JST';
+const VERSION='1.3.5',BUILD='2026-11-26 11:28 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
