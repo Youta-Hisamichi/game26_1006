@@ -69,6 +69,8 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #glJoin button,#glRefresh{font-size:13px;padding:6px 12px}
 #glRefresh{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 #gl ol{margin:6px 0;padding-left:2em}
+#glCount{font-weight:bold;margin:2px 0}
+#glCount:empty{display:none}
 #gl li.me{font-weight:bold;color:var(--accent)}
 #rk ol{margin:6px 0 0;padding-left:1.6em}
 #rk li{padding:1px 0}
@@ -103,7 +105,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
   <div id="meta"></div>
 </div>
 <div id="rk"><h2 data-i="rkh">この端末ランキング</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
-<div id="gl"><h2 data-i="glh">みんなのランキング（累計）</h2><div id="glStatus"></div>
+<div id="gl"><h2 data-i="glh">みんなのランキング（累計）</h2><div id="glStatus"></div><div id="glCount"></div>
   <div id="glJoin"><input id="glName" maxlength="50" autocomplete="off"><button type="button" id="glBtn" data-i="glRename">名前を変更</button></div>
   <ol id="glList"></ol><button type="button" id="glRefresh" data-i="glRefresh">更新</button></div>
 <div id="hist" hidden><h2 data-i="hist">育てた盆栽</h2><div id="histlist"></div><button type="button" id="histReset" data-i="reset">ログと累計をリセット</button></div>
@@ -696,7 +698,7 @@ const UI={
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。100万点や1億点のテキスト盆栽を探してね。','Type any text and a bonsai that suits it grows in seconds. Can you find a Text Bonsai worth 1,000,000 or 100,000,000 points?'],
   grow:['育てる','Grow'],try:['お試し:','Try:'],share:['シェア','Share'],shareTo:['共有先を選ぶ','Share to'],close:['閉じる','Close'],mail:['メール','Email'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
   dev:['開発','Developer'],
-  glh:['みんなのランキング（累計）','Global ranking (total)'],glOff:['オンラインランキングは準備中です','Online ranking is coming soon'],glRename:['名前を変更','Change name'],glNote:['名前の設定なしでも、スコアは自動でランキングに送信されます（ニックネームと累計点数が公開されます）','Scores are sent to the ranking automatically, even without a name (your nickname and total score are public).'],glNick:['ニックネーム（25文字まで）','Nickname (max 25)'],glMe:['参加中: ','Joined as '],glErr:['ランキングに接続できません','Cannot reach the ranking server'],glRefresh:['更新','Refresh'],glRank:['あなたの順位: ','Your rank: '],glOut:['圏外','out of top 20'],rkh:['この端末ランキング','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
+  glh:['みんなのランキング（累計）','Global ranking (total)'],glOff:['オンラインランキングは準備中です','Online ranking is coming soon'],glCount:['総プレイヤー数 ','Total players '],glRename:['名前を変更','Change name'],glNote:['名前の設定なしでも、スコアは自動でランキングに送信されます（ニックネームと累計点数が公開されます）','Scores are sent to the ranking automatically, even without a name (your nickname and total score are public).'],glNick:['ニックネーム（25文字まで）','Nickname (max 25)'],glMe:['参加中: ','Joined as '],glErr:['ランキングに接続できません','Cannot reach the ranking server'],glRefresh:['更新','Refresh'],glRank:['あなたの順位: ','Your rank: '],glOut:['圏外','out of top 20'],rkh:['この端末ランキング','Ranking (this device)'],rkEmpty:['まだ記録がありません。盆栽を育てよう！','No records yet. Grow a bonsai!'],hist:['育てた盆栽（最新30件）','Your bonsai (latest 30)'],reset:['ログと累計をリセット','Reset log & total'],resetAsk:['育てたログと累計点数を消しますか？','Delete the log and the total score?'],copyImg:['画像をコピー','Copy image'],imgHint:['画像をコピーして投稿に貼り付けるか、保存した画像を添付してください','Copy or save the image, then attach it to your post.'],copiedImg:['画像をコピーしました','Image copied'],copyImgFail:['この環境では画像をコピーできません。保存してください','Cannot copy the image here. Please save it.'],ph:['例：桜','e.g. cherry'],
   anal:['字形分析（実際に文字を描いて測定）','Glyph analysis (measured from the rendered text)'],
   wait:['育ち終わるまでお待ちください','Please wait until it finishes growing'],copied:['コピーしました','Copied'],copyPrompt:['コピーしてください','Copy this']
 };
@@ -897,7 +899,7 @@ const fbOn=()=>!!(FB.apiKey&&FB.projectId);
 const RK_NAME='mojibonsai_name',RK_AUTH='mojibonsai_auth',RK_DELTA='mojibonsai_delta',RK_JOIN='mojibonsai_join';
 const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}},lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
 const joined=()=>lsGet(RK_JOIN)==='1';
-let glData=[],glErr=false;
+let glData=[],glErr=false,glCount=null;
 const DOC=()=>`https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents`;
 async function fbAuth(){
   let a=null;try{a=JSON.parse(lsGet(RK_AUTH)||'null');}catch(e){}
@@ -937,6 +939,10 @@ async function loadGlobal(){
     glData=(await r.json()).filter(x=>x.document).map(x=>{const f=x.document.fields||{};return{id:x.document.name.split('/').pop(),name:(f.name||{}).stringValue||'?',total:+((f.total||{}).integerValue||0)};});
     glErr=false;
   }catch(e){glErr=true;}
+  try{ // 総プレイヤー数（players の件数）
+    const r2=await fetch(`${DOC()}:runAggregationQuery`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredAggregationQuery:{structuredQuery:{from:[{collectionId:'players'}]},aggregations:[{alias:'n',count:{}}]}})});
+    if(r2.ok){const j=await r2.json();glCount=parseInt((((j[0]||{}).result||{}).aggregateFields||{}).n.integerValue,10);}
+  }catch(e){}
   renderGlobal();
 }
 function renderGlobal(){
@@ -945,6 +951,7 @@ function renderGlobal(){
   let st=off?P(UI.glOff):glErr?P(UI.glErr):joined()?P(UI.glMe)+(lsGet(RK_NAME)||''):P(UI.glNote)+(lsGet(RK_NAME)?'　'+P(UI.glMe)+lsGet(RK_NAME):'');
   if(!off&&!glErr&&joined()){const i=glData.findIndex(x=>x.id===uid);st+='　'+P(UI.glRank)+(i>=0?(i+1)+(lang==='en'?'':'位'):P(UI.glOut));}
   $('glStatus').textContent=st;
+  $('glCount').textContent=(!off&&glCount!=null&&!isNaN(glCount))?P(UI.glCount)+fmtR(glCount)+L('人',''):'';
   $('glJoin').hidden=off;$('glRefresh').hidden=off;$('glName').placeholder=P(UI.glNick);
   if(document.activeElement!==$('glName')&&!$('glName').value)$('glName').value=lsGet(RK_NAME)||'';
   const ol=$('glList');ol.textContent='';
@@ -989,7 +996,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.9.4',BUILD='2026-11-26 22:37 JST';
+const VERSION='1.9.5',BUILD='2026-11-26 22:45 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
