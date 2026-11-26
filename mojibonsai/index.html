@@ -121,6 +121,7 @@ const PAL={
   digit:['#e0b628','#f2d04b','#c99a1a','#f7e08a'],
   dry:['#8a6d3b','#a1887f','#6d4c41','#b59b6a'],
   afro:['#3b2a20','#2a1d16','#4a352a'],
+  space:['#2f6fd6','#4a90e2','#1e4fa3','#7fb3f0','#9fd0ff'],
   gold:['#ffd54a','#f0b400','#ffe27a','#d4a017'],
   rainbow:['#ff4d4d','#ff9f1c','#ffe14d','#4cd964','#35a7ff','#7b5cff','#e056fd']
 };
@@ -250,8 +251,10 @@ function build(text){
   if(!bigEmo){const wf=WORD_FATE[low]||WORD_FATE[key];if(wf)fate=wf;}
   if(fate==='giant'&&mode==='ok')fate=null;
   if(emo0.length&&(fate==='fruit'||fate==='acorn'))fate=null;
+  if(gimmick==='ufo'&&(fate==='rainbow'||fate==='gold'))fate=null;
   const FR=['🍎','🍊','🍇','🍒','🍋','🍐','🍑'];
-  const emo=emo0.length?emo0:(fate==='fruit'?[FR[(seed>>>5)%FR.length]]:fate==='acorn'?['🌰']:[]);
+  const emoBase=emo0.length?emo0:(fate==='fruit'?[FR[(seed>>>5)%FR.length]]:fate==='acorn'?['🌰']:[]);
+  const emo=gimmick==='ufo'?[...new Set([...emoBase,'🌏','🪐','🚀'])]:emoBase;
   const fruit=emo[0]||null;
   const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
   const els=[],pads=[];
@@ -270,7 +273,7 @@ function build(text){
   if(mode==='glyph'){if(style==='kengai')style='moyogi';if(style==='hokidachi')style='chokkan';}
   const dens=info?info.dens:.3;
   const tw=10+dens*22;
-  const padPal=()=>{if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
+  const padPal=()=>{if(gimmick==='ufo')return{c:'theme',p:PAL.space};if(fate==='gold')return{c:'theme',p:PAL.gold};if(fate==='rainbow')return{c:'theme',p:PAL.rainbow};
     const i=Math.floor(rng()*kc.length),t=THEME[kc[i]];
     if(t&&!dry)return{c:'theme',p:t.pal};
     const c=classes[i];return{c,p:dry?PAL.dry:palFor(c,rng)};};
@@ -357,7 +360,7 @@ function build(text){
     cinfos.forEach((ci,i)=>{
       const P2=pl[i],k=P2.size/Math.max(ci.bw,ci.bh),cr=Math.cos(P2.rot),sr=Math.sin(P2.rot);
       const ki=kc[ci.idx%kc.length],t2=THEME[ki],cl=classes[ci.idx%classes.length];
-      const pal=fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:t2?t2.pal:cl==='kanji'?pineS[n>3?i%3:0]:palFor(cl,rng);
+      const pal=gimmick==='ufo'?PAL.space:fate==='gold'?PAL.gold:fate==='rainbow'?PAL.rainbow:t2?t2.pal:cl==='kanji'?pineS[n>3?i%3:0]:palFor(cl,rng);
       for(const p of ci.pts)dots.push({x:C.x+P2.x+(p.x*cr-p.y*sr)*k,y:C.y+P2.y+(p.x*sr+p.y*cr)*k,r:ci.step*k*.78,pal});
     });
     const low=pl.slice().sort((u,v)=>v.y-u.y).slice(0,Math.min(n,n>6?6:4));
@@ -762,7 +765,7 @@ const TOTAL_KEY='mojibonsai_total',fmtN=n=>Number(n).toLocaleString('en-US');
 function getTotal(){try{return parseInt(localStorage.getItem(TOTAL_KEY)||'0',10)||0;}catch(e){return 0;}}
 function setTotal(n){try{localStorage.setItem(TOTAL_KEY,String(n));}catch(e){}}
 function totalText(){return G?L('累計 '+fmtN(G.total)+'点','Total '+fmtN(G.total)+' pts'):'';}
-const VERSION='1.5.0',BUILD='2026-11-26 11:45 JST';
+const VERSION='1.5.1',BUILD='2026-11-26 11:47 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -880,8 +883,8 @@ $('bShare').onclick=async()=>{if(!ready())return;
 
 /* ---------- 言語切り替え・初期化 ---------- */
 const CHIPS={
-  ja:['桜','松','猫','火','寿','UFO','金','あ','顔','肉'],
-  en:['sakura','pine','cat','fire','sushi','UFO','gold','meat','protein','poop','face']
+  ja:['桜','松','猫','火','寿','UFO','金','あ','顔','肉','赤'],
+  en:['sakura','pine','cat','fire','sushi','UFO','gold','meat','red','protein','poop','face']
 };
 function renderChips(){
   const box=document.querySelector('.chips');
@@ -899,7 +902,7 @@ function applyLang(){
 $('lang').onclick=()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('mojibonsai_lang',lang);}catch(e){}applyLang();};
 $('histReset').onclick=()=>{if(confirm(P(UI.resetAsk))){try{localStorage.removeItem('mojibonsai');localStorage.removeItem(TOTAL_KEY);}catch(e){}renderHist();}};
 $('f').addEventListener('submit',e=>{e.preventDefault();grow($('t').value);});
-cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-(STAMP_AT-.3)*1000);}});
+cv.addEventListener('click',()=>{if(G&&!shown){const n=performance.now();start=Math.min(start,n-DURATION);slotT0=Math.min(slotT0,n-STAMP_AT*1000);}});
 {const qs=new URLSearchParams(location.search);let l=qs.get('lang');
  if(l!=='ja'&&l!=='en'){try{l=localStorage.getItem('mojibonsai_lang');}catch(e){}}
  if(l!=='ja'&&l!=='en')l=(navigator.language||'ja').toLowerCase().startsWith('ja')?'ja':'en';
