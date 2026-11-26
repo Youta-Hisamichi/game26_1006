@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function valid(d) {
+      return d.keys().hasOnly(['name', 'total', 'best', 't'])
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 12
+        && d.total is int && d.total >= 0
+        && d.best is int && d.best >= 0 && d.best <= 100000000
+        && d.t is timestamp;
+    }
+
+    match /players/{uid} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && valid(request.resource.data)
+        && request.resource.data.total <= 1000000000;
+      allow update: if request.auth != null && request.auth.uid == uid
+        && valid(request.resource.data)
+        && request.resource.data.total >= resource.data.total
+        && request.resource.data.total - resource.data.total <= 1000000000
+        && request.resource.data.best >= resource.data.best;
+      allow delete: if false;
+    }
+  }
+}
