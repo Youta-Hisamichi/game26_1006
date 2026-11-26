@@ -43,7 +43,9 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #share{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 #share button{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:7px 14px;font-size:14px}
 #share .x{background:#111;color:#fff;border-color:#111}
-#ver{margin:22px 0 6px;text-align:center;font-size:12px;opacity:.5}
+#ver{margin:22px 0 2px;text-align:center;font-size:12px;opacity:.5}
+#dev{margin:0 0 14px;text-align:center;font-size:12px}
+#dev a{color:inherit;opacity:.65;text-decoration:underline}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:8px 16px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.3s}
 #toast.on{opacity:.92}
 #hist{margin-top:14px;font-size:13px}
@@ -78,6 +80,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 </div>
 <div id="hist" hidden><h2 data-i="hist">育てた盆栽</h2><div id="histlist"></div></div>
 <footer id="ver"></footer>
+<div id="dev"><a href="https://x.com/Hisashi_vc" target="_blank" rel="noopener noreferrer"><span data-i="dev">開発</span>: ひさしApp</a></div>
 </main>
 <div id="toast"></div>
 <script>
@@ -540,6 +543,7 @@ const UI={
   title:['テキスト盆栽','Text Bonsai'],
   sub:['好きな文字を入れると、その文字らしい盆栽がすぐ育ちます。たまに育たない文字や、おかしな結果も。','Type any text and a bonsai that suits it grows in seconds. Sometimes it won\'t grow—or turns out weird.'],
   grow:['育てる','Grow'],try:['お試し:','Try:'],share:['共有','Share'],shareX:['𝕏 でシェア','Share on 𝕏'],img:['画像を保存','Save image'],copy:['リンクをコピー','Copy link'],
+  dev:['開発','Developer'],
   hist:['育てた盆栽','Your bonsai'],ph:['例：桜','e.g. cherry'],
   anal:['字形分析（実際に文字を描いて測定）','Glyph analysis (measured from the rendered text)'],
   wait:['育ち終わるまでお待ちください','Please wait until it finishes growing'],copied:['コピーしました','Copied'],copyPrompt:['コピーしてください','Copy this']
