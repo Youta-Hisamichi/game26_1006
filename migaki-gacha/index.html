@@ -71,12 +71,12 @@
       <div><b>シェア</b><small id="shareNote">画像つきで投稿できます</small></div>
     </div>
     <div class="share-grid">
+      <button class="btn primary all" id="allBtn" type="button">シェア先を一覧から選ぶ</button>
       <a class="btn s-x" id="xBtn" target="_blank" rel="noopener" href="#">𝕏</a>
       <a class="btn s-line" id="lineBtn" target="_blank" rel="noopener" href="#">LINE</a>
       <a class="btn s-fb" id="fbBtn" target="_blank" rel="noopener" href="#">Facebook</a>
       <a class="btn s-bsky" id="bskyBtn" target="_blank" rel="noopener" href="#">Bluesky</a>
       <a class="btn s-th" id="thBtn" target="_blank" rel="noopener" href="#">Threads</a>
-      <button class="btn" id="nativeBtn" type="button" hidden>共有…</button>
       <button class="btn" id="imgCopyBtn" type="button">画像コピー</button>
       <a class="btn" id="imgSaveBtn" download="migaki-gacha.png" href="#">画像保存</a>
       <button class="btn" id="copyBtn" type="button">文章コピー</button>
@@ -92,6 +92,14 @@
     <button class="link" id="resetBtn" type="button">データを消去</button>
   </footer>
 </main>
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-label="シェア先を選ぶ">
+    <b>シェア先を選ぶ</b>
+    <small>押すと画像をコピーして開きます。投稿画面で貼り付けてね。</small>
+    <div class="sheet-grid" id="sheetGrid"></div>
+    <button class="btn" id="sheetClose" type="button">閉じる</button>
+  </div>
+</div>
 <div id="toast" role="status"></div>
 <script src="game.js"></script>
 </body>

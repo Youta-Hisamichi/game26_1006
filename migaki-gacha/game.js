@@ -804,9 +804,40 @@ async function copyImage() {
   $('#' + id).addEventListener('click', async () => { if (await copyImage()) toast('画像をコピーしました。投稿画面で貼り付けてね'); });
 });
 $('#imgCopyBtn').addEventListener('click', async () => toast(await copyImage() ? '画像をコピーしました' : 'この環境では画像コピーできません。「画像保存」を使ってね'));
-if (navigator.share) {
-  const nb = $('#nativeBtn'); nb.hidden = false;
-  nb.addEventListener('click', async () => {
+function serviceList() {
+  const t = shareText(), u = shareUrl(), tu = t + '\n' + u, e = encodeURIComponent;
+  return [
+    ['𝕏', 's-x', 'https://twitter.com/intent/tweet?text=' + e(t) + '&url=' + e(u)],
+    ['LINE', 's-line', 'https://line.me/R/share?text=' + e(tu)],
+    ['Facebook', 's-fb', 'https://www.facebook.com/sharer/sharer.php?u=' + e(u) + '&quote=' + e(t)],
+    ['Bluesky', 's-bsky', 'https://bsky.app/intent/compose?text=' + e(tu)],
+    ['Threads', 's-th', 'https://www.threads.net/intent/post?text=' + e(tu)],
+    ['Mastodon', 's-ms', 'https://mastodonshare.com/?text=' + e(tu)],
+    ['Telegram', 's-tg', 'https://t.me/share/url?url=' + e(u) + '&text=' + e(t)],
+    ['WhatsApp', 's-wa', 'https://wa.me/?text=' + e(tu)],
+    ['Reddit', 's-rd', 'https://www.reddit.com/submit?url=' + e(u) + '&title=' + e(t.split('\n')[0])],
+    ['はてブ', 's-hb', 'https://b.hatena.ne.jp/entry/panel/?url=' + e(u) + '&btitle=' + e(t.split('\n')[0])],
+  ];
+}
+const sheet = $('#sheet');
+function openSheet() {
+  $('#sheetGrid').innerHTML = serviceList().map(([n, c, href]) => `<a class="btn ${c}" target="_blank" rel="noopener" href="${href}">${n}</a>`).join('')
+    + '<button class="btn" data-act="img" type="button">画像コピー</button><button class="btn" data-act="txt" type="button">文章コピー</button>';
+  sheet.hidden = false;
+}
+const closeSheet = () => { sheet.hidden = true; };
+sheet.addEventListener('click', async (ev) => {
+  if (ev.target === sheet) return closeSheet();
+  const a = ev.target.closest('a'), b = ev.target.closest('button[data-act]');
+  if (a && await copyImage()) toast('画像をコピーしました。投稿画面で貼り付けてね');
+  if (b && b.dataset.act === 'img') toast(await copyImage() ? '画像をコピーしました' : 'この環境では画像コピーできません');
+  if (b && b.dataset.act === 'txt') $('#copyBtn').click();
+});
+$('#sheetClose').addEventListener('click', closeSheet);
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeSheet(); });
+// 端末の共有シートが使えればそれを開き、使えなければ一覧を出す
+$('#allBtn').addEventListener('click', async () => {
+  if (navigator.share) {
     const data = { text: shareText(), url: shareUrl() };
     try {
       if (shareBlob) {
@@ -814,9 +845,11 @@ if (navigator.share) {
         if (navigator.canShare && navigator.canShare({ files: [f] })) data.files = [f];
       }
       await navigator.share(data);
-    } catch (e) { /* キャンセル */ }
-  });
-}
+      return;
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  openSheet();
+});
 $('#copyBtn').addEventListener('click', async () => {
   const txt = shareText() + '\n' + shareUrl();
   try { await navigator.clipboard.writeText(txt); toast('文章をコピーしました'); }
