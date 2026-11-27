@@ -44,11 +44,16 @@ h1{
   border:1px solid var(--line);box-shadow:0 20px 50px #0009, inset 0 0 60px #6d4cff26;
   user-select:none;-webkit-user-select:none;
 }
-.ball{position:absolute;left:21%;width:58%;top:7%;aspect-ratio:1;border-radius:50%;--amp:2}
+.ball{position:absolute;left:21%;width:58%;top:7%;aspect-ratio:1;--amp:2}
+.shape{position:absolute;inset:0;filter:drop-shadow(0 0 16px #7aa7ff66);transition:filter .3s}
+.shape>.ball-inner,.shape>#mud,.shape>.glass{clip-path:var(--clip,circle(50%))}
+.shape.open>.ball-inner{clip-path:none;background:none}
+.shape.open>.glass,.shape.open>.rim{opacity:0}
+.rim{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;transition:opacity .3s}
+.rim polygon{fill:none;stroke:#ffffff55;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round}
 .ball-inner{
-  position:absolute;inset:0;border-radius:50%;overflow:hidden;
+  position:absolute;inset:0;overflow:hidden;
   background:radial-gradient(circle at 35% 30%,#d6ebff66,#7090ff26 42%,#1a1c4dcc 78%,#0a0b2a);
-  box-shadow:inset 0 -20px 40px #0009,0 0 40px #7aa7ff40;
 }
 .core{position:absolute;inset:0;background:radial-gradient(circle,var(--rc) 0%,transparent 62%);opacity:0}
 .gem-slot{position:absolute;inset:14%;display:grid;place-items:center}
@@ -57,14 +62,13 @@ h1{
 .gem-slot.idle svg{animation:float 3.2s ease-in-out infinite}
 @keyframes pop{0%{transform:scale(.1) translateY(30%) rotate(-30deg);opacity:0}60%{transform:scale(1.3) translateY(-8%) rotate(8deg);opacity:1}100%{transform:scale(1.05) translateY(0) rotate(0)}}
 @keyframes float{0%,100%{transform:scale(1.05) translateY(0)}50%{transform:scale(1.07) translateY(-3%)}}
-#mud{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;touch-action:none;cursor:none;transition:opacity .45s,transform .45s}
+#mud{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:none;transition:opacity .45s,transform .45s}
 #mud.gone{opacity:0;transform:scale(1.02);pointer-events:none}
 #mud.fresh{animation:fresh .5s ease-out both}
 @keyframes fresh{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 .glass{
-  position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse 40% 24% at 32% 18%,#ffffffb0,#fff0 72%),radial-gradient(circle at 72% 88%,#7fb4ff44,transparent 42%);
-  box-shadow:inset 0 0 0 2px #ffffff30,inset 0 0 26px #ffffff30;
 }
 .prompt{
   position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none;
@@ -88,7 +92,7 @@ h1{
 }
 .ball{z-index:2}
 .rumble{animation:rumble .1s linear infinite}
-.rumble .ball-inner{box-shadow:inset 0 0 40px var(--rc),0 0 70px 14px var(--rc)}
+.rumble .shape{filter:drop-shadow(0 0 16px var(--rc)) drop-shadow(0 0 40px var(--rc))}
 .charge .core{animation:charge var(--dur,1s) ease-in forwards}
 @keyframes rumble{
   0%,100%{transform:translate(0,0) rotate(0)}
@@ -162,7 +166,7 @@ h1{
 @media (prefers-reduced-motion:reduce){.prompt,.new,.rays,.gem-slot.idle svg{animation:none}}
 
 /* 磨いた部分の予告グロー */
-.tease{position:absolute;inset:0;opacity:.2;transition:opacity .25s;pointer-events:none}
+.tease{position:absolute;inset:-25%;opacity:.2;transition:opacity .25s;pointer-events:none}
 .tease-n{background:radial-gradient(circle at 50% 45%,#fff 0,#ffffff88 45%,transparent 78%);animation:tpulse 2.2s ease-in-out infinite}
 .tease-r{background:radial-gradient(circle at 50% 45%,#fff 0,#9fe8ff 40%,#ff9ae0 68%,transparent 85%);animation:thue 3s linear infinite,tpulse 1.6s ease-in-out infinite}
 .tease-sr{background:conic-gradient(#fff,#6fd0ff,#4da3ff,#fff,#9ffcff,#4da3ff,#fff);animation:tspin 2.4s linear infinite,thue2 2s linear infinite}
@@ -204,3 +208,9 @@ h1{
 .card .rbadge{display:inline-flex;gap:3px;align-items:center}
 .card .rbadge .badge{font-size:9px;padding:1px 6px}
 @media (prefers-reduced-motion:reduce){.glint{animation:none}}
+
+.dexsum{display:flex;align-items:center;gap:10px;margin:0 0 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.dexsum b{font-size:22px;color:#ffe9a8;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dexsum small{color:var(--muted);font-size:11px;white-space:nowrap}
+.dexbar{flex:1;height:10px;border-radius:99px;background:#ffffff1c;overflow:hidden;min-width:40px}
+.dexbar i{display:block;height:100%;background:linear-gradient(90deg,#8fd0ff,#ffe9a8,#ff8fb8);border-radius:99px}

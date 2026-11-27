@@ -26,14 +26,17 @@
 
   <section class="stage" id="stage" aria-label="ゲーム画面">
     <div class="ball" id="ball">
-      <div class="ball-inner" id="ballInner">
-        <div class="tease tease-n" id="tease"></div>
-        <div class="core" id="core"></div>
-        <div class="gem-slot" id="gemSlot"></div>
+      <div class="shape" id="shape">
+        <div class="ball-inner" id="ballInner">
+          <div class="tease tease-n" id="tease"></div>
+          <div class="core" id="core"></div>
+          <div class="gem-slot" id="gemSlot"></div>
+        </div>
+        <canvas id="mud"></canvas>
+        <div class="glass"></div>
+        <svg class="rim" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon id="rimPoly" points=""/></svg>
       </div>
       <div class="rays" id="rays"></div>
-      <canvas id="mud"></canvas>
-      <div class="glass"></div>
       <div class="prompt" id="prompt">なぞって<br>磨こう</div>
     </div>
     <div class="pedestal"></div>

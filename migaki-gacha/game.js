@@ -266,6 +266,58 @@ function gemSVG(g) {
 }
 const rand2 = (rnd, a, b) => (a + rnd() * (b - a)).toFixed(1);
 
+
+/* ============================================================
+   水晶のかたち（0〜100の座標の多角形）
+============================================================ */
+function resamplePoly(p, n) {
+  const m = p.length, cum = [0];
+  for (let i = 0; i < m; i++) { const a = p[i], b = p[(i + 1) % m]; cum.push(cum[i] + Math.hypot(b[0] - a[0], b[1] - a[1])); }
+  const tot = cum[m], out = []; let j = 0;
+  for (let k = 0; k < n; k++) {
+    const d = tot * k / n; while (cum[j + 1] < d) j++;
+    const a = p[j], b = p[(j + 1) % m], t = (d - cum[j]) / ((cum[j + 1] - cum[j]) || 1);
+    out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+  }
+  return out;
+}
+function smoothPoly(p, k, it) {
+  let cur = p; const n = p.length;
+  for (let t = 0; t < it; t++) cur = cur.map((_, i) => { let x = 0, y = 0; for (let d = -k; d <= k; d++) { const q = cur[(i + d + n) % n]; x += q[0]; y += q[1]; } return [x / (2 * k + 1), y / (2 * k + 1)]; });
+  return cur;
+}
+function fitPoly(p) {
+  const xs = p.map((q) => q[0]), ys = p.map((q) => q[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const s = 98 / Math.max(x1 - x0, y1 - y0), ox = 50 - (x0 + x1) / 2 * s, oy = 50 - (y0 + y1) / 2 * s;
+  return p.map((q) => [q[0] * s + ox, q[1] * s + oy]);
+}
+const param = (f, n = 360) => Array.from({ length: n }, (_, i) => f(i / n * TAU));
+const SHAPES = [
+  { id: 'round', name: 'まん丸', w: 3, gen: () => param((t) => [Math.cos(t), Math.sin(t)]) },
+  { id: 'egg', name: 'たまご', w: 2, gen: () => param((t) => [.85 * Math.cos(t) * (1 + .2 * Math.sin(t)), Math.sin(t)]) },
+  { id: 'heart', name: 'ハート', w: 2, gen: () => param((t) => [16 * Math.pow(Math.sin(t), 3), -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))]) },
+  { id: 'star', name: '星', w: 2, gen: () => smoothPoly(resamplePoly(Array.from({ length: 10 }, (_, i) => { const a = i * Math.PI / 5 - Math.PI / 2, r = i % 2 ? 24 : 50; return [Math.cos(a) * r, Math.sin(a) * r]; }), 360), 4, 2) },
+  { id: 'drop', name: 'しずく', w: 2, gen: () => param((t) => [Math.sin(t) * Math.sin(t / 2), -Math.cos(t)]) },
+  { id: 'hex', name: '六角', w: 2, gen: () => smoothPoly(resamplePoly(Array.from({ length: 6 }, (_, i) => { const a = i * Math.PI / 3; return [Math.cos(a) * 50, Math.sin(a) * 50]; }), 360), 9, 2) },
+  { id: 'diamond', name: 'ひし形', w: 2, gen: () => smoothPoly(resamplePoly([[50, 0], [88, 50], [50, 100], [12, 50]], 360), 7, 2) },
+  { id: 'tri', name: '三角', w: 1, gen: () => smoothPoly(resamplePoly([[50, 6], [96, 88], [4, 88]], 360), 14, 2) },
+  { id: 'flower', name: 'お花', w: 2, gen: () => param((t) => { const r = .76 + .24 * Math.cos(6 * t); return [Math.cos(t) * r, Math.sin(t) * r]; }) },
+  { id: 'cube', name: 'まる四角', w: 2, gen: () => param((t) => { const c = Math.cos(t), s = Math.sin(t); return [Math.sign(c) * Math.pow(Math.abs(c), .5), Math.sign(s) * Math.pow(Math.abs(s), .5)]; }) },
+].map((s) => ({ ...s, pts: resamplePoly(fitPoly(s.gen()), 120) }));
+function pickShape(prevId) {
+  const list = SHAPES.filter((s) => s.id !== prevId), sum = list.reduce((a, s) => a + s.w, 0);
+  let x = Math.random() * sum; for (const s of list) { x -= s.w; if (x < 0) return s; }
+  return list[0];
+}
+function inPoly(x, y, p) {
+  let ins = false;
+  for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+    if ((p[i][1] > y) !== (p[j][1] > y) && x < (p[j][0] - p[i][0]) * (y - p[i][1]) / (p[j][1] - p[i][1]) + p[i][0]) ins = !ins;
+  }
+  return ins;
+}
+
 /* ============================================================
    セーブ
 ============================================================ */
@@ -321,7 +373,7 @@ function squeak() {
 ============================================================ */
 const el = {
   stage: $('#stage'), ball: $('#ball'), inner: $('#ballInner'), core: $('#core'), slot: $('#gemSlot'), rays: $('#rays'),
-  mud: $('#mud'), tease: $('#tease'), fx: $('#fx'), prompt: $('#prompt'), flash: $('#flash'),
+  mud: $('#mud'), shape: $('#shape'), rim: $('#rimPoly'), tease: $('#tease'), fx: $('#fx'), prompt: $('#prompt'), flash: $('#flash'),
   hud: $('#hud'), msg: $('#msg'), bar: $('#bar'), result: $('#result'),
   rBadge: $('#rBadge'), rName: $('#rName'), rNew: $('#rNew'), rScore: $('#rScore'), rStyle: $('#rStyle'),
   next: $('#nextBtn'), total: $('#total'), dex: $('#dexCount'), pol: $('#polishCount'), codex: $('#codex'),
@@ -339,6 +391,7 @@ function paintMud() {
   const c = mctx, rnd = Math.random;
   c.globalCompositeOperation = 'source-over';
   c.clearRect(0, 0, L, L);
+  c.save(); c.beginPath(); curShape.pts.forEach((q, i) => c[i ? 'lineTo' : 'moveTo'](q[0] / 100 * L, q[1] / 100 * L)); c.closePath(); c.clip();
   const g = c.createRadialGradient(L * .38, L * .32, L * .05, L / 2, L / 2, L * .62);
   g.addColorStop(0, '#8d6a45'); g.addColorStop(.55, '#684a2c'); g.addColorStop(1, '#3b2816');
   c.fillStyle = g; c.fillRect(0, 0, L, L);
@@ -365,9 +418,17 @@ function paintMud() {
   const v = c.createRadialGradient(L / 2, L / 2, L * .36, L / 2, L / 2, L * .52);
   v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.5)');
   c.fillStyle = v; c.fillRect(0, 0, L, L);
+  c.restore();
 }
 
+let curShape = SHAPES[0];
 function newBall() {
+  curShape = pickShape(curShape.id);
+  const clip = 'polygon(' + curShape.pts.map((q) => q[0].toFixed(2) + '% ' + q[1].toFixed(2) + '%').join(',') + ')';
+  el.shape.style.setProperty('--clip', clip);
+  el.shape.classList.remove('open');
+  el.rim.setAttribute('points', curShape.pts.map((q) => q[0].toFixed(2) + ',' + q[1].toFixed(2)).join(' '));
+  setProbeShape(curShape.pts);
   const w = Math.max(160, Math.round(el.ball.getBoundingClientRect().width));
   L = w;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -396,9 +457,12 @@ const PG = 48;
 const probeA = document.createElement('canvas'), probeB = document.createElement('canvas');
 probeA.width = probeA.height = 96; probeB.width = probeB.height = PG;
 const pa = probeA.getContext('2d', { willReadFrequently: true }), pb = probeB.getContext('2d', { willReadFrequently: true });
-const probeInside = [];
-for (let j = 0; j < PG; j++) for (let i = 0; i < PG; i++) probeInside.push(Math.hypot(i + .5 - PG / 2, j + .5 - PG / 2) < PG / 2 * 0.95);
-const probeCount = probeInside.filter(Boolean).length;
+let probeInside = [], probeCount = 1;
+function setProbeShape(pts) {
+  probeInside = [];
+  for (let j = 0; j < PG; j++) for (let i = 0; i < PG; i++) probeInside.push(inPoly((i + .5) / PG * 100, (j + .5) / PG * 100, pts));
+  probeCount = probeInside.filter(Boolean).length || 1;
+}
 function measureClean() {
   pa.clearRect(0, 0, 96, 96); pa.drawImage(el.mud, 0, 0, 96, 96);
   pb.clearRect(0, 0, PG, PG); pb.drawImage(probeA, 0, 0, PG, PG);
@@ -411,7 +475,7 @@ let lastMeasure = 0;
 
 function setProgress(p) {
   el.bar.style.width = (p * 100).toFixed(1) + '%';
-  const m = p <= 0 ? '水晶玉をなぞって磨こう' : p < .3 ? 'キュッ キュッ…' : p < .6 ? 'いい感じ…！' : p < .85 ? '中に何かある…！' : 'もうすぐ…！！';
+  const m = p <= 0 ? `${curShape.name}の水晶をなぞって磨こう` : p < .3 ? 'キュッ キュッ…' : p < .6 ? 'いい感じ…！' : p < .85 ? '中に何かある…！' : 'もうすぐ…！！';
   if (el.msg.textContent !== m) el.msg.textContent = m;
 }
 
@@ -561,7 +625,9 @@ function renderScores(animate) {
 /* ---------- 図鑑 ---------- */
 function renderCodex() {
   const now = Date.now(), rates = baseRates();
-  el.codex.innerHTML = RARITY_KEYS.map((rk) => {
+  const own = ownedCount(), pct = Math.floor(own / GEMS.length * 100);
+  const sum = `<div class="dexsum"><div><small>コンプ率</small><br><b>${pct}%</b></div><div class="dexbar"><i style="width:${own / GEMS.length * 100}%"></i></div><small>${own}/${GEMS.length}種</small></div>`;
+  el.codex.innerHTML = sum + RARITY_KEYS.map((rk) => {
     const list = GEMS.filter((g) => g.r === rk), have = list.filter((g) => save.counts[g.id] > 0).length;
     const cards = list.map((g) => {
       const n = save.counts[g.id] || 0, color = RARITY[g.r].color;
@@ -613,6 +679,7 @@ async function finish() {
 
   // 登場
   el.tease.style.opacity = 0;
+  el.shape.classList.add('open');
   el.flash.classList.remove('go'); void el.flash.offsetWidth; el.flash.classList.add('go');
   el.slot.innerHTML = gemSVG(gem) + '<i class="glint"></i>'.repeat(4);
   el.slot.className = 'gem-slot pop';
@@ -676,7 +743,7 @@ function shareUrl() { return location.href.split('#')[0]; }
 function shareText() {
   const l = save.last;
   if (!l) return '磨きガチャで遊んでる！泥だらけの水晶玉を磨いて宝石を集めよう💎 #磨きガチャ';
-  return `磨きガチャで【${l.name}】(${stars(l.r)})を磨き出した！ +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length} 💎 #磨きガチャ`;
+  return `磨きガチャで【${l.name}】(${stars(l.r)})を磨き出した！ +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%） 💎 #磨きガチャ`;
 }
 function toast(msg) {
   el.toast.textContent = msg; el.toast.classList.add('show');
@@ -714,7 +781,7 @@ async function makeShareImage() {
     x.fillStyle = '#fff'; x.font = `900 84px ${font}`; x.fillText('泥の水晶玉を磨いて', W / 2, 420); x.fillText('宝石を集めよう', W / 2, 530);
   }
   x.fillStyle = '#cfc8f5'; x.font = `700 38px ${font}`;
-  x.fillText(`TOTAL ${fmt(save.total)} pt　／　図鑑 ${ownedCount()}/${GEMS.length}`, W / 2, 1010);
+  x.fillText(`TOTAL ${fmt(save.total)} pt　／　図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%）`, W / 2, 1010);
   shareDataUrl = cv.toDataURL('image/png');
   shareBlob = await new Promise((r) => cv.toBlob(r, 'image/png'));
   $('#shareThumb').src = shareDataUrl; $('#imgSaveBtn').href = shareDataUrl;
