@@ -17,10 +17,10 @@ const MUTE_KEY = 'dino-horihori:mute';
 
 const RARITY = {
   N:   { score: 10,   w: 35,  boost: 2,   rumble: 350,  amp: 1,   color: '#a3adbd', order: 0 },
-  R:   { score: 50,   w: 11.7, boost: 12,   rumble: 650,  amp: 2,   color: '#4cc38a', order: 1 },
-  SR:  { score: 200,  w: 3.5, boost: 40,  rumble: 1100, amp: 3.5, color: '#4da3ff', order: 2 },
-  SSR: { score: 1000, w: 1.02, boost: 120, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
-  UR:  { score: 5000, w: 0.24, boost: 500, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
+  R:   { score: 150,  w: 11.7, boost: 12,   rumble: 650,  amp: 2,   color: '#4cc38a', order: 1 },
+  SR:  { score: 600,  w: 3.23, boost: 40,  rumble: 1100, amp: 3.5, color: '#4da3ff', order: 2 },
+  SSR: { score: 3000, w: 1.02, boost: 120, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
+  UR:  { score: 15000, w: 0.24, boost: 500, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
 };
 const stars = (r) => '★'.repeat(RARITY[r].order + 1) + '☆'.repeat(4 - RARITY[r].order);
 const RARITY_KEYS = ['UR', 'SSR', 'SR', 'R', 'N'];
@@ -84,6 +84,7 @@ const GEMS = [
   { id: 'm_monkey', name: '実物大ヴェロキラプトル', emoji: '🦃', img: '', cap: '映画より七面鳥くらいの大きさ。', r: 'SSR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
   { id: 'm_trend', name: 'トロオドン', emoji: '🦖', img: '', cap: '頭がいいと言われる恐竜。', r: 'UR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'", "'tap'"] },
   { id: 'm_zen', name: 'ドレッドノータス', emoji: '🦕', img: '', cap: '「何も恐れない」名前の巨竜。', r: 'UR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'", "'cw'"] },
+  { id: 'm_chicken', name: 'ニワトリティラノ', emoji: '🐔', img: '', cap: 'ニワトリを恐竜に戻す研究は実在する。', r: 'SR', shape: 'round', c: ['#ffe0b0', '#ff9a4a', '#b3501a'], styles: ['tap'] },
 ];
 const GEM_BY_ID = Object.fromEntries(GEMS.map((g) => [g.id, g]));
 
