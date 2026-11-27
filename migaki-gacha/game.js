@@ -22,7 +22,7 @@ const RARITY = {
   SSR: { score: 1000, w: 1.6, boost: 100, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
   UR:  { score: 5000, w: 0.4, boost: 400, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
 };
-const stars = (r) => '★'.repeat(RARITY[r].order + 1);
+const stars = (r) => '★'.repeat(RARITY[r].order + 1) + '☆'.repeat(4 - RARITY[r].order);
 const RARITY_KEYS = ['UR', 'SSR', 'SR', 'R', 'N'];
 
 const STYLE_HINT = {
