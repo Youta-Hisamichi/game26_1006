@@ -68,6 +68,17 @@ h1{margin:0;font-size:12cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 #total{margin-bottom:1cqw;font-size:4.4cqw;color:var(--mute)}
 #total b{color:var(--ink);font-size:6cqw;font-variant-numeric:tabular-nums}
 #preview{width:100%;border-radius:2cqw;border:.4cqw solid var(--line);margin-top:2cqw;display:block}
+#nameRow{display:flex;gap:2cqw;align-items:center;margin-bottom:3cqw;font-size:3.6cqw;color:var(--mute)}
+#nameRow input{flex:1;min-width:0;background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw;color:var(--ink);font:inherit;font-size:4cqw}
+#rrank{margin-top:1cqw;font-size:4.4cqw;font-weight:800;color:var(--good)}
+.rk{list-style:none;margin:0 0 2cqw;padding:0;text-align:left}
+.rk li{display:grid;grid-template-columns:9cqw 1fr auto;gap:2cqw;align-items:baseline;padding:2cqw 2.4cqw;margin-bottom:1.2cqw;
+  background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;font-size:3.8cqw}
+.rk li.me{border-color:var(--fire2);background:#ff7a1a33}
+.rk b{font-variant-numeric:tabular-nums;font-size:4.4cqw}
+.rk em{font-style:normal;color:var(--mute);font-size:3cqw;display:block}
+.rk .n{color:var(--fire2);font-weight:900}
+.empty{color:var(--mute);padding:6cqw 0}
 #toast{position:absolute;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
   padding:2cqw 4cqw;border-radius:3cqw;font-size:3.6cqw;opacity:0;transition:opacity .25s;pointer-events:none;
   max-width:90%;text-align:center;z-index:5}
@@ -107,13 +118,23 @@ h1{margin:0;font-size:12cqw;line-height:1.05;font-weight:900;color:var(--fire2);
       <div><small>ベスト</small><b id="tBest">-</b></div>
       <div><small>プレイ</small><b id="tPlays">0</b></div>
     </div>
+    <div id="nameRow"><label for="pname">なまえ</label><input id="pname" maxlength="8" placeholder="ななし" autocomplete="off"></div>
     <button class="btn" id="bStart">スタート</button>
+    <button class="btn sec" id="bRank">🏆 ランキング</button>
+  </div></div>
+
+  <div class="ov" id="ovRank"><div class="card">
+    <h1 style="font-size:9cqw">🏆 ランキング</h1>
+    <div class="sub">この端末のベスト10（スコア順）</div>
+    <ol class="rk" id="rkList"></ol>
+    <button class="btn" id="bRankBack">もどる</button>
   </div></div>
 
   <div class="ov" id="ovResult"><div class="card">
     <div id="rank"></div>
     <div id="rtime"></div>
     <div id="rscore"></div>
+    <div id="rrank"></div>
     <div id="newbest">🏆 ベスト更新！</div>
     <div class="stat">
       <div><small>正確さ</small><b id="sAcc"></b></div>
@@ -150,7 +171,7 @@ const $ = id => document.getElementById(id);
 
 // ───────── 記録 ─────────
 function loadRec() {
-  const d = { total: 0, best: 0, bestTime: 0, plays: 0 };
+  const d = { total: 0, best: 0, bestTime: 0, plays: 0, name: '', ranks: [] };
   try { Object.assign(d, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   return d;
 }
@@ -360,7 +381,12 @@ function showResult() {
   const isBest = score > rec.best;
   rec.total += score; rec.plays++;
   if (isBest) { rec.best = score; rec.bestTime = elapsed; }
+  const entry = { s: score, t: elapsed, a: acc, n: rec.name || 'ななし', d: Date.now() };
+  rec.ranks = (rec.ranks || []).concat(entry).sort((a, b) => b.s - a.s || a.d - b.d);
+  const pos = rec.ranks.indexOf(entry) + 1;
+  rec.ranks = rec.ranks.slice(0, 10);
   saveRec();
+  $('rrank').textContent = pos && pos <= 10 ? `ランキング ${pos}位！` : 'ランク圏外（10位まで）';
   result = { t: elapsed, score, acc, combo: maxCombo, n, rank: rankOf(score), total: rec.total, isBest };
   $('rank').textContent = result.rank;
   $('rtime').innerHTML = elapsed.toFixed(2) + '<small> 秒</small>';
@@ -693,9 +719,6 @@ function drawGuide() {
   ctx.lineTo(P.x + e[0] - Math.cos(a - .5) * 30, e[1] - Math.sin(a - .5) * 30);
   ctx.lineTo(P.x + e[0] - Math.cos(a + .5) * 30, e[1] - Math.sin(a + .5) * 30); ctx.fill();
   ctx.restore();
-  ctx.font = `900 40px ${FONT}`; ctx.textAlign = 'center'; ctx.lineWidth = 7; ctx.strokeStyle = '#000';
-  ctx.fillStyle = '#ffe066';
-  ctx.strokeText('ここで ジグザグに斜め下へ！', P.x, 215); ctx.fillText('ここで ジグザグに斜め下へ！', P.x, 215);
 }
 function drawFloaters() {
   ctx.textAlign = 'center'; ctx.font = `900 44px ${FONT}`; ctx.lineWidth = 7; ctx.lineJoin = 'round';
@@ -758,7 +781,25 @@ function frame(now) {
 }
 
 // ───────── 画面遷移 ─────────
+function showRank(hl) {
+  const ul = $('rkList'); ul.textContent = '';
+  const list = rec.ranks || [];
+  if (!list.length) { ul.innerHTML = '<div class="empty">まだ記録がありません</div>'; return; }
+  list.forEach((e, i) => {
+    const li = document.createElement('li');
+    if (hl && e.d === hl) li.className = 'me';
+    const d = new Date(e.d);
+    li.innerHTML = `<span class="n">${i + 1}</span><span></span><b>${fmt(e.s)}</b>`;
+    const mid = li.children[1];
+    mid.textContent = e.n;
+    const em = document.createElement('em');
+    em.textContent = `${e.t.toFixed(2)}秒 ・ 正確さ${Math.round(e.a * 100)}% ・ ${d.getMonth() + 1}/${d.getDate()}`;
+    mid.appendChild(em);
+    ul.appendChild(li);
+  });
+}
 function refreshTitle() {
+  $('pname').value = rec.name || '';
   $('tTotal').textContent = fmt(rec.total);
   $('tBest').textContent = rec.best ? fmt(rec.best) : '-';
   $('tPlays').textContent = rec.plays;
@@ -773,6 +814,9 @@ function toTitle() {
   mode = 'title'; resetRun(); refreshTitle();
   $('hud').classList.remove('on'); $('ovResult').classList.remove('on'); $('ovTitle').classList.add('on');
 }
+$('pname').addEventListener('input', e => { rec.name = e.target.value.trim().slice(0, 8); saveRec(); });
+$('bRank').onclick = () => { showRank(); $('ovTitle').classList.remove('on'); $('ovRank').classList.add('on'); };
+$('bRankBack').onclick = () => { $('ovRank').classList.remove('on'); $('ovTitle').classList.add('on'); };
 $('bStart').onclick = () => { initAudio(); toReady(); };
 $('bAgain').onclick = toReady;
 $('bRetry').onclick = toReady;
