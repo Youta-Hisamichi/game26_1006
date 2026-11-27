@@ -84,7 +84,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 .rk .n{color:var(--fire2);font-weight:900}
 .empty{color:var(--mute);padding:6cqw 0}
 .langrow{display:flex;justify-content:flex-end;margin-bottom:1cqw}
-.ib.lang{width:auto;min-width:9cqw;padding:0 2.4cqw;border-radius:5cqw;font-size:3.4cqw;font-weight:800;color:var(--ink)}
+.ib.lang,.ib.pill{width:auto;min-width:9cqw;padding:0 2.4cqw;border-radius:5cqw;font-size:3.4cqw;font-weight:800;color:var(--ink)}
 #ovResult{background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.55),rgba(8,4,2,.82))}
 #bRankBack{position:sticky;bottom:max(2cqw,env(safe-area-inset-bottom,0px));z-index:6}
 #toast{position:fixed;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
@@ -129,11 +129,11 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
   </div></div>
 
   <div class="ov" id="ovRank"><div class="card">
-    <div class="langrow"><button class="ib lang" id="bRankBack2" data-i="back">もどる</button></div>
+    <div class="langrow"><button class="ib pill" id="bRankBack2" data-i="back">もどる</button></div>
     <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
     <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
-    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="8" data-p="anon" autocomplete="off"></div>
     <div class="tabs" id="rkMetric"><button id="mtTime" data-i="mTime">速さ</button><button id="mtAcc" data-i="mAcc">正確さ</button></div>
+    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="8" data-p="anon" autocomplete="off"></div>
     <div class="sub" id="rkSub"></div>
     <div id="rkStatus"></div>
     <ol class="rk" id="rkList"></ol>
