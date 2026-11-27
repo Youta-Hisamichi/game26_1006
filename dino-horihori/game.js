@@ -17,10 +17,10 @@ const MUTE_KEY = 'dino-horihori:mute';
 
 const RARITY = {
   N:   { score: 10,   w: 35,  boost: 2,   rumble: 350,  amp: 1,   color: '#a3adbd', order: 0 },
-  R:   { score: 150,  w: 11.7, boost: 12,   rumble: 650,  amp: 2,   color: '#4cc38a', order: 1 },
-  SR:  { score: 600,  w: 3.23, boost: 40,  rumble: 1100, amp: 3.5, color: '#4da3ff', order: 2 },
-  SSR: { score: 3000, w: 1.02, boost: 120, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
-  UR:  { score: 15000, w: 0.24, boost: 500, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
+  R:   { score: 50,   w: 11.7, boost: 12,   rumble: 650,  amp: 2,   color: '#4cc38a', order: 1 },
+  SR:  { score: 500,  w: 3.23, boost: 40,  rumble: 1100, amp: 3.5, color: '#4da3ff', order: 2 },
+  SSR: { score: 5000, w: 1.02, boost: 120, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
+  UR:  { score: 50000, w: 0.24, boost: 500, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
 };
 const stars = (r) => '★'.repeat(RARITY[r].order + 1) + '☆'.repeat(4 - RARITY[r].order);
 const RARITY_KEYS = ['UR', 'SSR', 'SR', 'R', 'N'];
@@ -584,11 +584,10 @@ function fxLoop(t) {
   if (pad.a > .02) {
     const r = brushR * (el.ball.getBoundingClientRect().width / L), s = r * 1.5;
     const u = Math.min(1, (t - lastStrike) / STRIKE_MS);
-    const ang = down ? -0.55 - 0.7 * Math.sin(u * Math.PI) : -0.9 - 0.08 * Math.sin(t / 300);
-    const sq = down ? 1 - 0.1 * (1 - u) * (1 - u) : 1;
+    const ang = down ? -0.55 - 0.7 * Math.sin(u * Math.PI) : -0.65 + 0.05 * Math.sin(t / 300);
     fxc.save(); fxc.globalAlpha = pad.a * .95; fxc.translate(pad.x, pad.y);
     fxc.strokeStyle = `rgba(255,255,255,${.3 + pad.ring * .5})`; fxc.lineWidth = 1.5 + pad.ring * 1.5; fxc.setLineDash([4, 4]); fxc.beginPath(); fxc.arc(0, 0, r * (1 + pad.ring * .18), 0, TAU); fxc.stroke(); fxc.setLineDash([]);
-    fxc.rotate(ang); fxc.scale(sq, sq);
+    { const hl = s * 1.6; fxc.translate(-hl * Math.sin(-0.55), hl * Math.cos(-0.55)); fxc.rotate(ang); fxc.translate(0, -hl); }   // 支点は握る棒の下のほう
     fxc.fillStyle = '#8b5a2b'; fxc.beginPath(); fxc.roundRect(-s * .1, s * .15, s * .2, s * 1.7, s * .08); fxc.fill();
     fxc.strokeStyle = '#4a2c10'; fxc.lineWidth = 1.2; fxc.stroke();
     const hg = fxc.createLinearGradient(0, -s * .3, 0, s * .3); hg.addColorStop(0, '#e6e9ef'); hg.addColorStop(.5, '#9aa3b2'); hg.addColorStop(1, '#5b6474');
