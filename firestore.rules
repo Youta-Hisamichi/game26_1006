@@ -31,7 +31,7 @@ service cloud.firestore {
         && d.keys().hasAll(['n', 't', 'a', 'd', 'u'])
         && d.u == uid
         && d.n is string && d.n.size() >= 1 && d.n.size() <= 8
-        && (d.t is int || d.t is float) && d.t >= 2 && d.t < 100000
+        && (d.t is int || d.t is float) && d.t >= 1 && d.t < 100000
         && (d.a is int || d.a is float) && d.a >= 0 && d.a <= 1
         && d.d is int;
     }
