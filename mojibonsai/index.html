@@ -22,6 +22,7 @@ button{font:inherit;border:0;border-radius:10px;padding:10px 18px;background:var
 button:active{transform:translateY(1px)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px;font-size:14px}
 .chips span{opacity:.6;align-self:center}
+.chip.rand{background:var(--accent);color:#fff;border-color:var(--accent)}
 .chip{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:3px 11px;font-size:16px;border-radius:99px}
 canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2px solid var(--line);background:#eee;touch-action:manipulation}
 #result{margin-top:12px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px 16px;opacity:0;transform:translateY(8px);transition:.5s}
@@ -1019,7 +1020,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.10.2',BUILD='2026-11-27 13:39 JST';
+const VERSION='1.11.0',BUILD='2026-11-27 17:26 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -1139,9 +1140,21 @@ const CHIPS={
   ja:['桜','松','猫','火','寿','UFO','金','あ','顔','肉','赤'],
   en:['sakura','pine','cat','fire','sushi','UFO','gold','meat','red','protein','poop','face']
 };
+const RAND_KANJI='日月火水木金土山川田人大小中上下左右口目耳手足心力天空海風雨雪花草森林石星春夏秋冬愛夢光影音学校道車駅店本白黒赤青銀紫桃柿竹梅桜松菊鳥魚犬猫馬牛虎龍蛇亀鯨鹿熊兎猿豚羊鶏象虫蝶蜂蛙米茶酒肉卵麦豆芋餅笑泣怒喜哀楽勇速強美和平幸福運命時間世界宇宙神仏鬼王姫剣盾城橋塔鐘笛歌踊旅酔';
+const RAND_KANA='あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワ';
+/* ランダム文字：辞書の言葉・1文字・2文字から選ぶ。最近育てた文字は避けて、累計に加算されやすくする */
+function randomText(){
+  const hist=new Set(getHist().map(x=>norm(x.t)));
+  const dict=[...new Set([...Object.keys(EMO),...Object.keys(THEME),...Object.keys(EN_ALIAS)])].filter(k=>k&&Array.from(k).length<=8);
+  const ch=[...RAND_KANJI+RAND_KANA],rc=()=>ch[Math.floor(Math.random()*ch.length)];
+  const pick=()=>{const r=Math.random();return r<.5?dict[Math.floor(Math.random()*dict.length)]:r<.85?rc():rc()+rc();};
+  let t=pick();for(let i=0;i<30&&hist.has(norm(t));i++)t=pick();
+  return t;
+}
 function renderChips(){
   const box=document.querySelector('.chips');
   box.querySelectorAll('.chip').forEach(e=>e.remove());
+  {const r=document.createElement('button');r.type='button';r.className='chip rand';r.textContent=L('🎲 ランダム','🎲 Random');r.onclick=()=>{const v=randomText();$('t').value=v;grow(v);};box.appendChild(r);}
   for(const v of CHIPS[lang]){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=v;b.onclick=()=>{$('t').value=v;grow(v);};box.appendChild(b);}
 }
 function applyLang(){
