@@ -11,9 +11,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fmt = (n) => Math.round(n).toLocaleString('ja-JP');
 const rand = (a, b) => a + Math.random() * (b - a);
 
-const COOL_MS = 10 * 60 * 1000;     // 一度出た「クセ付きミーム」が眠る時間
-const SAVE_KEY = 'migaki-gacha:v1';
-const MUTE_KEY = 'migaki-gacha:mute';
+const COOL_MS = 10 * 60 * 1000;     // 一度出た「クセ付き恐竜」が眠る時間
+const SAVE_KEY = 'dino-horihori:v1';
+const MUTE_KEY = 'dino-horihori:mute';
 
 const RARITY = {
   N:   { score: 10,   w: 35,  boost: 2,   rumble: 350,  amp: 1,   color: '#a3adbd', order: 0 },
@@ -37,63 +37,63 @@ const STYLE_SHORT = {
 // shape: brilliant | emerald | round | oval | drop | heart | star | cab
 const GEMS = [
   { id: 'quartz',   name: 'とりあえず草', emoji: '🌱', cap: '生やしとけば間違いない。',         r: 'N', shape: 'round',   c: ['#f6f8fc', '#cfd6e6', '#8e99b3'], styles: [], w: 55 },
-  { id: 'obsidian', name: '既読スルー', emoji: '👀', cap: '見たけど返さない。',       r: 'N', shape: 'drop',    c: ['#7a7e92', '#2c2e3c', '#0c0d14'], styles: [], w: 55 },
+  { id: 'obsidian', name: '化石のうんち', emoji: '💩', cap: 'コプロライト。立派な研究対象。',       r: 'N', shape: 'drop',    c: ['#7a7e92', '#2c2e3c', '#0c0d14'], styles: [], w: 55 },
   { id: 'agate',    name: 'ぬるぽ→ガッ', emoji: '🔨', cap: '条件反射でガッ。',         r: 'N', shape: 'cab',     c: ['#f3d9b1', '#c98f5a', '#7a4a2c'], styles: ['horiz'], deco: 'bands' },
-  { id: 'fluorite', name: 'ゆっくり亀', emoji: '🐢', cap: '急がば回れ、亀は偉大。',         r: 'N', shape: 'emerald', c: ['#e0d4ff', '#8fd0c4', '#6a4fb0'], styles: ['slow'] },
+  { id: 'fluorite', name: 'かたい恐竜の卵', emoji: '🥚', cap: 'あたためても孵らない。',         r: 'N', shape: 'emerald', c: ['#e0d4ff', '#8fd0c4', '#6a4fb0'], styles: ['slow'] },
   { id: 'garnet',   name: '回る寿司', emoji: '🍣', cap: '流れてくるのを待つだけの時間。',   r: 'R', shape: 'brilliant', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ['cw'] },
   { id: 'lapis',    name: '逆再生おじさん', emoji: '⏪', cap: '巻き戻したら全部元通り。', r: 'R', shape: 'cab',     c: ['#6b8cf0', '#1f3a9e', '#0c1a5e'], styles: ['ccw'], deco: 'gold' },
   { id: 'peridot',  name: '縦読みの民', emoji: '📜', cap: '縦に読むと本音が見える。',   r: 'R', shape: 'round',   c: ['#eaff96', '#a8d62c', '#5e8c10'], styles: ['vert'] },
   { id: 'citrine',  name: '横揺れ猫', emoji: '🐈', cap: 'リズムに乗れていない。',     r: 'R', shape: 'emerald', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ['horiz'] },
-  { id: 'amethyst', name: 'ナマケモノ構文', emoji: '🦥', cap: 'やる気は明日出す。',   r: 'R', shape: 'oval',    c: ['#ebd2ff', '#a15de0', '#55208f'], styles: ['slow'] },
-  { id: 'rosequartz', name: 'ポチポチ連打ハムスター', emoji: '🐹', cap: '押せば出ると信じている。', r: 'R', shape: 'heart', c: ['#ffe6f0', '#ffa6c4', '#d9608f'], styles: ['tap'] },
-  { id: 'moonstone', name: '秒で完売', emoji: '⚡', cap: '気づいた時には売り切れ。', r: 'R', shape: 'cab',  c: ['#ffffff', '#cfe4ff', '#93b0e0'], styles: ['fast'], deco: 'sheen' },
+  { id: 'amethyst', name: 'ブロントサウルス', emoji: '🦕', cap: '歩くのもゆっくり。',   r: 'R', shape: 'oval',    c: ['#ebd2ff', '#a15de0', '#55208f'], styles: ['slow'] },
+  { id: 'rosequartz', name: 'ヒプシロフォドン', emoji: '🐰', cap: 'ちょこちょこ走る小型竜。', r: 'R', shape: 'heart', c: ['#ffe6f0', '#ffa6c4', '#d9608f'], styles: ['tap'] },
+  { id: 'moonstone', name: 'ヴェロキラプトル', emoji: '🐦', cap: '意外と小さいが素早い。', r: 'R', shape: 'cab',  c: ['#ffffff', '#cfe4ff', '#93b0e0'], styles: ['fast'], deco: 'sheen' },
   { id: 'ruby',     name: 'ぐるぐるバット大会', emoji: '🌀', cap: 'まっすぐ歩けた者はいない。',       r: 'SR', shape: 'emerald', c: ['#ff7f95', '#e0112f', '#7d0016'], styles: ['cw'] },
-  { id: 'sapphire', name: '逆再生ダンス', emoji: '🕺', cap: '後ろ向きのほうが上手い。',   r: 'SR', shape: 'brilliant', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ['ccw'] },
+  { id: 'sapphire', name: 'スピノサウルス', emoji: '🐊', cap: '巨大な背びれの魚食い。',   r: 'SR', shape: 'brilliant', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ['ccw'] },
   { id: 'emerald',  name: '縦スクロール地獄', emoji: '📱', cap: '親指が止まらない。',   r: 'SR', shape: 'emerald', c: ['#9dffc9', '#14b36a', '#05603a'], styles: ['vert'] },
   { id: 'topaz',    name: '横スワイプ事故', emoji: '👉', cap: '送るつもりのない人に送信。', r: 'SR', shape: 'drop', c: ['#ffe2a0', '#ff9d2e', '#b3500a'], styles: ['horiz'] },
-  { id: 'tanzanite', name: 'スロー再生猫', emoji: '🐈‍⬛', cap: '着地の瞬間をじっくり見る。', r: 'SR', shape: 'oval',  c: ['#cfc2ff', '#5a45d6', '#241a7a'], styles: ['slow'] },
-  { id: 'pinktour', name: '深夜のポチり', emoji: '🛒', cap: '気づいたら届いてる。', r: 'SR', shape: 'drop', c: ['#ffc4e1', '#ff5fa6', '#a31a63'], styles: ['tap'] },
-  { id: 'aquamarine', name: '早口言葉選手権', emoji: '🗣️', cap: '生麦生米生卵、噛んだ。', r: 'SR', shape: 'emerald', c: ['#d6fbff', '#6fdcf0', '#1a8fb0'], styles: ['fast'] },
+  { id: 'tanzanite', name: 'アルゼンチノサウルス', emoji: '🦕', cap: '史上最大級。のそのそ歩く。', r: 'SR', shape: 'oval',  c: ['#cfc2ff', '#5a45d6', '#241a7a'], styles: ['slow'] },
+  { id: 'pinktour', name: 'オヴィラプトル', emoji: '🥚', cap: '卵を抱く恐竜。', r: 'SR', shape: 'drop', c: ['#ffc4e1', '#ff5fa6', '#a31a63'], styles: ['tap'] },
+  { id: 'aquamarine', name: 'ディノニクス', emoji: '🦖', cap: 'かぎ爪の狩人。', r: 'SR', shape: 'emerald', c: ['#d6fbff', '#6fdcf0', '#1a8fb0'], styles: ['fast'] },
   { id: 'diamond',  name: '光速の既読', emoji: '💨', cap: '送信前に既読がついた。', r: 'SSR', shape: 'brilliant', c: ['#ffffff', '#dff3ff', '#9bc9ee'], styles: ['fast'] },
-  { id: 'alexandrite', name: '三時間待ちの行列', emoji: '🥱', cap: '並んだ時点で勝ち。', r: 'SSR', shape: 'oval', c: ['#7ef0c5', '#4f7de0', '#b53cc4'], grad: ['#8ff7cf', '#4f9ae0', '#b53cc4', '#e03a5a'], styles: ['slow'] },
+  { id: 'alexandrite', name: 'ギガノトサウルス', emoji: '🦖', cap: 'ティラノより大きい説。', r: 'SSR', shape: 'oval', c: ['#7ef0c5', '#4f7de0', '#b53cc4'], grad: ['#8ff7cf', '#4f9ae0', '#b53cc4', '#e03a5a'], styles: ['slow'] },
   { id: 'pigeon',   name: 'ドヤ顔ダブルピース', emoji: '😎', cap: '理由はないが誇らしい。', r: 'SSR', shape: 'emerald', c: ['#ff6a82', '#c40a28', '#58000f'], styles: ['cw'] },
   { id: 'kashmir',  name: '反転した世界の猫', emoji: '🙃', cap: '上下逆でもかわいい。', r: 'SSR', shape: 'round', c: ['#86b0ff', '#1741c9', '#071a6b'], styles: ['ccw'] },
-  { id: 'demantoid', name: '伸びすぎた猫', emoji: '🐱', cap: '液体説、ほぼ確定。', r: 'SSR', shape: 'brilliant', c: ['#d4ff8a', '#3cc226', '#0a6a12'], styles: ['vert'] },
-  { id: 'heliodor', name: 'ワイドショー風カエル', emoji: '🐸', cap: 'コメンテーターは全員カエル。', r: 'SSR', shape: 'emerald', c: ['#fffbb8', '#ffd400', '#c28a00'], styles: ['horiz'] },
-  { id: 'padparadscha', name: 'ポチりすぎた箱の山', emoji: '📦', cap: '置き場所がない。', r: 'SSR', shape: 'drop', c: ['#ffd8b8', '#ff7f6e', '#e0447c'], styles: ['tap'] },
+  { id: 'demantoid', name: 'スーパーサウルス', emoji: '🦕', cap: '首が超ロング。', r: 'SSR', shape: 'brilliant', c: ['#d4ff8a', '#3cc226', '#0a6a12'], styles: ['vert'] },
+  { id: 'heliodor', name: 'デイノケイルス', emoji: '🦐', cap: '腕だけ見つかり続けた謎の竜。', r: 'SSR', shape: 'emerald', c: ['#fffbb8', '#ffd400', '#c28a00'], styles: ['horiz'] },
+  { id: 'padparadscha', name: 'ティタノサウルス', emoji: '🥚', cap: '卵の巣ごと大発見。', r: 'SSR', shape: 'drop', c: ['#ffd8b8', '#ff7f6e', '#e0447c'], styles: ['tap'] },
   { id: 'opal',     name: '全方位バズ砲', emoji: '🌈', cap: 'どっちに回してもバズる。', r: 'UR', shape: 'cab', c: ['#ffffff', '#9fd8ff', '#c47aff'], grad: ['#ff9ad0', '#ffe27a', '#7affc8', '#7ab8ff', '#c47aff'], deco: 'rainbow', styles: ['cw', 'ccw'] },
   { id: 'sage',     name: '大草原', emoji: '🌾', cap: '縦にも横にも草。',     r: 'UR', shape: 'star', c: ['#fff2a8', '#ff5a3c', '#8a0a2a'], styles: ['cross'] },
-  { id: 'stardust', name: '最後のひとツイート', emoji: '🌙', cap: 'おやすみの前に、もう一回だけ。',       r: 'UR', shape: 'star', c: ['#ffffff', '#9fd8ff', '#6a5cff'], styles: ['slow', 'tap'] },
-  { id: 'm_pien', name: 'ぴえん', emoji: '🥺', cap: 'とりあえず泣いとく。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
-  { id: 'm_natsu', name: 'おつかれサマー', emoji: '🏖️', cap: '夏が終わるのは早い。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
-  { id: 'm_paw', name: 'ぬこ様の足跡', emoji: '🐾', cap: '肉球は縦に並ぶ。', r: 'N', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
-  { id: 'm_dash', name: 'ダッシュで逃げる', emoji: '🏃', cap: 'とりあえず走る。', r: 'N', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
-  { id: 'm_dog', name: 'ぐるぐる目の犬', emoji: '😵‍💫', cap: '目が回るほど忙しい。', r: 'R', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
-  { id: 'm_robo', name: 'ねじ巻きロボ', emoji: '🤖', cap: '巻き戻すとなぜか動く。', r: 'R', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
-  { id: 'm_crab', name: 'カニ歩き選手', emoji: '🦀', cap: '横歩きが最速。', r: 'R', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
-  { id: 'm_elev', name: 'エレベーター待ち', emoji: '🛗', cap: '上か下か、それが問題。', r: 'R', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
-  { id: 'm_deli', name: 'ダッシュ宅配', emoji: '🛵', cap: '届くのが早すぎる。', r: 'R', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
-  { id: 'm_coffee', name: 'ぐるぐるコーヒー', emoji: '☕', cap: 'かき混ぜすぎて冷めた。', r: 'SR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
-  { id: 'm_slot', name: '逆回転ルーレット', emoji: '🎰', cap: '外れたら逆に回せばいい。', r: 'SR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
-  { id: 'm_hero', name: '横スクロール勇者', emoji: '🗡️', cap: '右へ右へ進むだけ。', r: 'SR', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
-  { id: 'm_enter', name: 'エンターキー連打', emoji: '⌨️', cap: '確定したいだけなのに。', r: 'SR', shape: 'round', c: ['#ffd0e4', '#ff7fb0', '#c0306f'], styles: ["'tap'"] },
-  { id: 'm_nap', name: '二度寝の誘惑', emoji: '🛌', cap: 'あと5分が永遠。', r: 'SR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'"] },
-  { id: 'm_loop', name: '無限ループ会議', emoji: '🔁', cap: '結論は次回に持ち越し。', r: 'SSR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
-  { id: 'm_time', name: '時間を巻き戻す猫', emoji: '⏳', cap: '昨日の自分を助けに行く。', r: 'SSR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
-  { id: 'm_ladder', name: '終わらない縦スクロール', emoji: '🪜', cap: '指が筋肉痛になる。', r: 'SSR', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
-  { id: 'm_monkey', name: '爆速タイピング猿', emoji: '🐒', cap: 'シェイクスピアは書けない。', r: 'SSR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
-  { id: 'm_trend', name: 'トレンド入りの瞬間', emoji: '📈', cap: '気づけば世界のトレンド。', r: 'UR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'", "'tap'"] },
-  { id: 'm_zen', name: 'ゆっくり回る悟り', emoji: '🧘', cap: '右に回ると心が整う。', r: 'UR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'", "'cw'"] },
+  { id: 'stardust', name: '恐竜絶滅の隕石', emoji: '☄️', cap: '全部ここから始まった。',       r: 'UR', shape: 'star', c: ['#ffffff', '#9fd8ff', '#6a5cff'], styles: ['slow', 'tap'] },
+  { id: 'm_pien', name: '三葉虫', emoji: '🪲', cap: '恐竜より前の大先輩。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
+  { id: 'm_natsu', name: 'アンモナイト', emoji: '🐚', cap: '渦巻きは永遠のロマン。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
+  { id: 'm_paw', name: 'コンプソグナトゥス', emoji: '🐔', cap: 'ニワトリくらいの大きさ。', r: 'N', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
+  { id: 'm_dash', name: 'ガリミムス', emoji: '🦃', cap: 'ダチョウ型。時速60km。', r: 'N', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
+  { id: 'm_dog', name: 'パキケファロサウルス', emoji: '🐏', cap: '石頭で頭突き。', r: 'R', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_robo', name: 'パラサウロロフス', emoji: '🎺', cap: 'トサカがトランペット。', r: 'R', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_crab', name: 'エドモントニア', emoji: '🛡️', cap: '横にトゲだらけ。', r: 'R', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
+  { id: 'm_elev', name: 'プテラノドン', emoji: '🦅', cap: '空から縦に急降下。', r: 'R', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
+  { id: 'm_deli', name: 'ディロフォサウルス', emoji: '🦎', cap: '二つトサカの俊足。', r: 'R', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
+  { id: 'm_coffee', name: 'カルノタウルス', emoji: '🐂', cap: '牛みたいな角の肉食竜。', r: 'SR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_slot', name: 'ケントロサウルス', emoji: '🦏', cap: '鼻先にも背中にもトゲ。', r: 'SR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_hero', name: 'ガストニア', emoji: '🛡️', cap: '全身トゲトゲの鎧。', r: 'SR', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
+  { id: 'm_enter', name: 'ミクロラプトル', emoji: '🦆', cap: '翼が4枚の小型竜。', r: 'SR', shape: 'round', c: ['#ffd0e4', '#ff7fb0', '#c0306f'], styles: ["'tap'"] },
+  { id: 'm_nap', name: 'ムタブラサウルス', emoji: '😴', cap: '寝顔がかわいい…はず。', r: 'SR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'"] },
+  { id: 'm_loop', name: 'モササウルス', emoji: '🦈', cap: '海の王者。ぐるぐる泳ぐ。', r: 'SSR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_time', name: 'リードシクティス', emoji: '🐟', cap: '史上最大の魚。', r: 'SSR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_ladder', name: 'セイスモサウルス', emoji: '🪜', cap: '地震竜。縦に長い。', r: 'SSR', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
+  { id: 'm_monkey', name: 'ディノケイルス・ダッシュ', emoji: '💨', cap: '爆速で発掘現場を駆け抜ける。', r: 'SSR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
+  { id: 'm_trend', name: 'ジュラシック大噴火', emoji: '🌋', cap: '恐竜たちが一斉に目覚めた。', r: 'UR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'", "'tap'"] },
+  { id: 'm_zen', name: '生きた恐竜', emoji: '🐔', cap: '実はニワトリが子孫。', r: 'UR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'", "'cw'"] },
 ];
 const GEM_BY_ID = Object.fromEntries(GEMS.map((g) => [g.id, g]));
 
 function hintFor(g) {
-  if (!g.styles.length) return 'どんな磨き方でも出会える、ふつうの石。';
-  return g.styles.map((k) => STYLE_HINT[k]).join(' ＋ ') + '磨くと出やすい';
+  if (!g.styles.length) return 'どんな掘り方でも出会える、ふつうの化石。';
+  return g.styles.map((k) => STYLE_HINT[k]).join(' ＋ ') + '掘ると出やすい';
 }
 
 /* ============================================================
-   磨き方の解析（純粋関数）
+   掘り方の解析（純粋関数）
    points: [{x,y,t,s}]  x,y は水晶玉の半径を1とした座標、t はms、s はストローク番号
 ============================================================ */
 const SAMPLE_STEP = 0.1;   // 解析用に間引く距離（半径=1）
@@ -157,7 +157,7 @@ function matchOf(g, s) {
   return Math.min(...g.styles.map((k) => s[k] || 0));
 }
 
-// 各ミームの出やすさ。クセ付きミームは、出た後10分は重み0
+// 各恐竜の出やすさ。クセ付き恐竜は、出た後10分は重み0
 function gemWeights(scores, now, cool) {
   return GEMS.map((g) => {
     const R = RARITY[g.r];
@@ -187,7 +187,7 @@ function pickGem(scores, now, cool, rnd = Math.random) {
 }
 
 /* ============================================================
-   ミームSVG
+   恐竜SVG
 ============================================================ */
 let svgUid = 0;
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -313,8 +313,8 @@ function chime(order) {
 let lastSqueak = 0;
 function squeak() {
   const now = performance.now();
-  if (now - lastSqueak < 140) return; lastSqueak = now;
-  tone(rand(1800, 2600), 0, 0.06, 'triangle', 0.012);
+  if (now - lastSqueak < 110) return; lastSqueak = now;
+  tone(rand(130, 240), 0, 0.05, 'square', 0.025);
 }
 
 /* ============================================================
@@ -341,31 +341,36 @@ function paintMud() {
   c.globalCompositeOperation = 'source-over';
   c.clearRect(0, 0, L, L);
   c.save(); c.beginPath(); curShape.pts.forEach((q, i) => c[i ? 'lineTo' : 'moveTo'](q[0] / 100 * L, q[1] / 100 * L)); c.closePath(); c.clip();
-  const g = c.createRadialGradient(L * .38, L * .32, L * .05, L / 2, L / 2, L * .62);
-  g.addColorStop(0, '#8d6a45'); g.addColorStop(.55, '#684a2c'); g.addColorStop(1, '#3b2816');
+  const g = c.createRadialGradient(L * .38, L * .3, L * .05, L / 2, L / 2, L * .65);
+  g.addColorStop(0, '#9b9485'); g.addColorStop(.55, '#6f695d'); g.addColorStop(1, '#403c35');
   c.fillStyle = g; c.fillRect(0, 0, L, L);
-  for (let i = 0; i < 240; i++) {
-    const r = L * (.02 + rnd() * .07), dark = rnd() < .55;
-    c.fillStyle = dark ? `rgba(35,22,10,${.12 + rnd() * .2})` : `rgba(195,155,105,${.08 + rnd() * .14})`;
+  // 地層のしま
+  for (let i = 0; i < 9; i++) {
+    const y0 = L * (i / 9) + rnd() * L * .05, amp = L * (.01 + rnd() * .025), ph = rnd() * 6;
+    c.fillStyle = i % 2 ? `rgba(150,110,70,${.12 + rnd() * .12})` : `rgba(30,26,20,${.1 + rnd() * .12})`;
+    c.beginPath(); c.moveTo(0, y0);
+    for (let x = 0; x <= L; x += 8) c.lineTo(x, y0 + Math.sin(x / L * 7 + ph) * amp);
+    for (let x = L; x >= 0; x -= 8) c.lineTo(x, y0 + L * (.04 + rnd() * .01) + Math.sin(x / L * 5 + ph) * amp);
+    c.closePath(); c.fill();
+  }
+  for (let i = 0; i < 200; i++) {
+    const r = L * (.01 + rnd() * .05), dark = rnd() < .5;
+    c.fillStyle = dark ? `rgba(25,22,18,${.1 + rnd() * .2})` : `rgba(215,200,170,${.06 + rnd() * .12})`;
     c.beginPath(); c.ellipse(rnd() * L, rnd() * L, r, r * (.5 + rnd() * .6), rnd() * TAU, 0, TAU); c.fill();
   }
-  for (let i = 0; i < 14; i++) {
-    c.fillStyle = `rgba(85,115,50,${.1 + rnd() * .12})`;
-    c.beginPath(); c.ellipse(rnd() * L, rnd() * L, L * (.04 + rnd() * .06), L * (.02 + rnd() * .04), rnd() * TAU, 0, TAU); c.fill();
-  }
-  c.strokeStyle = 'rgba(25,15,6,.5)'; c.lineWidth = 1.2; c.lineCap = 'round';
-  for (let i = 0; i < 26; i++) {
+  c.strokeStyle = 'rgba(20,16,12,.65)'; c.lineWidth = 1.4; c.lineCap = 'round'; c.lineJoin = 'round';
+  for (let i = 0; i < 22; i++) {
     let x = rnd() * L, y = rnd() * L; c.beginPath(); c.moveTo(x, y);
-    for (let k = 0; k < 6; k++) { x += (rnd() - .5) * L * .12; y += (rnd() - .5) * L * .12; c.lineTo(x, y); }
+    for (let k = 0; k < 7; k++) { x += (rnd() - .5) * L * .16; y += (rnd() - .35) * L * .1; c.lineTo(x, y); }
     c.stroke();
   }
-  for (let i = 0; i < 100; i++) {
-    const x = rnd() * L, y = rnd() * L, r = 1 + rnd() * 3.5;
-    c.fillStyle = `rgba(20,12,5,${.3 + rnd() * .3})`; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
-    c.fillStyle = 'rgba(230,200,160,.25)'; c.beginPath(); c.arc(x - r * .3, y - r * .3, r * .45, 0, TAU); c.fill();
+  for (let i = 0; i < 110; i++) {
+    const x = rnd() * L, y = rnd() * L, r = 1 + rnd() * 4;
+    c.fillStyle = `rgba(30,26,20,${.3 + rnd() * .3})`; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
+    c.fillStyle = 'rgba(235,225,200,.28)'; c.beginPath(); c.arc(x - r * .3, y - r * .3, r * .45, 0, TAU); c.fill();
   }
-  const v = c.createRadialGradient(L / 2, L / 2, L * .36, L / 2, L / 2, L * .52);
-  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.5)');
+  const v = c.createRadialGradient(L / 2, L / 2, L * .36, L / 2, L / 2, L * .55);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.45)');
   c.fillStyle = v; c.fillRect(0, 0, L, L);
   c.restore();
 }
@@ -424,7 +429,7 @@ let lastMeasure = 0;
 
 function setProgress(p) {
   el.bar.style.width = (p * 100).toFixed(1) + '%';
-  const m = p <= 0 ? `${curShape.name}の水晶をなぞって磨こう` : p < .3 ? 'キュッ キュッ…' : p < .6 ? 'いい感じ…！' : p < .85 ? '中に何かある…！' : 'もうすぐ…！！';
+  const m = p <= 0 ? `${curShape.name}の岩をハンマーでほりほり` : p < .3 ? 'コツ コツ…' : p < .6 ? 'いい感じ…！' : p < .85 ? '中に何かある…！' : 'もうすぐ…！！';
   if (el.msg.textContent !== m) el.msg.textContent = m;
 }
 
@@ -442,7 +447,7 @@ function feed(p, e) {
   const R = L / 2, q = { x: (p.x - R) / R, y: (p.y - R) / R, t: p.t, s: strokeId };
   if (!lastS || lastS.s !== strokeId || Math.hypot(q.x - lastS.x, q.y - lastS.y) >= SAMPLE_STEP) { pts.push(q); lastS = q; }
   lastP = p;
-  if (e && Math.random() < .3) { const sp = stagePos(e); fxSparkle(sp.x, sp.y); }
+  if (e && Math.random() < .45) { const sp = stagePos(e); fxChip(sp.x, sp.y); if (Math.random() < .3) fxSparkle(sp.x, sp.y); }
   if (performance.now() - lastMeasure >= 90) checkProgress();
 }
 
@@ -458,7 +463,7 @@ function checkProgress() {
 }
 setInterval(() => { if (state === 'polish' && strokeId > 0) checkProgress(); }, 200);
 
-// 途中で中身を決めて、磨いた部分の光で予告する
+// 途中で中身を決めて、掘った部分の光で予告する
 function lockGem() {
   const { scores } = analyzeStyle(pts);
   const gem = pickGem(scores, Date.now(), save.cool);
@@ -498,7 +503,7 @@ el.mud.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') 
 el.mud.addEventListener('pointerleave', () => { if (!down) pad.show = false; });
 el.mud.addEventListener('contextmenu', (e) => e.preventDefault());
 
-/* ---------- FX（キラキラ・紙吹雪・磨き布） ---------- */
+/* ---------- FX（キラキラ・紙吹雪・ハンマー） ---------- */
 const fxc = el.fx.getContext('2d');
 let fw = 0, fh = 0;
 const parts = [];
@@ -520,6 +525,10 @@ function fxBurst(x, y, color, n) {
     const a = rand(0, TAU), sp = rand(120, 460);
     parts.push({ k: Math.random() < .5 ? 'c' : 's', x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120, g: 520, age: 0, max: rand(.8, 1.7), size: rand(3, 8), rot: rand(0, TAU), vr: rand(-8, 8), color: pal[Math.floor(Math.random() * pal.length)] });
   }
+}
+function fxChip(x, y) {
+  const pal = ['#8a8372', '#a89f8a', '#5a554a', '#c9bda0', '#6b5a44'];
+  for (let i = 0; i < 2; i++) parts.push({ k: 'c', x, y, vx: rand(-110, 110), vy: rand(-220, -60), g: 800, age: 0, max: rand(.4, .8), size: rand(3, 7), rot: rand(0, TAU), vr: rand(-12, 12), color: pal[Math.floor(Math.random() * pal.length)] });
 }
 function starPath(c, x, y, r) {
   c.beginPath();
@@ -543,13 +552,17 @@ function fxLoop(t) {
   fxc.globalAlpha = 1;
   pad.a += ((pad.show && state === 'polish' ? 1 : 0) - pad.a) * Math.min(1, dt * 14);
   if (pad.a > .02) {
-    const r = brushR * (el.ball.getBoundingClientRect().width / L) * 1.0;
-    fxc.globalAlpha = pad.a * .92;
-    const g = fxc.createRadialGradient(pad.x - r * .3, pad.y - r * .35, r * .1, pad.x, pad.y, r);
-    g.addColorStop(0, '#ffffff'); g.addColorStop(.55, '#d3dae6'); g.addColorStop(1, '#8590a3');
-    fxc.fillStyle = g; fxc.beginPath(); fxc.arc(pad.x, pad.y, r, 0, TAU); fxc.fill();
-    fxc.strokeStyle = 'rgba(255,255,255,.7)'; fxc.lineWidth = 1.5; fxc.stroke();
-    fxc.globalAlpha = 1;
+    const r = brushR * (el.ball.getBoundingClientRect().width / L), s = r * 1.5;
+    const swing = down ? Math.sin(t / 60) * 0.45 : 0;
+    fxc.save(); fxc.globalAlpha = pad.a * .95; fxc.translate(pad.x, pad.y);
+    fxc.strokeStyle = 'rgba(255,255,255,.35)'; fxc.lineWidth = 1.5; fxc.setLineDash([4, 4]); fxc.beginPath(); fxc.arc(0, 0, r, 0, TAU); fxc.stroke(); fxc.setLineDash([]);
+    fxc.rotate(-0.75 + swing);
+    fxc.fillStyle = '#8b5a2b'; fxc.beginPath(); fxc.roundRect(-s * .1, s * .15, s * .2, s * 1.7, s * .08); fxc.fill();
+    fxc.strokeStyle = '#4a2c10'; fxc.lineWidth = 1.2; fxc.stroke();
+    const hg = fxc.createLinearGradient(0, -s * .3, 0, s * .3); hg.addColorStop(0, '#e6e9ef'); hg.addColorStop(.5, '#9aa3b2'); hg.addColorStop(1, '#5b6474');
+    fxc.fillStyle = hg; fxc.beginPath(); fxc.roundRect(-s * .6, -s * .3, s * 1.2, s * .6, s * .1); fxc.fill();
+    fxc.strokeStyle = '#2f3542'; fxc.stroke();
+    fxc.restore();
   }
   requestAnimationFrame(fxLoop);
 }
@@ -663,7 +676,7 @@ function showResult(gem, scores, isNew, prob) {
   $('#rCap').textContent = gem.cap;
   $('#rProb').textContent = '確率 ' + fmtPct(prob);
   const top = Object.entries(scores).filter(([, v]) => v >= .25).sort((a, b) => b[1] - a[1]).slice(0, 2);
-  el.rStyle.textContent = top.length ? '磨きのクセ：' + top.map(([k, v]) => `${STYLE_SHORT[k]} ${Math.round(v * 100)}%`).join('・') : '磨きのクセ：なし（ふつうに磨いた）';
+  el.rStyle.textContent = top.length ? '掘りのクセ：' + top.map(([k, v]) => `${STYLE_SHORT[k]} ${Math.round(v * 100)}%`).join('・') : '掘りのクセ：なし（ふつうに掘った）';
   el.hud.hidden = true; el.result.hidden = false;
   state = 'result';
   updateShareLink();
@@ -693,8 +706,8 @@ el.next.addEventListener('click', nextBall);
 function shareUrl() { return location.href.split('#')[0]; }
 function shareText() {
   const l = save.last;
-  if (!l) return '磨きガチャで遊んでる！泥だらけの水晶玉を磨いてミームを集めよう🔥 #磨きガチャ';
-  return `磨きガチャで【${l.name}】(${stars(l.r)})が出た！${l.cap ? '「' + l.cap + '」' : ''} +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%） 🔥 #磨きガチャ`;
+  if (!l) return '恐竜ほりほりで遊んでる！ハンマーで岩を掘って恐竜を集めよう🦖 #恐竜ほりほり';
+  return `恐竜ほりほりで【${l.name}】(${stars(l.r)})を掘り当てた！${l.cap ? '「' + l.cap + '」' : ''} +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%） 🦖 #恐竜ほりほり`;
 }
 function toast(msg) {
   el.toast.textContent = msg; el.toast.classList.add('show');
@@ -716,7 +729,7 @@ async function makeShareImage() {
   const glow = x.createRadialGradient(W / 2, 430, 20, W / 2, 430, 330);
   glow.addColorStop(0, col + 'cc'); glow.addColorStop(1, col + '00'); x.fillStyle = glow; x.fillRect(0, 60, W, 740);
   x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillStyle = '#ffe9a8'; x.font = `900 60px ${font}`; x.fillText('磨きガチャ', W / 2, 90);
+  x.fillStyle = '#ffe9a8'; x.font = `900 60px ${font}`; x.fillText('恐竜ほりほり', W / 2, 90);
   if (g) {
     const svg = gemSVG(g).replace('<svg viewBox', '<svg width="512" height="512" viewBox');
     const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
@@ -730,7 +743,7 @@ async function makeShareImage() {
     x.fillStyle = '#d9d2ff'; x.font = `700 40px ${font}`; x.fillText(g.cap || '', W / 2, 898, 980);
     x.fillStyle = '#ffe9a8'; x.font = `800 56px ${font}`; x.fillText(`+${fmt(l.score)} pt`, W / 2, 965);
   } else {
-    x.fillStyle = '#fff'; x.font = `900 84px ${font}`; x.fillText('泥の水晶玉を磨いて', W / 2, 420); x.fillText('ミームを集めよう', W / 2, 530);
+    x.fillStyle = '#fff'; x.font = `900 84px ${font}`; x.fillText('ハンマーで岩を掘って', W / 2, 420); x.fillText('恐竜を集めよう', W / 2, 530);
   }
   x.fillStyle = '#cfc8f5'; x.font = `700 38px ${font}`;
   x.fillText(`TOTAL ${fmt(save.total)} pt　／　図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%）`, W / 2, 1035);
@@ -821,7 +834,7 @@ const bestOrder = () => GEMS.reduce((m, g) => (save.counts[g.id] > 0 ? Math.max(
 function myScoreDoc() { return { total: save.total, dex: ownedCount(), best: bestOrder(), polished: save.polished, updated: Date.now() }; }
 function pushScore() {
   if (!rankDb || !myId || canWrite === false || save.polished < 1) return;
-  const ref = rankDb.doc('scores/' + myId);
+  const ref = rankDb.doc('dino_scores/' + myId);
   pushChain = pushChain.then(() => ref.set(myScoreDoc())).catch(() => {});
 }
 async function renderRank() {
@@ -841,7 +854,7 @@ async function renderRank() {
     const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = rank;
     const img = document.createElement('img'); img.alt = ''; if (p && p.avatarUrl) img.src = p.avatarUrl;
     const who = document.createElement('div'); who.className = 'who';
-    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (p && p.name) || (isMe ? 'あなた' : '名無しの磨き人');
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (p && p.name) || (isMe ? 'あなた' : '名無しの発掘隊');
     if (isMe) { const y = document.createElement('i'); y.className = 'you'; y.textContent = 'YOU'; y.style.fontStyle = 'normal'; nm.appendChild(y); }
     const sub = document.createElement('span'); sub.className = 'sub';
     sub.textContent = rankTab === 'dex' ? `${fmt(r.total)}pt ・ 最高 ${r.best >= 0 ? RARITY_KEYS[4 - r.best] : '-'}` : `図鑑 ${r.dex}/${GEMS.length} ・ 最高 ${r.best >= 0 ? RARITY_KEYS[4 - r.best] : '-'}`;
@@ -860,9 +873,9 @@ async function initRanking() {
     canWrite = user ? await user.can('data.write') : null;
     $('#rankSec').hidden = false;
     const note = $('#rankNote');
-    note.textContent = !myId ? 'この環境ではあなたのスコアは記録されません。' : canWrite === false ? '閲覧のみの権限のため、あなたのスコアはランキングに載りません。' : '磨くたびにスコアが自動で登録されます。';
+    note.textContent = !myId ? 'この環境ではあなたのスコアは記録されません。' : canWrite === false ? '閲覧のみの権限のため、あなたのスコアはランキングに載りません。' : '掘るたびにスコアが自動で登録されます。';
     const timer = setTimeout(() => { note.textContent = 'ランキングに接続できません。しばらくしてから開き直してください。'; }, 10000);
-    db.collection('scores').limit(200).onSnapshot((snap) => {
+    db.collection('dino_scores').limit(200).onSnapshot((snap) => {
       if (!snap.metadata.fromCache) clearTimeout(timer);
       rankRows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       renderRank();
@@ -887,7 +900,7 @@ $('#resetBtn').addEventListener('click', () => {
   delete b.dataset.arm; b.textContent = 'データを消去';
   save = { total: 0, polished: 0, counts: {}, cool: {}, last: null };
   writeSave(); shownTotal = 0; renderScores(false); renderCodex();
-  if (rankDb && myId) rankDb.doc('scores/' + myId).delete().catch(() => {});
+  if (rankDb && myId) rankDb.doc('dino_scores/' + myId).delete().catch(() => {});
 });
 window.addEventListener('resize', fxResize);
 
