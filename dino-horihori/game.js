@@ -25,7 +25,7 @@ const I18N = {
     imgCopy: '画像コピー', imgSave: '画像保存', txtCopy: '文章コピー', rankTitle: 'ランキング', tabScore: 'スコア順', tabDex: '図鑑順',
     codexTitle: '恐竜図鑑', reset: 'データを消去', resetArm: '本当に消す？もう一度押すと消去', sheetTitle: 'シェア先を選ぶ',
     sheetNote: '押すと画像をコピーして開きます。投稿画面で貼り付けてね。', sheetClose: '閉じる', muteAria: 'サウンド切り替え', langBtn: 'EN',
-    msg0: (n) => `${n}の岩をハンマーでほりほり`, msg1: 'コツ コツ…', msg2: 'いい感じ…！', msg3: '中に何かある…！', msg4: 'もうすぐ…！！', msgHit: '…！',
+    msg0: (n) => `${n}をハンマーでほりほり`, msg1: 'コツ コツ…', msg2: 'いい感じ…！', msg3: '中に何かある…！', msg4: 'もうすぐ…！！', msgHit: '…！',
     h_cw: '時計まわりにぐるぐる', h_ccw: '反時計まわりにぐるぐる', h_vert: '縦にゴシゴシ', h_horiz: '横にゴシゴシ', h_slow: 'ゆっくり丁寧に', h_fast: 'すばやく', h_tap: 'こまめに指を離しながら', h_cross: '縦と横をまぜて',
     s_cw: '時計まわり', s_ccw: '反時計まわり', s_vert: '縦ゴシゴシ', s_horiz: '横ゴシゴシ', s_slow: 'ゆっくり', s_fast: 'スピード', s_tap: 'こまめ', s_cross: '縦横ミックス',
     hintNeutral: 'どんな掘り方でも出会える、ふつうの恐竜ネタ。', hintStyle: (l) => l.join(' ＋ ') + '掘ると出やすい',
@@ -48,7 +48,7 @@ const I18N = {
     imgCopy: 'Copy image', imgSave: 'Save image', txtCopy: 'Copy text', rankTitle: 'Ranking', tabScore: 'By score', tabDex: 'By dex',
     codexTitle: 'Dino Dex', reset: 'Erase data', resetArm: 'Sure? Press again to erase', sheetTitle: 'Share to…',
     sheetNote: 'Tapping copies the image, then opens the site. Paste it in your post.', sheetClose: 'Close', muteAria: 'Toggle sound', langBtn: '日本語',
-    msg0: (n) => `Tap the ${n.toLowerCase()} rock with your hammer`, msg1: 'Tap tap…', msg2: 'Looking good!', msg3: 'Something is in there…!', msg4: 'Almost there!!', msgHit: '…!',
+    msg0: (n) => `Tap the ${n.toLowerCase()} with your hammer`, msg1: 'Tap tap…', msg2: 'Looking good!', msg3: 'Something is in there…!', msg4: 'Almost there!!', msgHit: '…!',
     h_cw: 'in clockwise circles', h_ccw: 'in counter-clockwise circles', h_vert: 'in vertical strokes', h_horiz: 'in horizontal strokes', h_slow: 'slowly and carefully', h_fast: 'fast', h_tap: 'in short taps (lift your finger often)', h_cross: 'in both vertical and horizontal strokes',
     s_cw: 'Clockwise', s_ccw: 'Counter-cw', s_vert: 'Vertical', s_horiz: 'Horizontal', s_slow: 'Slow', s_fast: 'Fast', s_tap: 'Taps', s_cross: 'Cross',
     hintNeutral: 'Shows up no matter how you dig.', hintStyle: (l) => 'Likelier if you dig ' + l.join(' + '),
@@ -325,11 +325,42 @@ const SHAPES = [
   { id: 'cube', name: 'まる四角', w: 2, gen: () => param((t) => { const c = Math.cos(t), s = Math.sin(t); return [Math.sign(c) * Math.pow(Math.abs(c), .5), Math.sign(s) * Math.pow(Math.abs(s), .5)]; }) },
 ].map((s) => ({ ...s, pts: resamplePoly(fitPoly(s.gen()), 120) }));
 const SHAPE_EN = { round: 'Round', egg: 'Egg', heart: 'Heart', star: 'Star', drop: 'Drop', hex: 'Hexagon', diamond: 'Diamond', tri: 'Triangle', flower: 'Flower', cube: 'Rounded square' };
-const shapeName = (s) => (lang === 'en' ? SHAPE_EN[s.id] : s.name);
+const shapeName = (s) => (lang === 'en' ? (s.en || SHAPE_EN[s.id]) : s.name);
+// いろんな形の岩石を、そのつど自動生成する
+function roughen(poly, amp, levels) {
+  let cur = poly;
+  for (let l = 0; l < levels; l++) {
+    const out = [];
+    for (let i = 0; i < cur.length; i++) {
+      const p = cur[i], q = cur[(i + 1) % cur.length], dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy) || 1;
+      const k = (Math.random() - .5) * amp * len;
+      out.push(p, [(p[0] + q[0]) / 2 - dy / len * k, (p[1] + q[1]) / 2 + dx / len * k]);
+    }
+    cur = out;
+  }
+  return cur;
+}
+function blobPoly(n, jag, sx, sy) {
+  const pts = [], step = TAU / n, a0 = Math.random() * TAU;
+  for (let i = 0; i < n; i++) {
+    const a = a0 + i * step + (Math.random() - .5) * step * .7, r = 1 + (Math.random() - .5) * 2 * jag;
+    pts.push([Math.cos(a) * r * sx, Math.sin(a) * r * sy]);
+  }
+  return pts;
+}
+const ROCK_KINDS = [
+  { id: 'boulder', name: 'ごろごろ岩', en: 'Boulder', w: 3, make: () => roughen(blobPoly(10 + Math.floor(Math.random() * 4), .22, 1, .92), .1, 2) },
+  { id: 'slab', name: '平たい岩', en: 'Flat rock', w: 2, make: () => roughen(blobPoly(9 + Math.floor(Math.random() * 3), .15, 1, .58), .1, 2) },
+  { id: 'pillar', name: '縦長の岩', en: 'Tall rock', w: 2, make: () => roughen(blobPoly(9 + Math.floor(Math.random() * 3), .15, .58, 1), .1, 2) },
+  { id: 'chunk', name: 'ごつごつ岩', en: 'Jagged rock', w: 3, make: () => roughen(blobPoly(7 + Math.floor(Math.random() * 3), .3, 1, 1), .14, 2) },
+  { id: 'pebble', name: '川原の丸石', en: 'River stone', w: 1, make: () => smoothPoly(resamplePoly(blobPoly(8, .12, 1, .8), 240), 8, 2) },
+  { id: 'wedge', name: 'とがり岩', en: 'Pointed rock', w: 2, make: () => roughen([[0 + (Math.random() - .5) * .4, -1], [1 + Math.random() * .2, .7 + Math.random() * .2], [-1 - Math.random() * .2, .8 + Math.random() * .15]], .12, 3) },
+];
 function pickShape(prevId) {
-  const list = SHAPES.filter((s) => s.id !== prevId), sum = list.reduce((a, s) => a + s.w, 0);
-  let x = Math.random() * sum; for (const s of list) { x -= s.w; if (x < 0) return s; }
-  return list[0];
+  const list = ROCK_KINDS.filter((k) => k.id !== prevId), sum = list.reduce((a, k) => a + k.w, 0);
+  let x = Math.random() * sum, kind = list[0];
+  for (const k of list) { x -= k.w; if (x < 0) { kind = k; break; } }
+  return { id: kind.id, name: kind.name, en: kind.en, pts: resamplePoly(fitPoly(kind.make()), 120) };
 }
 function inPoly(x, y, p) {
   let ins = false;
@@ -429,6 +460,7 @@ function paintMud() {
   const g = c.createRadialGradient(L * .38, L * .3, L * .05, L / 2, L / 2, L * .65);
   g.addColorStop(0, '#9b9485'); g.addColorStop(.55, '#6f695d'); g.addColorStop(1, '#403c35');
   c.fillStyle = g; c.fillRect(0, 0, L, L);
+  { const cx = L * (.3 + rnd() * .2), cy = L * (.25 + rnd() * .2), n = 11; for (let i = 0; i < n; i++) { const a0 = i / n * TAU + rnd() * .3, a1 = a0 + TAU / n; c.fillStyle = rnd() < .5 ? `rgba(255,248,230,${.05 + rnd() * .1})` : `rgba(10,8,4,${.07 + rnd() * .12})`; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a0) * L * 1.2, cy + Math.sin(a0) * L * 1.2); c.lineTo(cx + Math.cos(a1) * L * 1.2, cy + Math.sin(a1) * L * 1.2); c.closePath(); c.fill(); } }
   // 地層のしま
   for (let i = 0; i < 9; i++) {
     const y0 = L * (i / 9) + rnd() * L * .05, amp = L * (.01 + rnd() * .025), ph = rnd() * 6;
@@ -602,6 +634,39 @@ el.mud.addEventListener('pointercancel', onUp);
 el.mud.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') { pad.show = true; movePad(e); } });
 el.mud.addEventListener('pointerleave', () => { if (!down) pad.show = false; });
 el.mud.addEventListener('contextmenu', (e) => e.preventDefault());
+
+
+/* ---------- 背景：地層 ---------- */
+const strataCv = $('#strata');
+function paintStrata() {
+  const r = el.stage.getBoundingClientRect(); if (!r.width) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2), W = r.width, H = r.height;
+  strataCv.width = Math.round(W * dpr); strataCv.height = Math.round(H * dpr);
+  const c = strataCv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const rnd = mulberry(7);
+  const cols = ['#5b3f28', '#8c6a43', '#b98c55', '#7b6b5b', '#a0562f', '#caa56b', '#6b4a32', '#8d7c67', '#4b3727', '#a77b4c'];
+  let y = -H * .02, i = 0;
+  while (y < H) {
+    const h = H * (.07 + rnd() * .09), col = cols[i % cols.length], amp = H * (.004 + rnd() * .012), ph = rnd() * 6, f = 2 + rnd() * 3;
+    const edge = (x) => y + Math.sin(x / W * f * TAU / 2 + ph) * amp + Math.sin(x / W * 11 + ph * 2) * amp * .35;
+    c.beginPath(); c.moveTo(0, H + 5); c.lineTo(0, edge(0));
+    for (let x = 0; x <= W; x += 6) c.lineTo(x, edge(x));
+    c.lineTo(W, H + 5); c.closePath();
+    const gr = c.createLinearGradient(0, y - amp, 0, y + h); gr.addColorStop(0, col); gr.addColorStop(1, col + 'cc');
+    c.fillStyle = gr; c.fill();
+    c.strokeStyle = 'rgba(255,240,210,.18)'; c.lineWidth = 1.2; c.beginPath();
+    for (let x = 0; x <= W; x += 6) c[x ? 'lineTo' : 'moveTo'](x, edge(x)); c.stroke();
+    for (let k = 0; k < 70; k++) {
+      const px = rnd() * W, py = edge(px) + rnd() * h, rr = .6 + rnd() * 2.2;
+      c.fillStyle = rnd() < .5 ? 'rgba(30,20,10,.28)' : 'rgba(255,235,200,.18)'; c.beginPath(); c.arc(px, py, rr, 0, TAU); c.fill();
+    }
+    if (rnd() < .5) { const px = rnd() * W, py = edge(px) + h * .5; c.fillStyle = 'rgba(245,235,215,.22)'; c.beginPath(); c.ellipse(px, py, 7 + rnd() * 6, 2.5, rnd() * 3, 0, TAU); c.fill(); c.beginPath(); c.arc(px - 8, py, 3, 0, TAU); c.arc(px + 8, py, 3, 0, TAU); c.fill(); }
+    y += h; i++;
+  }
+  const v = c.createRadialGradient(W / 2, H * .35, H * .1, W / 2, H * .45, H * .85);
+  v.addColorStop(0, 'rgba(20,12,6,0)'); v.addColorStop(1, 'rgba(20,12,6,.55)');
+  c.fillStyle = v; c.fillRect(0, 0, W, H);
+}
 
 /* ---------- FX（キラキラ・紙吹雪・ハンマー） ---------- */
 const fxc = el.fx.getContext('2d');
@@ -1010,7 +1075,7 @@ $('#resetBtn').addEventListener('click', () => {
   writeSave(); shownTotal = 0; renderScores(false); renderCodex();
   if (rankDb && myId) rankDb.doc('dino_scores/' + myId).delete().catch(() => {});
 });
-window.addEventListener('resize', fxResize);
+window.addEventListener('resize', () => { fxResize(); paintStrata(); });
 
 loadSave();
 drawMute();
@@ -1019,6 +1084,7 @@ renderScores(false);
 renderCodex();
 updateShareLink();
 fxResize();
+paintStrata();
 newBall();
 requestAnimationFrame(fxLoop);
 
