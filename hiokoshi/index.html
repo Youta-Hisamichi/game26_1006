@@ -590,13 +590,17 @@ function tone(freq, dur, vol, type) {
   o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + dur + .02);
 }
 // 判定ごとの一打の音
+const PENTA = [0, 2, 4, 7, 9];
+const noteHz = idx => 523.25 * Math.pow(2, (PENTA[idx % 5] + 12 * Math.floor(idx / 5)) / 12);
 function strokeSound(q, bad) {
   soundQ = bad ? Math.min(q, .15) : q;
   if (!ac || muted) return;
-  if (bad || q < .3) { tone(120, .09, .03, 'sawtooth'); burst(0, .08, 300, .07, 'lowpass'); }
-  else if (q < .6) { burst(0, .06, 900, .05); }
-  else if (q < .85) { tone(700, .07, .02, 'triangle'); burst(0, .05, 1800, .04); }
-  else { tone(1000 + Math.min(combo, 24) * 30, .07, .025, 'sine'); burst(0, .04, 3200, .05); }
+  if (bad || q < .3) { tone(150, .1, .045, 'triangle'); burst(0, .07, 320, .06, 'lowpass'); return; }
+  const idx = Math.min(Math.max(combo, 0), 14);      // コンボが続くほど音階を駆け上がる
+  const f = noteHz(idx);
+  if (q < .6) { tone(f / 2, .12, .05, 'triangle'); }
+  else if (q < .85) { tone(f, .16, .07, 'triangle'); tone(f * 2, .1, .02, 'sine'); }
+  else { tone(f, .2, .09, 'sine'); tone(f * 2, .16, .04, 'sine'); tone(f * 3, .1, .015, 'sine'); }
 }
 function burst(delay, dur, freq, vol, type) {
   if (!ac || muted) return;
