@@ -36,8 +36,8 @@ const STYLE_SHORT = {
 
 // shape: brilliant | emerald | round | oval | drop | heart | star | cab
 const GEMS = [
-  { id: 'quartz', name: 'コンプソグナトゥス', emoji: '🦖', img: '', cap: 'ニワトリくらいの小さな恐竜。',         r: 'N', shape: 'round',   c: ['#f6f8fc', '#cfd6e6', '#8e99b3'], styles: [], w: 55 },
-  { id: 'obsidian', name: 'プシッタコサウルス', emoji: '🦖', img: '', cap: 'オウムみたいなくちばし。',       r: 'N', shape: 'drop',    c: ['#7a7e92', '#2c2e3c', '#0c0d14'], styles: [], w: 55 },
+  { id: 'quartz', name: '恐竜の名前の意味', emoji: '📖', img: '', cap: '「恐ろしいトカゲ」という意味。',         r: 'N', shape: 'round',   c: ['#f6f8fc', '#cfd6e6', '#8e99b3'], styles: [], w: 55 },
+  { id: 'obsidian', name: '羽毛のある恐竜', emoji: '🪶', img: '', cap: 'ふわふわだった恐竜は多い。',       r: 'N', shape: 'drop',    c: ['#7a7e92', '#2c2e3c', '#0c0d14'], styles: [], w: 55 },
   { id: 'agate', name: 'カムプトサウルス', emoji: '🦖', img: '', cap: '二足歩行もできる草食竜。',         r: 'N', shape: 'cab',     c: ['#f3d9b1', '#c98f5a', '#7a4a2c'], styles: ['horiz'], deco: 'bands' },
   { id: 'fluorite', name: 'ヒプシロフォドン', emoji: '🦖', img: '', cap: 'ちょこちょこ走る小型竜。',         r: 'N', shape: 'emerald', c: ['#e0d4ff', '#8fd0c4', '#6a4fb0'], styles: ['slow'] },
   { id: 'garnet', name: 'トリケラトプス', emoji: '🦖', img: '', cap: '3本の角で突進。',   r: 'R', shape: 'brilliant', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ['cw'] },
@@ -64,31 +64,31 @@ const GEMS = [
   { id: 'opal', name: 'ティラノサウルス・レックス', emoji: '🦖', img: '', cap: '王の中の王。全身骨格を発掘！', r: 'UR', shape: 'cab', c: ['#ffffff', '#9fd8ff', '#c47aff'], grad: ['#ff9ad0', '#ffe27a', '#7affc8', '#7ab8ff', '#c47aff'], deco: 'rainbow', styles: ['cw', 'ccw'] },
   { id: 'sage', name: 'ブルハトカヤサウルス', emoji: '🦕', img: '', cap: '史上最大かもしれない巨竜。',     r: 'UR', shape: 'star', c: ['#fff2a8', '#ff5a3c', '#8a0a2a'], styles: ['cross'] },
   { id: 'stardust', name: 'パタゴティタン', emoji: '🦕', img: '', cap: 'ゆっくり歩く超巨大竜。',       r: 'UR', shape: 'star', c: ['#ffffff', '#9fd8ff', '#6a5cff'], styles: ['slow', 'tap'] },
-  { id: 'm_pien', name: 'ミクロケラトプス', emoji: '🦖', img: '', cap: '角つき恐竜の小さなご先祖。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
-  { id: 'm_natsu', name: 'レソトサウルス', emoji: '🦖', img: '', cap: '小さくてすばしっこい草食竜。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
+  { id: 'm_pien', name: 'ジュラ紀の名前の由来', emoji: '🏔️', img: '', cap: 'スイスのジュラ山脈が由来。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
+  { id: 'm_natsu', name: '恐竜の卵の殻', emoji: '🥚', img: '', cap: '意外と薄くて割れやすい。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
   { id: 'm_paw', name: 'ヘテロドントサウルス', emoji: '🦖', img: '', cap: '牙みたいな歯がある小型竜。', r: 'N', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
   { id: 'm_dash', name: 'ガリミムス', emoji: '🦖', img: '', cap: 'ダチョウ型。時速60kmで走る。', r: 'N', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
-  { id: 'm_dog', name: 'パキケファロサウルス', emoji: '🦖', img: '', cap: '石頭で頭突き。', r: 'R', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
-  { id: 'm_robo', name: 'パラサウロロフス', emoji: '🦖', img: '', cap: 'トサカがトランペットみたい。', r: 'R', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
-  { id: 'm_crab', name: 'エドモントニア', emoji: '🦖', img: '', cap: '肩のトゲが横に突き出る。', r: 'R', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
+  { id: 'm_dog', name: '琥珀の中の蚊', emoji: '🦟', img: '', cap: '映画の名シーンの発想の元。', r: 'R', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_robo', name: '恐竜のDNA', emoji: '🧬', img: '', cap: '実際には残らないと言われる。', r: 'R', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_crab', name: 'コップの水の波紋', emoji: '💧', img: '', cap: '足音が近づく名シーン。', r: 'R', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
   { id: 'm_elev', name: 'カマラサウルス', emoji: '🦕', img: '', cap: '首がぐいっと縦に伸びる。', r: 'R', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
-  { id: 'm_deli', name: 'オルニトミムス', emoji: '🦖', img: '', cap: '鳥みたいに速い。', r: 'R', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
-  { id: 'm_coffee', name: 'カルノタウルス', emoji: '🦖', img: '', cap: '牛みたいな角の肉食竜。', r: 'SR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
-  { id: 'm_slot', name: 'ケントロサウルス', emoji: '🦖', img: '', cap: '鼻先にも背中にもトゲ。', r: 'SR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
-  { id: 'm_hero', name: 'ガストニア', emoji: '🦖', img: '', cap: '全身トゲトゲの鎧。', r: 'SR', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
-  { id: 'm_enter', name: 'ミクロラプトル', emoji: '🦖', img: '', cap: '翼が4枚の小型竜。', r: 'SR', shape: 'round', c: ['#ffd0e4', '#ff7fb0', '#c0306f'], styles: ["'tap'"] },
-  { id: 'm_nap', name: 'ムタブラサウルス', emoji: '🦖', img: '', cap: '鼻がふくらんだ不思議な竜。', r: 'SR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'"] },
-  { id: 'm_loop', name: 'テリジノサウルス', emoji: '🦖', img: '', cap: '1メートルの巨大なかぎ爪。', r: 'SSR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
-  { id: 'm_time', name: 'ケラトサウルス', emoji: '🦖', img: '', cap: '鼻先に小さな角。', r: 'SSR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
-  { id: 'm_ladder', name: 'セイスモサウルス', emoji: '🦕', img: '', cap: '地震竜。縦に長い。', r: 'SSR', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
-  { id: 'm_monkey', name: 'ストルティオミムス', emoji: '🦖', img: '', cap: 'ダチョウそっくりの俊足。', r: 'SSR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
+  { id: 'm_deli', name: '最古級の恐竜化石', emoji: '🦴', img: '', cap: '約2億3000万年前の地層から。', r: 'R', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
+  { id: 'm_coffee', name: 'ティラノの視力', emoji: '👁️', img: '', cap: 'かなり目がよかった説。', r: 'SR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_slot', name: 'ティラノの咬合力', emoji: '🦷', img: '', cap: 'ワニの数倍の噛む力。', r: 'SR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_hero', name: '恐竜テーマパークの島', emoji: '🏝️', img: '', cap: '島のパークは安全…とは限らない。', r: 'SR', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
+  { id: 'm_enter', name: 'ステゴサウルスの小さな脳', emoji: '🧠', img: '', cap: '脳はクルミ大と言われる。', r: 'SR', shape: 'round', c: ['#ffd0e4', '#ff7fb0', '#c0306f'], styles: ["'tap'"] },
+  { id: 'm_nap', name: 'ブラキオの高血圧', emoji: '❤️', img: '', cap: '首が長すぎて血を送るのが大変。', r: 'SR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'"] },
+  { id: 'm_loop', name: '鳥は恐竜の子孫', emoji: '🐔', img: '', cap: 'ニワトリは今も生きる恐竜の親戚。', r: 'SSR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_time', name: '6600万年前の隕石衝突', emoji: '☄️', img: '', cap: '恐竜絶滅のきっかけと言われる。', r: 'SSR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_ladder', name: '恐竜はゆっくり消えた', emoji: '⏳', img: '', cap: '絶滅には長い時間がかかった。', r: 'SSR', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
+  { id: 'm_monkey', name: '実物大ヴェロキラプトル', emoji: '🦃', img: '', cap: '映画より七面鳥くらいの大きさ。', r: 'SSR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
   { id: 'm_trend', name: 'トロオドン', emoji: '🦖', img: '', cap: '頭がいいと言われる恐竜。', r: 'UR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'", "'tap'"] },
   { id: 'm_zen', name: 'ドレッドノータス', emoji: '🦕', img: '', cap: '「何も恐れない」名前の巨竜。', r: 'UR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'", "'cw'"] },
 ];
 const GEM_BY_ID = Object.fromEntries(GEMS.map((g) => [g.id, g]));
 
 function hintFor(g) {
-  if (!g.styles.length) return 'どんな掘り方でも出会える、ふつうの恐竜。';
+  if (!g.styles.length) return 'どんな掘り方でも出会える、ふつうの恐竜ネタ。';
   return g.styles.map((k) => STYLE_HINT[k]).join(' ＋ ') + '掘ると出やすい';
 }
 
