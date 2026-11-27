@@ -2,26 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 1人1ドキュメント（ドキュメントID = 匿名ログインのuid）。ベストスコアだけを保持する。
+    // 1人1ドキュメント（ドキュメントID = 匿名ログインのuid）。最速タイムだけを保持する。
     match /scores/{uid} {
       allow read: if true;
 
       allow create: if request.auth != null && request.auth.uid == uid && validScore(request.resource.data, uid);
 
-      // 更新はスコアが上回るときだけ
+      // 更新はタイムが縮まるときだけ
       allow update: if request.auth != null && request.auth.uid == uid
                     && validScore(request.resource.data, uid)
-                    && request.resource.data.s > resource.data.s;
+                    && request.resource.data.t < resource.data.t;
 
       allow delete: if false;
     }
 
     function validScore(d, uid) {
-      return d.keys().hasOnly(['n', 's', 't', 'a', 'd', 'u'])
-        && d.keys().hasAll(['n', 's', 't', 'a', 'd', 'u'])
+      return d.keys().hasOnly(['n', 't', 'a', 'd', 'u'])
+        && d.keys().hasAll(['n', 't', 'a', 'd', 'u'])
         && d.u == uid
         && d.n is string && d.n.size() >= 1 && d.n.size() <= 8
-        && d.s is int && d.s >= 0 && d.s <= 10000
         && (d.t is int || d.t is float) && d.t >= 2 && d.t < 100000
         && (d.a is int || d.a is float) && d.a >= 0 && d.a <= 1
         && d.d is int;
