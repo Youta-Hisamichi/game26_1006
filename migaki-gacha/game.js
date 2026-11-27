@@ -11,7 +11,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fmt = (n) => Math.round(n).toLocaleString('ja-JP');
 const rand = (a, b) => a + Math.random() * (b - a);
 
-const COOL_MS = 10 * 60 * 1000;     // 一度出た「クセ付き宝石」が眠る時間
+const COOL_MS = 10 * 60 * 1000;     // 一度出た「クセ付きミーム」が眠る時間
 const SAVE_KEY = 'migaki-gacha:v1';
 const MUTE_KEY = 'migaki-gacha:mute';
 
@@ -36,39 +36,34 @@ const STYLE_SHORT = {
 
 // shape: brilliant | emerald | round | oval | drop | heart | star | cab
 const GEMS = [
-  // ---- N
-  { id: 'quartz',   name: '石英',         r: 'N', shape: 'round',   c: ['#f6f8fc', '#cfd6e6', '#8e99b3'], styles: [], w: 110 },
-  { id: 'obsidian', name: '黒曜石',       r: 'N', shape: 'drop',    c: ['#7a7e92', '#2c2e3c', '#0c0d14'], styles: [], w: 110 },
-  { id: 'agate',    name: '瑪瑙',         r: 'N', shape: 'cab',     c: ['#f3d9b1', '#c98f5a', '#7a4a2c'], styles: ['horiz'], deco: 'bands' },
-  { id: 'fluorite', name: '蛍石',         r: 'N', shape: 'emerald', c: ['#e0d4ff', '#8fd0c4', '#6a4fb0'], styles: ['slow'] },
-  // ---- R
-  { id: 'garnet',   name: 'ガーネット',   r: 'R', shape: 'brilliant', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ['cw'] },
-  { id: 'lapis',    name: 'ラピスラズリ', r: 'R', shape: 'cab',     c: ['#6b8cf0', '#1f3a9e', '#0c1a5e'], styles: ['ccw'], deco: 'gold' },
-  { id: 'peridot',  name: 'ペリドット',   r: 'R', shape: 'round',   c: ['#eaff96', '#a8d62c', '#5e8c10'], styles: ['vert'] },
-  { id: 'citrine',  name: 'シトリン',     r: 'R', shape: 'emerald', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ['horiz'] },
-  { id: 'amethyst', name: 'アメジスト',   r: 'R', shape: 'oval',    c: ['#ebd2ff', '#a15de0', '#55208f'], styles: ['slow'] },
-  { id: 'rosequartz', name: 'ローズクォーツ', r: 'R', shape: 'heart', c: ['#ffe6f0', '#ffa6c4', '#d9608f'], styles: ['tap'] },
-  { id: 'moonstone', name: 'ムーンストーン', r: 'R', shape: 'cab',  c: ['#ffffff', '#cfe4ff', '#93b0e0'], styles: ['fast'], deco: 'sheen' },
-  // ---- SR
-  { id: 'ruby',     name: 'ルビー',       r: 'SR', shape: 'emerald', c: ['#ff7f95', '#e0112f', '#7d0016'], styles: ['cw'] },
-  { id: 'sapphire', name: 'サファイア',   r: 'SR', shape: 'brilliant', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ['ccw'] },
-  { id: 'emerald',  name: 'エメラルド',   r: 'SR', shape: 'emerald', c: ['#9dffc9', '#14b36a', '#05603a'], styles: ['vert'] },
-  { id: 'topaz',    name: 'インペリアルトパーズ', r: 'SR', shape: 'drop', c: ['#ffe2a0', '#ff9d2e', '#b3500a'], styles: ['horiz'] },
-  { id: 'tanzanite', name: 'タンザナイト', r: 'SR', shape: 'oval',  c: ['#cfc2ff', '#5a45d6', '#241a7a'], styles: ['slow'] },
-  { id: 'pinktour', name: 'ピンクトルマリン', r: 'SR', shape: 'drop', c: ['#ffc4e1', '#ff5fa6', '#a31a63'], styles: ['tap'] },
-  { id: 'aquamarine', name: 'アクアマリン', r: 'SR', shape: 'emerald', c: ['#d6fbff', '#6fdcf0', '#1a8fb0'], styles: ['fast'] },
-  // ---- SSR
-  { id: 'diamond',  name: 'ダイヤモンド', r: 'SSR', shape: 'brilliant', c: ['#ffffff', '#dff3ff', '#9bc9ee'], styles: ['fast'] },
-  { id: 'alexandrite', name: 'アレキサンドライト', r: 'SSR', shape: 'oval', c: ['#7ef0c5', '#4f7de0', '#b53cc4'], grad: ['#8ff7cf', '#4f9ae0', '#b53cc4', '#e03a5a'], styles: ['slow'] },
-  { id: 'pigeon',   name: 'ピジョンブラッド', r: 'SSR', shape: 'emerald', c: ['#ff6a82', '#c40a28', '#58000f'], styles: ['cw'] },
-  { id: 'kashmir',  name: 'カシミールブルー', r: 'SSR', shape: 'round', c: ['#86b0ff', '#1741c9', '#071a6b'], styles: ['ccw'] },
-  { id: 'demantoid', name: 'デマントイド', r: 'SSR', shape: 'brilliant', c: ['#d4ff8a', '#3cc226', '#0a6a12'], styles: ['vert'] },
-  { id: 'heliodor', name: 'ゴールデンベリル', r: 'SSR', shape: 'emerald', c: ['#fffbb8', '#ffd400', '#c28a00'], styles: ['horiz'] },
-  { id: 'padparadscha', name: 'パパラチア', r: 'SSR', shape: 'drop', c: ['#ffd8b8', '#ff7f6e', '#e0447c'], styles: ['tap'] },
-  // ---- UR
-  { id: 'opal',     name: '虹彩オパール', r: 'UR', shape: 'cab', c: ['#ffffff', '#9fd8ff', '#c47aff'], grad: ['#ff9ad0', '#ffe27a', '#7affc8', '#7ab8ff', '#c47aff'], deco: 'rainbow', styles: ['cw', 'ccw'] },
-  { id: 'sage',     name: '賢者の石',     r: 'UR', shape: 'star', c: ['#fff2a8', '#ff5a3c', '#8a0a2a'], styles: ['cross'] },
-  { id: 'stardust', name: '星の涙',       r: 'UR', shape: 'star', c: ['#ffffff', '#9fd8ff', '#6a5cff'], styles: ['slow', 'tap'] },
+  { id: 'quartz',   name: 'とりあえず草', emoji: '🌱', cap: '生やしとけば間違いない。',         r: 'N', shape: 'round',   c: ['#f6f8fc', '#cfd6e6', '#8e99b3'], styles: [], w: 110 },
+  { id: 'obsidian', name: '既読スルー', emoji: '👀', cap: '見たけど返さない。',       r: 'N', shape: 'drop',    c: ['#7a7e92', '#2c2e3c', '#0c0d14'], styles: [], w: 110 },
+  { id: 'agate',    name: 'ぬるぽ→ガッ', emoji: '🔨', cap: '条件反射でガッ。',         r: 'N', shape: 'cab',     c: ['#f3d9b1', '#c98f5a', '#7a4a2c'], styles: ['horiz'], deco: 'bands' },
+  { id: 'fluorite', name: 'ゆっくり亀', emoji: '🐢', cap: '急がば回れ、亀は偉大。',         r: 'N', shape: 'emerald', c: ['#e0d4ff', '#8fd0c4', '#6a4fb0'], styles: ['slow'] },
+  { id: 'garnet',   name: '回る寿司', emoji: '🍣', cap: '流れてくるのを待つだけの時間。',   r: 'R', shape: 'brilliant', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ['cw'] },
+  { id: 'lapis',    name: '逆再生おじさん', emoji: '⏪', cap: '巻き戻したら全部元通り。', r: 'R', shape: 'cab',     c: ['#6b8cf0', '#1f3a9e', '#0c1a5e'], styles: ['ccw'], deco: 'gold' },
+  { id: 'peridot',  name: '縦読みの民', emoji: '📜', cap: '縦に読むと本音が見える。',   r: 'R', shape: 'round',   c: ['#eaff96', '#a8d62c', '#5e8c10'], styles: ['vert'] },
+  { id: 'citrine',  name: '横揺れ猫', emoji: '🐈', cap: 'リズムに乗れていない。',     r: 'R', shape: 'emerald', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ['horiz'] },
+  { id: 'amethyst', name: 'ナマケモノ構文', emoji: '🦥', cap: 'やる気は明日出す。',   r: 'R', shape: 'oval',    c: ['#ebd2ff', '#a15de0', '#55208f'], styles: ['slow'] },
+  { id: 'rosequartz', name: 'ポチポチ連打ハムスター', emoji: '🐹', cap: '押せば出ると信じている。', r: 'R', shape: 'heart', c: ['#ffe6f0', '#ffa6c4', '#d9608f'], styles: ['tap'] },
+  { id: 'moonstone', name: '秒で完売', emoji: '⚡', cap: '気づいた時には売り切れ。', r: 'R', shape: 'cab',  c: ['#ffffff', '#cfe4ff', '#93b0e0'], styles: ['fast'], deco: 'sheen' },
+  { id: 'ruby',     name: 'ぐるぐるバット大会', emoji: '🌀', cap: 'まっすぐ歩けた者はいない。',       r: 'SR', shape: 'emerald', c: ['#ff7f95', '#e0112f', '#7d0016'], styles: ['cw'] },
+  { id: 'sapphire', name: '逆再生ダンス', emoji: '🕺', cap: '後ろ向きのほうが上手い。',   r: 'SR', shape: 'brilliant', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ['ccw'] },
+  { id: 'emerald',  name: '縦スクロール地獄', emoji: '📱', cap: '親指が止まらない。',   r: 'SR', shape: 'emerald', c: ['#9dffc9', '#14b36a', '#05603a'], styles: ['vert'] },
+  { id: 'topaz',    name: '横スワイプ事故', emoji: '👉', cap: '送るつもりのない人に送信。', r: 'SR', shape: 'drop', c: ['#ffe2a0', '#ff9d2e', '#b3500a'], styles: ['horiz'] },
+  { id: 'tanzanite', name: 'スロー再生猫', emoji: '🐈‍⬛', cap: '着地の瞬間をじっくり見る。', r: 'SR', shape: 'oval',  c: ['#cfc2ff', '#5a45d6', '#241a7a'], styles: ['slow'] },
+  { id: 'pinktour', name: '深夜のポチり', emoji: '🛒', cap: '気づいたら届いてる。', r: 'SR', shape: 'drop', c: ['#ffc4e1', '#ff5fa6', '#a31a63'], styles: ['tap'] },
+  { id: 'aquamarine', name: '早口言葉選手権', emoji: '🗣️', cap: '生麦生米生卵、噛んだ。', r: 'SR', shape: 'emerald', c: ['#d6fbff', '#6fdcf0', '#1a8fb0'], styles: ['fast'] },
+  { id: 'diamond',  name: '光速の既読', emoji: '💨', cap: '送信前に既読がついた。', r: 'SSR', shape: 'brilliant', c: ['#ffffff', '#dff3ff', '#9bc9ee'], styles: ['fast'] },
+  { id: 'alexandrite', name: '三時間待ちの行列', emoji: '🥱', cap: '並んだ時点で勝ち。', r: 'SSR', shape: 'oval', c: ['#7ef0c5', '#4f7de0', '#b53cc4'], grad: ['#8ff7cf', '#4f9ae0', '#b53cc4', '#e03a5a'], styles: ['slow'] },
+  { id: 'pigeon',   name: 'ドヤ顔ダブルピース', emoji: '😎', cap: '理由はないが誇らしい。', r: 'SSR', shape: 'emerald', c: ['#ff6a82', '#c40a28', '#58000f'], styles: ['cw'] },
+  { id: 'kashmir',  name: '反転した世界の猫', emoji: '🙃', cap: '上下逆でもかわいい。', r: 'SSR', shape: 'round', c: ['#86b0ff', '#1741c9', '#071a6b'], styles: ['ccw'] },
+  { id: 'demantoid', name: '伸びすぎた猫', emoji: '🐱', cap: '液体説、ほぼ確定。', r: 'SSR', shape: 'brilliant', c: ['#d4ff8a', '#3cc226', '#0a6a12'], styles: ['vert'] },
+  { id: 'heliodor', name: 'ワイドショー風カエル', emoji: '🐸', cap: 'コメンテーターは全員カエル。', r: 'SSR', shape: 'emerald', c: ['#fffbb8', '#ffd400', '#c28a00'], styles: ['horiz'] },
+  { id: 'padparadscha', name: 'ポチりすぎた箱の山', emoji: '📦', cap: '置き場所がない。', r: 'SSR', shape: 'drop', c: ['#ffd8b8', '#ff7f6e', '#e0447c'], styles: ['tap'] },
+  { id: 'opal',     name: '全方位バズ砲', emoji: '🌈', cap: 'どっちに回してもバズる。', r: 'UR', shape: 'cab', c: ['#ffffff', '#9fd8ff', '#c47aff'], grad: ['#ff9ad0', '#ffe27a', '#7affc8', '#7ab8ff', '#c47aff'], deco: 'rainbow', styles: ['cw', 'ccw'] },
+  { id: 'sage',     name: '大草原', emoji: '🌾', cap: '縦にも横にも草。',     r: 'UR', shape: 'star', c: ['#fff2a8', '#ff5a3c', '#8a0a2a'], styles: ['cross'] },
+  { id: 'stardust', name: '最後のひとツイート', emoji: '🌙', cap: 'おやすみの前に、もう一回だけ。',       r: 'UR', shape: 'star', c: ['#ffffff', '#9fd8ff', '#6a5cff'], styles: ['slow', 'tap'] },
 ];
 const GEM_BY_ID = Object.fromEntries(GEMS.map((g) => [g.id, g]));
 
@@ -142,7 +137,7 @@ function matchOf(g, s) {
   return Math.min(...g.styles.map((k) => s[k] || 0));
 }
 
-// 各宝石の出やすさ。クセ付き宝石は、出た後10分は重み0
+// 各ミームの出やすさ。クセ付きミームは、出た後10分は重み0
 function gemWeights(scores, now, cool) {
   return GEMS.map((g) => {
     const R = RARITY[g.r];
@@ -172,7 +167,7 @@ function pickGem(scores, now, cool, rnd = Math.random) {
 }
 
 /* ============================================================
-   宝石SVG
+   ミームSVG
 ============================================================ */
 let svgUid = 0;
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -184,85 +179,19 @@ const facetEl = (poly, s) => s >= 0
   : `<polygon points="${ptsStr(poly)}" fill="#000" fill-opacity="${(-s * 0.6).toFixed(2)}" stroke="#fff" stroke-opacity=".25" stroke-width=".6" stroke-linejoin="round"/>`;
 
 function gemSVG(g) {
-  const id = 'g' + (++svgUid);
-  const stops = (g.grad || g.c);
+  const id = 'g' + (++svgUid), stops = g.grad || g.c, seal = g.r === 'SSR' || g.r === 'UR';
   const grad = `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">${stops.map((c, i) => `<stop offset="${(i / (stops.length - 1) * 100).toFixed(0)}%" stop-color="${c}"/>`).join('')}</linearGradient>`;
-  const fill = `url(#${id})`;
-  let defs = grad, body = '';
-  const rnd = mulberry([...g.id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7));
-
-  const fan = (center, ring) => ring.map((p, i) => {
-    const q = ring[(i + 1) % ring.length];
-    const mid = Math.atan2((p[1] + q[1]) / 2 - center[1], (p[0] + q[0]) / 2 - center[0]) * 180 / Math.PI;
-    return facetEl([center, p, q], shadeAt(mid));
-  }).join('');
-
-  switch (g.shape) {
-    case 'brilliant': {
-      const A = [28, 18], B = [72, 18], C = [92, 38], D = [50, 92], E = [8, 38], g1 = [38, 38], g2 = [62, 38], M = [50, 18];
-      body = `<polygon points="${ptsStr([A, B, C, D, E])}" fill="${fill}"/>`
-        + [[[E, A, g1], .2], [[A, M, g1], .55], [[M, g1, g2], .35], [[M, B, g2], .1], [[B, C, g2], -.25], [[E, g1, D], -.1], [[g1, g2, D], .3], [[g2, C, D], -.4]].map(([p, s]) => facetEl(p, s)).join('')
-        + `<polygon points="${ptsStr([A, B, C, D, E])}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1" stroke-linejoin="round"/>`;
-      break;
-    }
-    case 'emerald': {
-      const o = [[28, 8], [72, 8], [92, 26], [92, 74], [72, 92], [28, 92], [8, 74], [8, 26]];
-      const n = [[36, 24], [64, 24], [76, 36], [76, 64], [64, 76], [36, 76], [24, 64], [24, 36]];
-      const sh = [.55, .25, -.15, -.4, -.4, -.1, .15, .4];
-      body = `<polygon points="${ptsStr(o)}" fill="${fill}"/>`
-        + o.map((p, i) => { const j = (i + 1) % 8; return facetEl([p, o[j], n[j], n[i]], sh[i]); }).join('')
-        + facetEl(n, .12)
-        + `<polygon points="${ptsStr([n[0], n[1], [58, 40], [42, 40]])}" fill="#fff" fill-opacity=".28"/>`
-        + `<polygon points="${ptsStr(o)}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1" stroke-linejoin="round"/>`;
-      break;
-    }
-    case 'round': case 'oval': {
-      const sx = g.shape === 'oval' ? 0.8 : 1, N = 12;
-      const o = [], n = [];
-      for (let i = 0; i < N; i++) { o.push(polar(50, 50, 43 * sx, 43, i * 30 + 15)); n.push(polar(50, 50, 23 * sx, 23, i * 30 + 15)); }
-      body = `<polygon points="${ptsStr(o)}" fill="${fill}"/>`
-        + o.map((p, i) => { const j = (i + 1) % N; return facetEl([p, o[j], n[j], n[i]], shadeAt(i * 30 + 30)); }).join('')
-        + fan([50, 50], n)
-        + `<polygon points="${ptsStr(o)}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1" stroke-linejoin="round"/>`;
-      break;
-    }
-    case 'star': {
-      const o = [];
-      for (let i = 0; i < 16; i++) o.push(polar(50, 50, i % 2 ? 22 : 46, i % 2 ? 22 : 46, i * 22.5 - 90));
-      body = `<polygon points="${ptsStr(o)}" fill="${fill}"/>` + fan([50, 50], o)
-        + `<circle cx="50" cy="50" r="7" fill="#fff" fill-opacity=".75"/>`
-        + `<polygon points="${ptsStr(o)}" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="1" stroke-linejoin="round"/>`;
-      break;
-    }
-    case 'drop': case 'heart': {
-      const path = g.shape === 'drop'
-        ? 'M50 5 C60 26 84 42 84 64 A34 34 0 0 1 16 64 C16 42 40 26 50 5 Z'
-        : 'M50 90 C10 62 4 34 22 20 C36 10 48 20 50 30 C52 20 64 10 78 20 C96 34 90 62 50 90 Z';
-      const ring = g.shape === 'drop'
-        ? [[50, 5], [68, 32], [84, 62], [74, 88], [50, 98], [26, 88], [16, 62], [32, 32]]
-        : [[50, 30], [78, 18], [94, 44], [74, 72], [50, 90], [26, 72], [6, 44], [22, 18]];
-      defs += `<clipPath id="${id}c"><path d="${path}"/></clipPath>`;
-      body = `<path d="${path}" fill="${fill}"/><g clip-path="url(#${id}c)">${fan([50, 56], ring)}</g>`
-        + `<path d="${path}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1"/>`;
-      break;
-    }
-    case 'cab': default: {
-      defs += `<clipPath id="${id}c"><ellipse cx="50" cy="52" rx="42" ry="36"/></clipPath>`;
-      let deco = '';
-      if (g.deco === 'bands') for (let i = 1; i <= 5; i++) deco += `<ellipse cx="50" cy="52" rx="${42 - i * 7}" ry="${36 - i * 6}" fill="none" stroke="${i % 2 ? '#fff' : '#3a1c08'}" stroke-opacity=".28" stroke-width="2.4"/>`;
-      if (g.deco === 'gold') for (let i = 0; i < 26; i++) deco += `<circle cx="${rand2(rnd, 14, 86)}" cy="${rand2(rnd, 24, 80)}" r="${rand2(rnd, .6, 1.6)}" fill="#ffd36b" fill-opacity=".9"/>`;
-      if (g.deco === 'rainbow') for (let i = 0; i < 22; i++) deco += `<circle cx="${rand2(rnd, 14, 86)}" cy="${rand2(rnd, 24, 80)}" r="${rand2(rnd, 1, 3.2)}" fill="hsl(${Math.floor(rnd() * 360)} 100% 75%)" fill-opacity=".75"/>`;
-      if (g.deco === 'sheen') deco += `<ellipse cx="46" cy="56" rx="34" ry="14" fill="#9cc4ff" fill-opacity=".35" transform="rotate(-18 46 56)"/>`;
-      body = `<ellipse cx="50" cy="52" rx="42" ry="36" fill="${fill}"/><g clip-path="url(#${id}c)">${deco}`
-        + `<ellipse cx="50" cy="52" rx="42" ry="36" fill="url(#${id}s)"/></g>`
-        + `<ellipse cx="36" cy="38" rx="15" ry="7" fill="#fff" fill-opacity=".5" transform="rotate(-28 36 38)"/>`
-        + `<ellipse cx="50" cy="52" rx="42" ry="36" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="1"/>`;
-      defs += `<radialGradient id="${id}s" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></radialGradient>`;
-    }
-  }
-  // 小さなキラリ
-  const sp = (g.r === 'SSR' || g.r === 'UR') ? `<path d="M80 14 L82 22 L90 24 L82 26 L80 34 L78 26 L70 24 L78 22 Z" fill="#fff" fill-opacity=".9"/>` : '';
-  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${defs}</defs>${body}${sp}</svg>`;
+  let shape;
+  if (seal) {
+    const o = [];
+    for (let i = 0; i < 32; i++) o.push(polar(50, 50, i % 2 ? 41 : 47, i % 2 ? 41 : 47, i * 11.25));
+    shape = `<polygon points="${ptsStr(o)}" fill="url(#${id})" stroke="#fff" stroke-opacity=".7" stroke-width="1.2" stroke-linejoin="round"/>`;
+  } else shape = `<circle cx="50" cy="50" r="44" fill="url(#${id})" stroke="#fff" stroke-opacity=".6" stroke-width="1.2"/>`;
+  const sp = seal ? `<path d="M80 12 L82 20 L90 22 L82 24 L80 32 L78 24 L70 22 L78 20 Z" fill="#fff" fill-opacity=".95"/>` : '';
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${grad}</defs>${shape}`
+    + `<circle cx="50" cy="50" r="34" fill="#fff" fill-opacity=".28" stroke="#fff" stroke-opacity=".55" stroke-width=".8"/>`
+    + `<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-size="40" font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif">${g.emoji}</text>`
+    + `<ellipse cx="34" cy="26" rx="14" ry="6" fill="#fff" fill-opacity=".45" transform="rotate(-28 34 26)"/>${sp}</svg>`;
 }
 const rand2 = (rnd, a, b) => (a + rnd() * (b - a)).toFixed(1);
 
@@ -693,7 +622,7 @@ async function finish() {
   save.total += R.score;
   save.polished += 1;
   if (gem.styles.length) save.cool[gem.id] = now + COOL_MS;
-  save.last = { id: gem.id, name: gem.name, r: gem.r, score: R.score };
+  save.last = { id: gem.id, name: gem.name, r: gem.r, score: R.score, cap: gem.cap };
   writeSave();
   pushScore();
   renderScores(true);
@@ -711,6 +640,7 @@ function showResult(gem, scores, isNew, prob) {
   el.rNew.hidden = !isNew;
   el.rScore.textContent = fmt(R.score);
   $('#rStars').textContent = stars(gem.r);
+  $('#rCap').textContent = gem.cap;
   $('#rProb').textContent = '確率 ' + fmtPct(prob);
   const top = Object.entries(scores).filter(([, v]) => v >= .25).sort((a, b) => b[1] - a[1]).slice(0, 2);
   el.rStyle.textContent = top.length ? '磨きのクセ：' + top.map(([k, v]) => `${STYLE_SHORT[k]} ${Math.round(v * 100)}%`).join('・') : '磨きのクセ：なし（ふつうに磨いた）';
@@ -743,8 +673,8 @@ el.next.addEventListener('click', nextBall);
 function shareUrl() { return location.href.split('#')[0]; }
 function shareText() {
   const l = save.last;
-  if (!l) return '磨きガチャで遊んでる！泥だらけの水晶玉を磨いて宝石を集めよう💎 #磨きガチャ';
-  return `磨きガチャで【${l.name}】(${stars(l.r)})を磨き出した！ +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%） 💎 #磨きガチャ`;
+  if (!l) return '磨きガチャで遊んでる！泥だらけの水晶玉を磨いてミームを集めよう🔥 #磨きガチャ';
+  return `磨きガチャで【${l.name}】(${stars(l.r)})が出た！${l.cap ? '「' + l.cap + '」' : ''} +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%） 🔥 #磨きガチャ`;
 }
 function toast(msg) {
   el.toast.textContent = msg; el.toast.classList.add('show');
@@ -776,13 +706,14 @@ async function makeShareImage() {
     } catch (e) { /* 画像なしで続行 */ }
     URL.revokeObjectURL(url);
     x.fillStyle = col; x.font = `900 54px ${font}`; x.fillText(stars(g.r), W / 2, 745);
-    x.fillStyle = '#fff'; x.font = `900 100px ${font}`; x.fillText(g.name, W / 2, 840, 960);
-    x.fillStyle = '#ffe9a8'; x.font = `800 56px ${font}`; x.fillText(`+${fmt(l.score)} pt`, W / 2, 925);
+    x.fillStyle = '#fff'; x.font = `900 92px ${font}`; x.fillText(g.name, W / 2, 830, 980);
+    x.fillStyle = '#d9d2ff'; x.font = `700 40px ${font}`; x.fillText(g.cap || '', W / 2, 898, 980);
+    x.fillStyle = '#ffe9a8'; x.font = `800 56px ${font}`; x.fillText(`+${fmt(l.score)} pt`, W / 2, 965);
   } else {
-    x.fillStyle = '#fff'; x.font = `900 84px ${font}`; x.fillText('泥の水晶玉を磨いて', W / 2, 420); x.fillText('宝石を集めよう', W / 2, 530);
+    x.fillStyle = '#fff'; x.font = `900 84px ${font}`; x.fillText('泥の水晶玉を磨いて', W / 2, 420); x.fillText('ミームを集めよう', W / 2, 530);
   }
   x.fillStyle = '#cfc8f5'; x.font = `700 38px ${font}`;
-  x.fillText(`TOTAL ${fmt(save.total)} pt　／　図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%）`, W / 2, 1010);
+  x.fillText(`TOTAL ${fmt(save.total)} pt　／　図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%）`, W / 2, 1035);
   shareDataUrl = cv.toDataURL('image/png');
   shareBlob = await new Promise((r) => cv.toBlob(r, 'image/png'));
   $('#shareThumb').src = shareDataUrl; $('#imgSaveBtn').href = shareDataUrl;

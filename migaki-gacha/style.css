@@ -242,3 +242,6 @@ h1{
 .rank-list .val{font-weight:900;font-size:15px;color:#ffe9a8;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
 .rank-list .you{font-size:9px;font-weight:900;background:#ff4f7b;color:#fff;border-radius:5px;padding:1px 5px;margin-left:6px}
 .rank-note{font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.5}
+
+.res-cap{text-align:center;font-size:12px;color:#d9d2ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gem-slot svg{filter:drop-shadow(0 6px 10px #000a)}
