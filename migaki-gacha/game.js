@@ -152,6 +152,17 @@ function gemWeights(scores, now, cool) {
     return base * (1 + boost);
   });
 }
+function probOf(gem, scores, cool = save.cool) {
+  const ws = gemWeights(scores, Date.now(), cool), sum = ws.reduce((a, b) => a + b, 0);
+  return ws[GEMS.indexOf(gem)] / sum;
+}
+const fmtPct = (p) => { const v = p * 100; return (v >= 10 ? v.toFixed(0) : v >= 1 ? v.toFixed(1) : v.toFixed(2)) + '%'; };
+function baseRates() {
+  const zero = { cw: 0, ccw: 0, vert: 0, horiz: 0, slow: 0, fast: 0, tap: 0, cross: 0 };
+  const ws = gemWeights(zero, 0, {}), sum = ws.reduce((a, b) => a + b, 0), out = {};
+  GEMS.forEach((g, i) => { out[g.r] = (out[g.r] || 0) + ws[i] / sum; });
+  return out;
+}
 function pickGem(scores, now, cool, rnd = Math.random) {
   const ws = gemWeights(scores, now, cool);
   let sum = ws.reduce((a, b) => a + b, 0);
@@ -320,10 +331,8 @@ const mctx = el.mud.getContext('2d');
 
 let L = 300;               // 泥キャンバスの論理サイズ(px)
 let brushR = 26;
-const GRID = 40;
-let inside = [], done = [], insideCount = 0, cleared = 0;
 let state = 'polish';      // polish | reveal | result
-let locked = null;
+let locked = null, lockedProb = 0, shineTimer = 0;
 let pts = [], strokeId = 0, lastP = null, lastS = null, down = false;
 
 function paintMud() {
@@ -366,12 +375,7 @@ function newBall() {
   mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   brushR = Math.max(16, el.stage.getBoundingClientRect().width * 0.72 * 0.085);   // 磨き布の大きさは元のまま
   paintMud();
-  const cs = L / GRID;
-  inside = new Array(GRID * GRID); done = new Array(GRID * GRID).fill(0); insideCount = 0; cleared = 0;
-  for (let j = 0; j < GRID; j++) for (let i = 0; i < GRID; i++) {
-    const ok = Math.hypot((i + .5) * cs - L / 2, (j + .5) * cs - L / 2) < L / 2 * 0.95;
-    inside[j * GRID + i] = ok; if (ok) insideCount++;
-  }
+  lastMeasure = 0;
   locked = null; el.tease.className = 'tease tease-n'; el.tease.style.opacity = .2;
   pts = []; strokeId = 0; lastP = null; lastS = null; down = false;
   el.mud.classList.remove('gone'); el.mud.classList.add('fresh');
@@ -385,15 +389,25 @@ function stamp(x, y) {
   mctx.globalCompositeOperation = 'destination-out';
   mctx.fillStyle = g; mctx.beginPath(); mctx.arc(x, y, r, 0, TAU); mctx.fill();
   mctx.globalCompositeOperation = 'source-over';
-  // 進捗マーク
-  const cs = L / GRID, rr = r * 0.55;
-  const x0 = Math.max(0, Math.floor((x - rr) / cs)), x1 = Math.min(GRID - 1, Math.floor((x + rr) / cs));
-  const y0 = Math.max(0, Math.floor((y - rr) / cs)), y1 = Math.min(GRID - 1, Math.floor((y + rr) / cs));
-  for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) {
-    const k = j * GRID + i;
-    if (inside[k] && !done[k] && Math.hypot((i + .5) * cs - x, (j + .5) * cs - y) <= rr) { done[k] = 1; cleared++; }
-  }
 }
+
+// 実際に見える泥の量を、縮小コピーで測る（見た目と判定を一致させる）
+const PG = 48;
+const probeA = document.createElement('canvas'), probeB = document.createElement('canvas');
+probeA.width = probeA.height = 96; probeB.width = probeB.height = PG;
+const pa = probeA.getContext('2d', { willReadFrequently: true }), pb = probeB.getContext('2d', { willReadFrequently: true });
+const probeInside = [];
+for (let j = 0; j < PG; j++) for (let i = 0; i < PG; i++) probeInside.push(Math.hypot(i + .5 - PG / 2, j + .5 - PG / 2) < PG / 2 * 0.95);
+const probeCount = probeInside.filter(Boolean).length;
+function measureClean() {
+  pa.clearRect(0, 0, 96, 96); pa.drawImage(el.mud, 0, 0, 96, 96);
+  pb.clearRect(0, 0, PG, PG); pb.drawImage(probeA, 0, 0, PG, PG);
+  const d = pb.getImageData(0, 0, PG, PG).data;
+  let dirty = 0;
+  for (let k = 0; k < PG * PG; k++) if (probeInside[k] && d[k * 4 + 3] > 40) dirty++;
+  return 1 - dirty / probeCount;
+}
+let lastMeasure = 0;
 
 function setProgress(p) {
   el.bar.style.width = (p * 100).toFixed(1) + '%';
@@ -416,20 +430,26 @@ function feed(p, e) {
   if (!lastS || lastS.s !== strokeId || Math.hypot(q.x - lastS.x, q.y - lastS.y) >= SAMPLE_STEP) { pts.push(q); lastS = q; }
   lastP = p;
   if (e && Math.random() < .3) { const sp = stagePos(e); fxSparkle(sp.x, sp.y); }
-  const prog = cleared / insideCount;
-  setProgress(Math.min(1, prog / 0.96));
+  if (performance.now() - lastMeasure >= 90) checkProgress();
+}
+
+function checkProgress() {
+  lastMeasure = performance.now();
+  const prog = measureClean();
+  setProgress(Math.min(1, prog / 0.97));
   if (state === 'polish') {
     if (!locked && prog >= 0.3 && pts.length >= 12) lockGem();
-    el.tease.style.opacity = (0.2 + Math.min(1, prog / 0.96) * 0.8).toFixed(2);
+    el.tease.style.opacity = (0.2 + Math.min(1, prog / 0.97) * 0.8).toFixed(2);
   }
-  if (prog >= 0.96 && state === 'polish') { down = false; finish(); }
+  if (prog >= 0.97 && state === 'polish') { down = false; finish(); }
 }
+setInterval(() => { if (state === 'polish' && strokeId > 0) checkProgress(); }, 200);
 
 // 途中で中身を決めて、磨いた部分の光で予告する
 function lockGem() {
   const { scores } = analyzeStyle(pts);
   const gem = pickGem(scores, Date.now(), save.cool);
-  locked = gem;
+  locked = gem; lockedProb = probOf(gem, scores);
   const order = RARITY[gem.r].order;
   let kind = ['n', 'r', 'sr', 'ssr', 'rainbow'][order];
   if (order <= 1 && Math.random() < 0.07) kind = 'rainbow';   // たまに虹色のブラフ
@@ -478,8 +498,8 @@ function fxResize() {
 }
 function stagePos(e) { const r = el.stage.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 function movePad(e) { const p = stagePos(e); pad.x = p.x; pad.y = p.y; }
-function fxSparkle(x, y) {
-  parts.push({ k: 's', x, y, vx: rand(-30, 30), vy: rand(-70, -10), age: 0, max: rand(.4, .8), size: rand(2, 5), color: Math.random() < .5 ? '#fff' : '#ffe9a8' });
+function fxSparkle(x, y, color) {
+  parts.push({ k: 's', x, y, vx: rand(-30, 30), vy: rand(-70, -10), age: 0, max: rand(.4, .9), size: rand(2, color ? 8 : 5), color: color || (Math.random() < .5 ? '#fff' : '#ffe9a8') });
 }
 function fxBurst(x, y, color, n) {
   const pal = [color, '#fff', '#ffd36b', '#ff9ad0', '#7ab8ff'];
@@ -540,16 +560,16 @@ function renderScores(animate) {
 
 /* ---------- 図鑑 ---------- */
 function renderCodex() {
-  const now = Date.now();
+  const now = Date.now(), rates = baseRates();
   el.codex.innerHTML = RARITY_KEYS.map((rk) => {
     const list = GEMS.filter((g) => g.r === rk), have = list.filter((g) => save.counts[g.id] > 0).length;
     const cards = list.map((g) => {
       const n = save.counts[g.id] || 0, color = RARITY[g.r].color;
-      if (!n) return `<div class="card unknown ${g.r}" style="--rc:${color}">${gemSVG(g)}<span class="nm">？？？</span><span class="stars" style="opacity:.4">${stars(g.r)}</span></div>`;
+      if (!n) return `<div class="card unknown ${g.r}" style="--rc:${color}">${gemSVG(g)}<span class="nm">？？？</span><span class="rbadge" style="opacity:.5"><span class="badge ${g.r}">${g.r}</span><span class="stars">${stars(g.r)}</span></span></div>`;
       const cd = g.styles.length && (save.cool[g.id] || 0) > now ? `<span class="sleep" data-until="${save.cool[g.id]}"></span>` : '';
-      return `<div class="card known ${g.r}" style="--rc:${color}">${cd}${gemSVG(g)}<span class="nm">${g.name}</span><span class="stars">${stars(g.r)}</span><span class="meta">${fmt(RARITY[g.r].score)}pt ・ ×${n}</span><span class="hint">${hintFor(g)}</span></div>`;
+      return `<div class="card known ${g.r}" style="--rc:${color}">${cd}${gemSVG(g)}<span class="nm">${g.name}</span><span class="rbadge"><span class="badge ${g.r}">${g.r}</span><span class="stars">${stars(g.r)}</span></span><span class="meta">${fmt(RARITY[g.r].score)}pt ・ ×${n}</span><span class="hint">${hintFor(g)}</span></div>`;
     }).join('');
-    return `<div class="grp"><div class="grp-h"><span class="badge ${rk}">${rk}</span><span class="stars">${stars(rk)}</span><span>${have}/${list.length}　${fmt(RARITY[rk].score)}pt</span></div><div class="grid">${cards}</div></div>`;
+    return `<div class="grp"><div class="grp-h"><span class="badge ${rk}">${rk}</span><span class="stars">${stars(rk)}</span><span>${have}/${list.length}　${fmt(RARITY[rk].score)}pt　基本確率 ${fmtPct(rates[rk])}</span></div><div class="grid">${cards}</div></div>`;
   }).join('');
   tickSleep();
 }
@@ -571,6 +591,7 @@ async function finish() {
   const { scores } = analyzeStyle(pts);
   const now = Date.now();
   const gem = locked || pickGem(scores, now, save.cool);
+  const prob = locked ? lockedProb : probOf(gem, scores);
   const R = RARITY[gem.r];
   const isNew = !(save.counts[gem.id] > 0);
 
@@ -593,8 +614,9 @@ async function finish() {
   // 登場
   el.tease.style.opacity = 0;
   el.flash.classList.remove('go'); void el.flash.offsetWidth; el.flash.classList.add('go');
-  el.slot.innerHTML = gemSVG(gem);
+  el.slot.innerHTML = gemSVG(gem) + '<i class="glint"></i>'.repeat(4);
   el.slot.className = 'gem-slot pop';
+  startShine(R);
   el.rays.classList.add('on');
   fxBurst(cx, cy, R.color, 24 + R.order * 26);
   chime(R.order);
@@ -611,16 +633,17 @@ async function finish() {
 
   await sleep(900);
   el.slot.className = 'gem-slot idle';
-  showResult(gem, scores, isNew);
+  showResult(gem, scores, isNew, prob);
 }
 
-function showResult(gem, scores, isNew) {
+function showResult(gem, scores, isNew, prob) {
   const R = RARITY[gem.r];
   el.rBadge.textContent = gem.r; el.rBadge.className = 'badge ' + gem.r;
   el.rName.textContent = gem.name;
   el.rNew.hidden = !isNew;
   el.rScore.textContent = fmt(R.score);
   $('#rStars').textContent = stars(gem.r);
+  $('#rProb').textContent = '確率 ' + fmtPct(prob);
   const top = Object.entries(scores).filter(([, v]) => v >= .25).sort((a, b) => b[1] - a[1]).slice(0, 2);
   el.rStyle.textContent = top.length ? '磨きのクセ：' + top.map(([k, v]) => `${STYLE_SHORT[k]} ${Math.round(v * 100)}%`).join('・') : '磨きのクセ：なし（ふつうに磨いた）';
   el.hud.hidden = true; el.result.hidden = false;
@@ -629,8 +652,17 @@ function showResult(gem, scores, isNew) {
   el.next.focus({ preventScroll: true });
 }
 
+function startShine(R) {
+  clearInterval(shineTimer);
+  shineTimer = setInterval(() => {
+    const cx = fw / 2, cy = el.ball.offsetTop + el.ball.offsetHeight / 2, rr = el.ball.offsetWidth * 0.3;
+    for (let i = 0; i < 1 + R.order; i++) fxSparkle(cx + rand(-rr, rr), cy + rand(-rr, rr * .8), i % 2 ? '#fff' : R.color);
+  }, 140);
+}
+
 function nextBall() {
   if (state !== 'result') return;
+  clearInterval(shineTimer);
   el.result.hidden = true; el.hud.hidden = false;
   el.rays.classList.remove('on');
   el.slot.className = 'gem-slot'; el.slot.innerHTML = '';
