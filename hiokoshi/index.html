@@ -85,6 +85,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 .empty{color:var(--mute);padding:6cqw 0}
 .langrow{display:flex;justify-content:flex-end;margin-bottom:1cqw}
 .ib.lang{width:auto;min-width:9cqw;padding:0 2.4cqw;border-radius:5cqw;font-size:3.4cqw;font-weight:800;color:var(--ink)}
+#ovResult{background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.55),rgba(8,4,2,.82))}
 #toast{position:fixed;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
   padding:2cqw 4cqw;border-radius:3cqw;font-size:3.6cqw;opacity:0;transition:opacity .25s;pointer-events:none;
   max-width:90%;text-align:center;z-index:5}
@@ -330,6 +331,7 @@ function toLogical(e) {
   return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
 }
 cv.addEventListener('pointerdown', e => {
+  if (mode === 'ignite' && performance.now() - igniteAt > 900) { showResult(); return; }   // タップで結果へ
   if (mode !== 'ready' && mode !== 'play') return;
   e.preventDefault();
   try { cv.setPointerCapture(e.pointerId); } catch (_) {}
@@ -430,7 +432,8 @@ function ignite() {
   mode = 'ignite'; down = false; tr = null;
   tEnd = performance.now(); elapsed = (tEnd - tStart) / 1000; igniteAt = tEnd;
   boom();
-  setTimeout(showResult, 2300);
+  tier = rankIdx(elapsed); spawnFlies(6 + (8 - tier) * 5);
+  setTimeout(showResult, visitDelay());
 }
 
 // ───────── スコア ─────────
@@ -507,7 +510,8 @@ function renderCard(r) {
   gr.addColorStop(0, 'rgba(255,160,60,.55)'); gr.addColorStop(1, 'rgba(255,120,20,0)');
   g.fillStyle = gr; g.fillRect(0, 0, 600, 630);
   // 地面と板
-  g.fillStyle = '#2a1a10'; g.fillRect(0, 520, 1200, 110);
+  g.fillStyle = '#2a1a10'; g.fillRect(0, 470, 1200, 160);
+  drawVisitorsCard(g, r.ri);
   g.fillStyle = '#7a5230'; g.fillRect(90, 500, 400, 40);
   g.fillStyle = '#5a3a20'; g.fillRect(90, 540, 400, 30);
   // 棒
@@ -761,6 +765,10 @@ function updateParticles(dt) {
     if (p.age > p.life) { dust.splice(i, 1); continue; }
     p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt;
   }
+  if ((mode === 'ignite' || mode === 'result') && Math.random() < 3 * dt) {
+    const now = (performance.now() - igniteAt) / 1000;
+    for (const r of ROAST) if (visOn(r) && now > r.at + .5 && Math.random() < .5) smoke.push({ x: r.tx, y: r.ty - 8, vx: rnd(-6, 6), vy: rnd(-30, -50), age: 0, life: rnd(1, 1.8), s: 4, ph: rnd(0, 6) });
+  }
   // 炎
   if (mode === 'ignite' || mode === 'result') {
     const ia = Math.min(1, (performance.now() - igniteAt) / 900);
@@ -840,15 +848,149 @@ function drawFloaters() {
   ctx.globalAlpha = 1;
 }
 
+// ───────── 火のまわりに集まる来訪者（着火タイムのランクに応じて増える） ─────────
+let tier = 8;           // rankIdx(着火タイム)。小さいほど速い＝来訪者が豪華
+const SIL = '#160d08';
+const sil = c => { c.fillStyle = SIL; c.strokeStyle = SIL; c.shadowColor = 'rgba(255,140,50,.55)'; c.shadowBlur = 10; };
+const ell = (c, x, y, rx, ry, rot = 0) => { c.beginPath(); c.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); c.fill(); };
+const poly = (c, p) => { c.beginPath(); c.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); c.closePath(); c.fill(); };
+const limb = (c, x, y, w, h) => { c.beginPath(); c.roundRect(x - w / 2, y, w, h, w / 3); c.fill(); };
+const curve = (c, p, w) => { c.save(); c.lineCap = 'round'; c.lineJoin = 'round'; c.lineWidth = w; c.beginPath(); c.moveTo(p[0], p[1]); c.quadraticCurveTo(p[2], p[3], p[4], p[5]); c.stroke(); c.restore(); };
+const eye = (c, x, y, r) => { c.save(); c.shadowBlur = 0; c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(255,215,90,.95)'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.restore(); };
+const DRAW = {
+  rabbit(c) { ell(c, -2, -13, 15, 11); ell(c, 14, -24, 8, 8); ell(c, 11, -39, 3, 10, -.2); ell(c, 18, -38, 3, 10, .15); ell(c, -8, -7, 9, 8); ell(c, -17, -14, 4, 4); eye(c, 18, -26, 1.6); },
+  owl(c) {
+    c.fillStyle = '#2a1a10'; c.shadowBlur = 0; c.fillRect(-16, -22, 32, 22); sil(c);
+    c.translate(0, -20);
+    ell(c, 0, -22, 12, 19); ell(c, 0, -46, 12, 11); poly(c, [-10, -52, -6, -64, -2, -54]); poly(c, [10, -52, 6, -64, 2, -54]);
+    eye(c, -5, -47, 3.6); eye(c, 5, -47, 3.6);
+  },
+  deer(c) {
+    for (const x of [-24, -16, 18, 26]) limb(c, x, -40, 5, 40);
+    ell(c, 0, -52, 34, 15); poly(c, [20, -58, 30, -62, 44, -100, 34, -102]); ell(c, 46, -102, 11, 6.5, -.35); ell(c, -34, -56, 5, 3, .5);
+    c.lineWidth = 3; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(44, -106); c.lineTo(40, -134); c.moveTo(41, -122); c.lineTo(30, -128); c.moveTo(42, -112); c.lineTo(52, -126); c.stroke();
+    ell(c, 38, -108, 3, 6, -.4); eye(c, 50, -104, 1.8);
+  },
+  wolf(c) {
+    for (const x of [-22, -14, 16, 24]) limb(c, x, -26, 5, 26);
+    ell(c, 0, -34, 30, 12); ell(c, 18, -36, 14, 13); ell(c, 40, -48, 11, 8, -.2); poly(c, [46, -52, 62, -44, 46, -42]);
+    poly(c, [36, -56, 38, -68, 44, -57]); poly(c, [42, -57, 47, -67, 50, -55]); curve(c, [-28, -38, -50, -44, -56, -24], 7); eye(c, 46, -50, 1.8);
+  },
+  mammoth(c) {
+    for (const x of [-48, -24, 26, 50]) limb(c, x, -62, 22, 62);
+    ell(c, 0, -96, 72, 46); ell(c, 12, -128, 42, 30); ell(c, 62, -98, 30, 34); ell(c, 50, -100, 12, 22);
+    curve(c, [84, -84, 100, -40, 88, -12], 16);
+    c.save(); c.shadowBlur = 0; c.strokeStyle = 'rgba(215,200,160,.9)'; c.lineCap = 'round'; c.lineWidth = 6;
+    c.beginPath(); c.moveTo(78, -74); c.quadraticCurveTo(120, -64, 112, -100); c.stroke(); c.restore();
+    eye(c, 76, -106, 2.2);
+  },
+  trike(c) {
+    for (const x of [-30, -12, 26, 42]) limb(c, x, -30, 14, 30);
+    ell(c, 0, -46, 52, 28); poly(c, [-48, -52, -100, -30, -48, -34]); ell(c, 54, -66, 26, 30, -.3); ell(c, 76, -52, 24, 14);
+    poly(c, [70, -62, 104, -92, 82, -56]); poly(c, [82, -60, 116, -84, 90, -54]); poly(c, [96, -50, 110, -56, 102, -42]); eye(c, 82, -58, 2);
+  },
+  trex(c) {
+    ell(c, -6, -62, 14, 26, -.2); poly(c, [-16, -44, 6, -44, 10, -8, -8, -8]); poly(c, [-8, -8, 22, -8, 24, 0, -10, 0]);
+    ell(c, 0, -104, 34, 42, -.35); poly(c, [-20, -118, -112, -76, -112, -66, -14, -84]); ell(c, 18, -130, 14, 26, .4);
+    ell(c, 34, -152, 32, 16, .1); poly(c, [10, -148, 62, -144, 58, -132, 14, -136]); limb(c, 34, -122, 5, 16);
+    eye(c, 42, -156, 2.4);
+  },
+  brachio(c) {
+    for (const x of [-52, -26, 34, 58]) limb(c, x, -86, 20, 86);
+    ell(c, 0, -112, 70, 38); curve(c, [-60, -120, -130, -104, -150, -70], 26); curve(c, [50, -128, 96, -170, 96, -270], 26);
+    ell(c, 100, -282, 18, 11, -.2); eye(c, 108, -284, 2.2);
+  }
+};
+const VIS = [   // ri: この順位以上（数字が小さいほど上位）で登場 / at: 着火からの到着秒 / s*: 画面 / c*: シェア画像
+  { id: 'rabbit', ri: 7, at: .8, from: -1, sx: 585, sy: 764, ss: 1, cx: 515, cy: 503, cs: 0.85 },
+  { id: 'owl', ri: 6, at: 1.2, from: 1, fly: 1, sx: 175, sy: 762, ss: .9, cx: 188, cy: 503, cs: 0.6 },
+  { id: 'deer', ri: 5, at: 1.5, from: -1, sx: 85, sy: 762, ss: .9, cx: 112, cy: 503, cs: 0.7 },
+  { id: 'wolf', ri: 4, at: 2.0, from: 1, sx: 655, sy: 762, ss: .9, cx: 445, cy: 503, cs: 0.7 },
+  { id: 'mammoth', ri: 3, at: 2.4, from: -1, sx: 105, sy: 655, ss: .85, cx: 60, cy: 486, cs: 0.78 },
+  { id: 'trike', ri: 2, at: 2.8, from: -1, sx: 235, sy: 722, ss: .75, cx: 165, cy: 482, cs: 0.5 },
+  { id: 'trex', ri: 1, at: 3.2, from: 1, sx: 480, sy: 720, ss: .62, cx: 525, cy: 482, cs: 0.42 },
+  { id: 'brachio', ri: 0, at: 3.6, from: 1, sx: 595, sy: 640, ss: .85, cx: 440, cy: 478, cs: 0.5 }
+];
+const ROAST = [{ id: 'fish', ri: 6, at: .9, bx: 188, by: 796, tx: 252, ty: 716 }, { id: 'meat', ri: 5, at: 1.7, bx: 532, by: 796, tx: 468, ty: 718 }];
+const visOn = (v, tr = tier) => tr <= v.ri;
+const mixHex = (a, b, k) => `rgb(${a.map((x, i) => Math.round(lerp(x, b[i], k))).join(',')})`;
+const easeOut = k => 1 - Math.pow(1 - clamp(k, 0, 1), 3);
+const visitDelay = () => Math.max(2300, (Math.max(0, ...VIS.filter(v => visOn(v)).map(v => v.at), ...ROAST.filter(v => visOn(v)).map(v => v.at)) + 1.4) * 1000);
+
+function drawAnimal(c, id, x, y, s, dir) {
+  c.save(); c.translate(x, y); c.scale(dir * s, s); sil(c); DRAW[id](c); c.restore();
+}
+function drawVisitors() {
+  if (mode !== 'ignite' && mode !== 'result') return;
+  const now = (performance.now() - igniteAt) / 1000;
+  const list = VIS.filter(v => visOn(v) && now > v.at - 1.2).sort((a, b) => a.sy - b.sy);
+  for (const v of list) {
+    const k = easeOut((now - (v.at - 1.2)) / 1.2), moving = k < 1;
+    const x0 = v.fly ? W + 80 : (v.from < 0 ? -170 : W + 170), y0 = v.fly ? 260 : v.sy;
+    const x = lerp(x0, v.sx, k), y = lerp(y0, v.sy, k) - (moving && !v.fly ? Math.abs(Math.sin(clock * 13)) * 5 : 0) + Math.sin(clock * 1.7 + v.sx) * (moving ? 0 : 1.2);
+    const dir = moving ? (v.sx > x0 ? 1 : -1) : (v.sx < P.x ? 1 : -1);
+    drawAnimal(ctx, v.id, x, y, v.ss, dir);
+  }
+}
+function drawRoast() {
+  if (mode !== 'ignite' && mode !== 'result') return;
+  const now = (performance.now() - igniteAt) / 1000;
+  for (const r of ROAST) {
+    if (!visOn(r) || now < r.at) continue;
+    const k = easeOut((now - r.at) / .5), cook = clamp((now - r.at) / 4, 0, 1);
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = '#6b4a2b'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(r.bx, r.by); ctx.lineTo(lerp(r.bx, r.tx, k), lerp(r.by, r.ty, k)); ctx.stroke();
+    ctx.translate(lerp(r.bx, r.tx, k), lerp(r.by, r.ty, k)); ctx.rotate(Math.atan2(r.ty - r.by, r.tx - r.bx) + (r.id === 'fish' ? 0 : .3)); ctx.scale(k * 1.3, k * 1.3);
+    if (r.id === 'fish') {
+      ctx.fillStyle = mixHex([235, 160, 150], [110, 58, 26], cook); ctx.beginPath(); ctx.ellipse(10, 0, 20, 8, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(-24, -8); ctx.lineTo(-24, 8); ctx.fill();
+      ctx.fillStyle = '#1a0f08'; ctx.beginPath(); ctx.arc(24, -2, 1.6, 0, 7); ctx.fill();
+    } else {
+      ctx.fillStyle = '#e9dcc0'; ctx.beginPath(); ctx.arc(-18, -2, 3.5, 0, 7); ctx.arc(-18, 3, 3.5, 0, 7); ctx.fill(); ctx.fillRect(-18, -1.5, 12, 3);
+      ctx.fillStyle = mixHex([200, 90, 80], [96, 48, 22], cook); ctx.beginPath(); ctx.ellipse(6, 0, 17, 12, 0, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+let flies = [];
+function spawnFlies(n) { flies = Array.from({ length: n }, () => ({ x: rnd(30, 690), y: rnd(300, 740), ph: rnd(0, 6.3), sp: rnd(.5, 1.1), r: rnd(18, 60), at: rnd(.4, 3) })); }
+function drawFireflies() {
+  if (mode !== 'ignite' && mode !== 'result') return;
+  const now = (performance.now() - igniteAt) / 1000;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const f of flies) {
+    const age = now - f.at; if (age < 0) continue;
+    const a = Math.min(1, age) * (.3 + .7 * Math.abs(Math.sin(clock * f.sp * 2.2 + f.ph)));
+    const x = f.x + Math.sin(clock * f.sp + f.ph) * f.r, y = f.y + Math.cos(clock * f.sp * .7 + f.ph * 2) * f.r * .6;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 9);
+    g.addColorStop(0, `rgba(210,255,110,${a})`); g.addColorStop(.4, `rgba(170,240,80,${a * .45})`); g.addColorStop(1, 'rgba(170,240,80,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - 9, y - 9, 18, 18);
+  }
+  ctx.restore();
+}
+// シェア画像用：同じ来訪者を静止画で描く
+function drawVisitorsCard(g, tr) {
+  for (const v of VIS.filter(v => visOn(v, tr)).sort((a, b) => a.cy - b.cy)) drawAnimal(g, v.id, v.cx, v.cy, v.cs, v.cx < 290 ? 1 : -1);
+  g.save(); g.globalCompositeOperation = 'lighter';
+  for (let i = 0, n = 4 + (8 - tr) * 4; i < n; i++) {
+    const x = rnd(20, 560), y = rnd(250, 470), gr = g.createRadialGradient(x, y, 0, x, y, 12);
+    gr.addColorStop(0, 'rgba(210,255,110,.95)'); gr.addColorStop(.4, 'rgba(170,240,80,.4)'); gr.addColorStop(1, 'rgba(170,240,80,0)');
+    g.fillStyle = gr; g.fillRect(x - 12, y - 12, 24, 24);
+  }
+  g.restore();
+}
+
 function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.drawImage(bg, 0, 0);
+  drawVisitors();
   const burnt = (mode === 'ignite' || mode === 'result') ? (performance.now() - igniteAt) / 3000 : 0;
   ctx.save();
   if (shake > 0) ctx.translate(Math.sin(clock * 90) * shake * 1.5, 0);
   drawBoard(); drawSawdust(); drawGrass(burnt); drawStick();
   ctx.restore();
-  drawGlow(); drawParticles(); drawGuide(); drawFloaters();
+  drawGlow(); drawParticles(); drawRoast(); drawFireflies(); drawGuide(); drawFloaters();
 }
 
 // ───────── HUD ─────────
@@ -1098,7 +1240,7 @@ $('bLang2').onclick = toggleLang;
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 // テスト・デバッグ用
-window.__hioko = { get T() { return T; }, get mode() { return mode; }, get result() { return result; } };
+window.__hioko = { async card(ri, t) { const b = await renderCard({ t, acc: .97, combo: 20, n: 25, ri }); return await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); }, demo(n) { tier = n; spawnFlies(6 + (8 - n) * 5); igniteAt = performance.now() - 6000; mode = 'ignite'; $('ovTitle').classList.remove('on'); $('hud').classList.add('on'); }, get T() { return T; }, get mode() { return mode; }, get result() { return result; } };
 
 refreshTitle();
 applyLang();
