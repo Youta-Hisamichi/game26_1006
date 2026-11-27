@@ -159,6 +159,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
   <div id="toast"></div>
 </div>
 
+<script src="firebase-config.js"></script>
 <script>
 (() => {
 'use strict';
@@ -876,7 +877,7 @@ function frame(now) {
 //   GET  {url}/scores?limit=10 → [{n,s,t,a,d,u?}, …]（スコア降順）
 //   POST {url}/scores  {n,s,t,a} → 1人1記録のベスト更新は サーバー側で処理
 const Online = {
-  kind: null, db: null, uid: null, url: null,
+  kind: null, db: null, uid: null, url: null, fs: null, fdb: null,
   async init() {
     try {
       if (window.claude && window.claude.use) {
@@ -888,6 +889,16 @@ const Online = {
         }
       }
     } catch (e) {}
+    const cfg = window.HIOKOSHI_FIREBASE;
+    if (cfg && cfg.projectId) {            // Firebase（匿名ログイン + Firestore）
+      try {
+        const V = 'https://www.gstatic.com/firebasejs/10.14.1/';
+        const [app, auth, fs] = await Promise.all([import(V + 'firebase-app.js'), import(V + 'firebase-auth.js'), import(V + 'firebase-firestore.js')]);
+        const a = app.initializeApp(cfg);
+        const cred = await auth.signInAnonymously(auth.getAuth(a));
+        this.fs = fs; this.fdb = fs.getFirestore(a); this.uid = cred.user.uid; this.kind = 'fb'; return;
+      } catch (e) { console.warn('Firebase init failed', e); }
+    }
     const m = document.querySelector('meta[name="ranking-endpoint"]');
     const u = window.HIOKOSHI_RANK_URL || (m && m.content);
     if (u && /^https?:/.test(u)) { this.url = u.replace(/\/$/, ''); this.kind = 'rest'; }
@@ -895,6 +906,11 @@ const Online = {
   async top(n = 10) {
     if (this.kind === 'db') {
       const snap = await this.db.collection('scores').orderBy('s', 'desc').limit(n).get();
+      return snap.docs.map(d => d.data()).filter(e => e && typeof e.s === 'number');
+    }
+    if (this.kind === 'fb') {
+      const f = this.fs;
+      const snap = await f.getDocs(f.query(f.collection(this.fdb, 'scores'), f.orderBy('s', 'desc'), f.limit(n)));
       return snap.docs.map(d => d.data()).filter(e => e && typeof e.s === 'number');
     }
     if (this.kind === 'rest') {
@@ -911,6 +927,11 @@ const Online = {
       const cur = await ref.get();
       if (cur.exists && cur.data().s >= e.s) return;
       await ref.set({ n: e.n, s: e.s, t: e.t, a: e.a, d: e.d, u: this.uid });
+    } else if (this.kind === 'fb') {
+      const f = this.fs, ref = f.doc(this.fdb, 'scores', this.uid);
+      const cur = await f.getDoc(ref);
+      if (cur.exists() && cur.data().s >= e.s) return;
+      await f.setDoc(ref, { n: String(e.n).slice(0, 8), s: Math.round(e.s), t: e.t, a: e.a, d: e.d, u: this.uid });
     } else if (this.kind === 'rest') {
       const r = await fetch(this.url + '/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n: e.n, s: e.s, t: e.t, a: e.a }) });
       if (!r.ok) throw new Error('http ' + r.status);
