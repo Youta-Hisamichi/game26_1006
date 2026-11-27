@@ -48,7 +48,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 .how{background:#00000055;border:.4cqw solid var(--line);border-radius:3cqw;padding:2.4cqw;
   text-align:left;font-size:3.2cqw;line-height:1.55;margin-bottom:2.5cqw}
 .how b{color:var(--fire2)}
-.rec{display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;margin-bottom:2.5cqw}
+.rec{display:grid;grid-template-columns:repeat(2,1fr);gap:2cqw;margin-bottom:2.5cqw}
 .rec div,.stat div{background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw 1cqw}
 .rec small,.stat small{display:block;font-size:2.8cqw;color:var(--mute)}
 .rec b,.stat b{font-size:4.8cqw;font-variant-numeric:tabular-nums}
@@ -65,8 +65,6 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 #rscore{font-size:7cqw;font-weight:800;font-variant-numeric:tabular-nums}
 #newbest{display:none;color:var(--good);font-weight:900;font-size:4cqw;margin-top:1cqw}
 .stat{display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;margin:3cqw 0}
-#total{margin-bottom:1cqw;font-size:4.4cqw;color:var(--mute)}
-#total b{color:var(--ink);font-size:6cqw;font-variant-numeric:tabular-nums}
 #preview{width:100%;border-radius:2cqw;border:.4cqw solid var(--line);margin-top:2cqw;display:block}
 #nameRow{display:flex;gap:2cqw;align-items:center;margin-bottom:2cqw;font-size:3.4cqw;color:var(--mute)}
 #nameRow input{flex:1;min-width:0;background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw;color:var(--ink);font:inherit;font-size:4cqw}
@@ -116,11 +114,10 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 
   <div class="ov on" id="ovTitle"><div class="card">
     <div class="langrow"><button class="ib lang" id="bLang" aria-label="Language">EN</button></div>
-    <h1 data-h="title">火おこし<br>RTA</h1>
+    <h1 data-h="title">🔥 火おこし<br>RTA</h1>
     <div class="sub" data-i="sub">原始人になって、木の棒で火をおこせ！</div>
     <div class="how" data-h="how"></div>
     <div class="rec">
-      <div><small data-i="recTotal">トータル</small><b id="tTotal">0</b></div>
       <div><small data-i="recBest">ベスト</small><b id="tBest">-</b></div>
       <div><small data-i="recPlays">プレイ</small><b id="tPlays">0</b></div>
     </div>
@@ -150,7 +147,6 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
       <div><small data-i="sCombo">最大コンボ</small><b id="sCombo"></b></div>
       <div><small data-i="sN">こすった数</small><b id="sN"></b></div>
     </div>
-    <div id="total"><span data-i="totalLbl">トータルスコア</span> <b id="rTotal"></b></div>
     <img id="preview" alt="share image">
     <button class="btn share" id="bShare" data-i="share">📷 画像つきでシェア</button>
     <div class="two">
@@ -181,7 +177,7 @@ const $ = id => document.getElementById(id);
 
 // ───────── 記録 ─────────
 function loadRec() {
-  const d = { total: 0, best: 0, bestTime: 0, plays: 0, name: '', ranks: [], lang: '' };
+  const d = { best: 0, bestTime: 0, plays: 0, name: '', ranks: [], lang: '' };
   try { Object.assign(d, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   return d;
 }
@@ -193,11 +189,11 @@ const fmt = n => Math.round(n).toLocaleString('en-US');
 const I18N = {
   ja: {
     unit: '秒', gSt1: 'こする', gSt2: '煙', gSt3: '火種', gSt4: '着火',
-    title: '火おこし<br>RTA', sub: '原始人になって、木の棒で火をおこせ！',
+    title: '🔥 火おこし<br>RTA', sub: '原始人になって、木の棒で火をおこせ！',
     how: '画面を<b>ドラッグ</b>して棒をこする。<br><b>右下 ⇄ 左下</b>へ、<b>正確に・高速に・交互に</b>斜め下へこすり続けるほど煙が出て、早く火がつく！<br>ヨコすぎ・タテすぎ・バラバラだと熱が逃げる。',
-    recTotal: 'トータル', recBest: 'ベスト', recPlays: 'プレイ', nameLabel: 'なまえ', anon: 'ななし',
+    recBest: 'ベスト', recPlays: 'プレイ', nameLabel: 'なまえ', anon: 'ななし',
     start: 'スタート', rankBtn: '🏆 ランキング', rankSub: 'この端末のベスト10（スコア順）', back: 'もどる',
-    newBest: '🏆 ベスト更新！', sAcc: '正確さ', sCombo: '最大コンボ', sN: 'こすった数', totalLbl: 'トータルスコア',
+    newBest: '🏆 ベスト更新！', sAcc: '正確さ', sCombo: '最大コンボ', sN: 'こすった数',
     share: '📷 画像つきでシェア', again: 'もう一回', home: 'タイトル', rank2: '🏆 ランキングを見る',
     hReady: '棒を ジグザグに こすって スタート！', hIgnite: '🔥 着火！！', hStall: '斜め下へ 右・左・右・左…と 交互に！',
     h1: 'もっと速く こすれ！', h2: '煙が出てきた！', h3: 'おがくずに 火種が！', h4: 'もうすぐ着火！！',
@@ -209,17 +205,17 @@ const I18N = {
     rrankIn: 'ランキング {0}位！', rrankOut: 'ランク圏外（10位まで）', empty: 'まだ記録がありません',
     rowInfo: '{0}秒 ・ 正確さ{1}% ・ {2}',
     cardTitle: '火おこしRTA', cardStats: '正確さ {0}% / 最大コンボ {1} / {2}ストローク', tag: '#火おこしRTA',
-    shareText: '火おこしRTA 🔥 {0}秒で着火！ SCORE {1}（{2}） トータル {3} #火おこしRTA',
+    shareText: '火おこしRTA 🔥 {0}秒で着火！ SCORE {1}（{2}） #火おこしRTA',
     tWait: '画像を作っています…もう一度押してね', tSaved: '画像を保存しました。投稿に添付してね',
     tCopied: '文面をコピーしました。画像は長押し/右クリックで保存して添付してね', langBtn: 'EN', docTitle: '火おこしRTA'
   },
   en: {
     unit: 's', gSt1: 'Rub', gSt2: 'Smoke', gSt3: 'Ember', gSt4: 'Fire',
-    title: 'FIRE<br>STARTER RTA', sub: 'Be a caveman. Start a fire with a stick!',
+    title: '🔥 FIRE<br>STARTER RTA', sub: 'Be a caveman. Start a fire with a stick!',
     how: '<b>Drag</b> on the screen to rub the stick.<br>Rub <b>down-right ⇄ down-left</b> — <b>accurately, fast, alternating</b> — to make smoke and light the fire sooner!<br>Too flat, too steep, or sloppy strokes let the heat escape.',
-    recTotal: 'Total', recBest: 'Best', recPlays: 'Plays', nameLabel: 'Name', anon: 'Anon',
+    recBest: 'Best', recPlays: 'Plays', nameLabel: 'Name', anon: 'Anon',
     start: 'Start', rankBtn: '🏆 Ranking', rankSub: 'Top 10 on this device (by score)', back: 'Back',
-    newBest: '🏆 New best!', sAcc: 'Accuracy', sCombo: 'Max combo', sN: 'Strokes', totalLbl: 'Total score',
+    newBest: '🏆 New best!', sAcc: 'Accuracy', sCombo: 'Max combo', sN: 'Strokes',
     share: '📷 Share with image', again: 'Again', home: 'Title', rank2: '🏆 View ranking',
     hReady: 'Rub the stick in a zigzag to start!', hIgnite: '🔥 Ignited!!', hStall: 'Alternate down-right, down-left, down-right…',
     h1: 'Rub faster!', h2: 'Smoke is rising!', h3: 'An ember in the sawdust!', h4: 'Almost there!!',
@@ -231,7 +227,7 @@ const I18N = {
     rrankIn: 'Rank #{0}!', rrankOut: 'Not in the top 10', empty: 'No records yet',
     rowInfo: '{0}s ・ Acc {1}% ・ {2}',
     cardTitle: 'Fire Starter RTA', cardStats: 'Accuracy {0}% / Max combo {1} / {2} strokes', tag: '#FireStarterRTA',
-    shareText: 'Fire Starter RTA 🔥 Lit in {0}s! SCORE {1} ({2}) Total {3} #FireStarterRTA',
+    shareText: 'Fire Starter RTA 🔥 Lit in {0}s! SCORE {1} ({2}) #FireStarterRTA',
     tWait: 'Making the image… tap again', tSaved: 'Image saved. Attach it to your post.',
     tCopied: 'Text copied. Long-press / right-click the image to save and attach it.', langBtn: '日本語', docTitle: 'Fire Starter RTA'
   }
@@ -449,7 +445,6 @@ function renderResultText() {
   $('sAcc').textContent = Math.round(r.acc * 100) + '%';
   $('sCombo').textContent = r.combo;
   $('sN').textContent = r.n;
-  $('rTotal').textContent = fmt(r.total);
 }
 function makeCard() {
   shareBlob = null;
@@ -467,14 +462,14 @@ function showResult() {
   const acc = n ? qSum / n : 0;
   const score = calcScore(elapsed, acc);
   const isBest = score > rec.best;
-  rec.total += score; rec.plays++;
+  rec.plays++;
   if (isBest) { rec.best = score; rec.bestTime = elapsed; }
   const entry = { s: score, t: elapsed, a: acc, n: rec.name || t('anon'), d: Date.now() };
   rec.ranks = (rec.ranks || []).concat(entry).sort((a, b) => b.s - a.s || a.d - b.d);
   const pos = rec.ranks.indexOf(entry) + 1;
   rec.ranks = rec.ranks.slice(0, 10);
   saveRec();
-  result = { d: entry.d, t: elapsed, score, acc, combo: maxCombo, n, ri: rankIdx(score), pos, total: rec.total, isBest };
+  result = { d: entry.d, t: elapsed, score, acc, combo: maxCombo, n, ri: rankIdx(score), pos, isBest };
   renderResultText();
   postOnline(entry);
   $('hud').classList.remove('on'); $('combo').classList.remove('on');
@@ -531,8 +526,6 @@ function renderCard(r) {
   g.fillStyle = '#ffc84a'; g.font = `900 58px ${FONT}`; g.fillText(rankName(r.ri), 560, 435);
   g.fillStyle = '#d6bf9c'; g.font = `600 30px ${FONT}`;
   g.fillText(t('cardStats', Math.round(r.acc * 100), r.combo, r.n), 560, 495);
-  g.fillStyle = '#f6e7cf'; g.font = `800 42px ${FONT}`;
-  g.fillText('TOTAL ' + fmt(r.total), 560, 560);
   g.fillStyle = '#b79b78'; g.font = `600 28px ${FONT}`; g.textAlign = 'right';
   g.fillText(t('tag'), 1160, 595);
   return new Promise(res => c.toBlob(res, 'image/png'));
@@ -540,7 +533,7 @@ function renderCard(r) {
 
 async function doShare() {
   if (!result) return;
-  const text = t('shareText', result.t.toFixed(2), fmt(result.score), t(RANKS[result.ri][2]), fmt(result.total));
+  const text = t('shareText', result.t.toFixed(2), fmt(result.score), t(RANKS[result.ri][2]));
   const url = /^https?:/.test(location.protocol) ? location.href : '';
   if (!shareBlob) { toast(t('tWait')); return; }
   const file = new File([shareBlob], 'hiokoshi-rta.png', { type: 'image/png' });
@@ -972,7 +965,6 @@ async function postOnline(entry) {
 }
 function refreshTitle() {
   $('pname').value = rec.name || '';
-  $('tTotal').textContent = fmt(rec.total);
   $('tBest').textContent = rec.best ? fmt(rec.best) : '-';
   $('tPlays').textContent = rec.plays;
 }
