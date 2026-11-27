@@ -22,6 +22,7 @@ const RARITY = {
   SSR: { score: 1000, w: 1.6, boost: 100, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
   UR:  { score: 5000, w: 0.4, boost: 400, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
 };
+const stars = (r) => '★'.repeat(RARITY[r].order + 1);
 const RARITY_KEYS = ['UR', 'SSR', 'SR', 'R', 'N'];
 
 const STYLE_HINT = {
@@ -363,12 +364,12 @@ function newBall() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   el.mud.width = el.mud.height = Math.round(L * dpr);
   mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  brushR = L * 0.13;
+  brushR = Math.max(16, el.stage.getBoundingClientRect().width * 0.72 * 0.085);   // 磨き布の大きさは元のまま
   paintMud();
   const cs = L / GRID;
   inside = new Array(GRID * GRID); done = new Array(GRID * GRID).fill(0); insideCount = 0; cleared = 0;
   for (let j = 0; j < GRID; j++) for (let i = 0; i < GRID; i++) {
-    const ok = Math.hypot((i + .5) * cs - L / 2, (j + .5) * cs - L / 2) < L / 2 * 0.93;
+    const ok = Math.hypot((i + .5) * cs - L / 2, (j + .5) * cs - L / 2) < L / 2 * 0.95;
     inside[j * GRID + i] = ok; if (ok) insideCount++;
   }
   locked = null; el.tease.className = 'tease tease-n'; el.tease.style.opacity = .2;
@@ -385,7 +386,7 @@ function stamp(x, y) {
   mctx.fillStyle = g; mctx.beginPath(); mctx.arc(x, y, r, 0, TAU); mctx.fill();
   mctx.globalCompositeOperation = 'source-over';
   // 進捗マーク
-  const cs = L / GRID, rr = r * 0.85;
+  const cs = L / GRID, rr = r * 0.55;
   const x0 = Math.max(0, Math.floor((x - rr) / cs)), x1 = Math.min(GRID - 1, Math.floor((x + rr) / cs));
   const y0 = Math.max(0, Math.floor((y - rr) / cs)), y1 = Math.min(GRID - 1, Math.floor((y + rr) / cs));
   for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) {
@@ -416,12 +417,12 @@ function feed(p, e) {
   lastP = p;
   if (e && Math.random() < .3) { const sp = stagePos(e); fxSparkle(sp.x, sp.y); }
   const prog = cleared / insideCount;
-  setProgress(Math.min(1, prog / 0.85));
+  setProgress(Math.min(1, prog / 0.96));
   if (state === 'polish') {
     if (!locked && prog >= 0.3 && pts.length >= 12) lockGem();
-    el.tease.style.opacity = (0.2 + Math.min(1, prog / 0.85) * 0.8).toFixed(2);
+    el.tease.style.opacity = (0.2 + Math.min(1, prog / 0.96) * 0.8).toFixed(2);
   }
-  if (prog >= 0.85 && state === 'polish') { down = false; finish(); }
+  if (prog >= 0.96 && state === 'polish') { down = false; finish(); }
 }
 
 // 途中で中身を決めて、磨いた部分の光で予告する
@@ -544,11 +545,11 @@ function renderCodex() {
     const list = GEMS.filter((g) => g.r === rk), have = list.filter((g) => save.counts[g.id] > 0).length;
     const cards = list.map((g) => {
       const n = save.counts[g.id] || 0, color = RARITY[g.r].color;
-      if (!n) return `<div class="card unknown ${g.r}" style="--rc:${color}">${gemSVG(g)}<span class="nm">？？？</span><span class="meta">${g.r}</span></div>`;
+      if (!n) return `<div class="card unknown ${g.r}" style="--rc:${color}">${gemSVG(g)}<span class="nm">？？？</span><span class="stars" style="opacity:.4">${stars(g.r)}</span></div>`;
       const cd = g.styles.length && (save.cool[g.id] || 0) > now ? `<span class="sleep" data-until="${save.cool[g.id]}"></span>` : '';
-      return `<div class="card known ${g.r}" style="--rc:${color}">${cd}${gemSVG(g)}<span class="nm">${g.name}</span><span class="meta">${g.r} ・ ${fmt(RARITY[g.r].score)}pt ・ ×${n}</span><span class="hint">${hintFor(g)}</span></div>`;
+      return `<div class="card known ${g.r}" style="--rc:${color}">${cd}${gemSVG(g)}<span class="nm">${g.name}</span><span class="stars">${stars(g.r)}</span><span class="meta">${fmt(RARITY[g.r].score)}pt ・ ×${n}</span><span class="hint">${hintFor(g)}</span></div>`;
     }).join('');
-    return `<div class="grp"><div class="grp-h"><span class="badge ${rk}">${rk}</span><span>${have}/${list.length}　${fmt(RARITY[rk].score)}pt</span></div><div class="grid">${cards}</div></div>`;
+    return `<div class="grp"><div class="grp-h"><span class="badge ${rk}">${rk}</span><span class="stars">${stars(rk)}</span><span>${have}/${list.length}　${fmt(RARITY[rk].score)}pt</span></div><div class="grid">${cards}</div></div>`;
   }).join('');
   tickSleep();
 }
@@ -619,6 +620,7 @@ function showResult(gem, scores, isNew) {
   el.rName.textContent = gem.name;
   el.rNew.hidden = !isNew;
   el.rScore.textContent = fmt(R.score);
+  $('#rStars').textContent = stars(gem.r);
   const top = Object.entries(scores).filter(([, v]) => v >= .25).sort((a, b) => b[1] - a[1]).slice(0, 2);
   el.rStyle.textContent = top.length ? '磨きのクセ：' + top.map(([k, v]) => `${STYLE_SHORT[k]} ${Math.round(v * 100)}%`).join('・') : '磨きのクセ：なし（ふつうに磨いた）';
   el.hud.hidden = true; el.result.hidden = false;
@@ -642,26 +644,86 @@ function shareUrl() { return location.href.split('#')[0]; }
 function shareText() {
   const l = save.last;
   if (!l) return '磨きガチャで遊んでる！泥だらけの水晶玉を磨いて宝石を集めよう💎 #磨きガチャ';
-  return `磨きガチャで【${l.name}】(${l.r})を磨き出した！ +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length} 💎 #磨きガチャ`;
+  return `磨きガチャで【${l.name}】(${stars(l.r)})を磨き出した！ +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length} 💎 #磨きガチャ`;
 }
 function toast(msg) {
   el.toast.textContent = msg; el.toast.classList.add('show');
-  clearTimeout(toast.t); toast.t = setTimeout(() => el.toast.classList.remove('show'), 1800);
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.toast.classList.remove('show'), 2200);
 }
-const xBtn = $('#xBtn');
-function updateShareLink() { xBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText()) + '&url=' + encodeURIComponent(shareUrl()); }
+let shareBlob = null, shareDataUrl = '';
+async function makeShareImage() {
+  const W = 1080, cv = document.createElement('canvas'); cv.width = cv.height = W;
+  const x = cv.getContext('2d'), l = save.last, g = l && GEM_BY_ID[l.id];
+  const col = g ? RARITY[g.r].color : '#ffd36b', font = '"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif';
+  const bg = x.createRadialGradient(W / 2, 430, 60, W / 2, 430, 900);
+  bg.addColorStop(0, '#34267a'); bg.addColorStop(.6, '#180f3d'); bg.addColorStop(1, '#0a0720');
+  x.fillStyle = bg; x.fillRect(0, 0, W, W);
+  const rnd = mulberry(11);
+  for (let i = 0; i < 70; i++) { x.fillStyle = `rgba(255,255,255,${.2 + rnd() * .5})`; x.beginPath(); x.arc(rnd() * W, rnd() * W, 1 + rnd() * 2.2, 0, TAU); x.fill(); }
+  x.save(); x.translate(W / 2, 430); x.globalAlpha = .22; x.fillStyle = col;
+  for (let i = 0; i < 18; i++) { x.rotate(TAU / 18); x.beginPath(); x.moveTo(0, 0); x.lineTo(-60, -900); x.lineTo(60, -900); x.closePath(); x.fill(); }
+  x.restore();
+  const glow = x.createRadialGradient(W / 2, 430, 20, W / 2, 430, 330);
+  glow.addColorStop(0, col + 'cc'); glow.addColorStop(1, col + '00'); x.fillStyle = glow; x.fillRect(0, 60, W, 740);
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = '#ffe9a8'; x.font = `900 60px ${font}`; x.fillText('磨きガチャ', W / 2, 90);
+  if (g) {
+    const svg = gemSVG(g).replace('<svg viewBox', '<svg width="512" height="512" viewBox');
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    try {
+      const img = new Image(); img.src = url; await img.decode();
+      x.drawImage(img, W / 2 - 230, 200, 460, 460);
+    } catch (e) { /* 画像なしで続行 */ }
+    URL.revokeObjectURL(url);
+    x.fillStyle = col; x.font = `900 54px ${font}`; x.fillText(stars(g.r), W / 2, 745);
+    x.fillStyle = '#fff'; x.font = `900 100px ${font}`; x.fillText(g.name, W / 2, 840, 960);
+    x.fillStyle = '#ffe9a8'; x.font = `800 56px ${font}`; x.fillText(`+${fmt(l.score)} pt`, W / 2, 925);
+  } else {
+    x.fillStyle = '#fff'; x.font = `900 84px ${font}`; x.fillText('泥の水晶玉を磨いて', W / 2, 420); x.fillText('宝石を集めよう', W / 2, 530);
+  }
+  x.fillStyle = '#cfc8f5'; x.font = `700 38px ${font}`;
+  x.fillText(`TOTAL ${fmt(save.total)} pt　／　図鑑 ${ownedCount()}/${GEMS.length}`, W / 2, 1010);
+  shareDataUrl = cv.toDataURL('image/png');
+  shareBlob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+  $('#shareThumb').src = shareDataUrl; $('#imgSaveBtn').href = shareDataUrl;
+}
+function updateShareLink() {
+  const t = shareText(), u = shareUrl(), tu = t + '\n' + u;
+  $('#xBtn').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(t) + '&url=' + encodeURIComponent(u);
+  $('#lineBtn').href = 'https://line.me/R/share?text=' + encodeURIComponent(tu);
+  $('#fbBtn').href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(u) + '&quote=' + encodeURIComponent(t);
+  $('#bskyBtn').href = 'https://bsky.app/intent/compose?text=' + encodeURIComponent(tu);
+  $('#thBtn').href = 'https://www.threads.net/intent/post?text=' + encodeURIComponent(tu);
+  makeShareImage().catch(() => {});
+}
+async function copyImage() {
+  if (!shareBlob || !navigator.clipboard || !window.ClipboardItem) return false;
+  try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': shareBlob })]); return true; } catch (e) { return false; }
+}
+// 各サービスは画像を直接受け取れないので、押したときに画像をコピーしておく（投稿画面で貼り付け）
+['xBtn', 'lineBtn', 'fbBtn', 'bskyBtn', 'thBtn'].forEach((id) => {
+  $('#' + id).addEventListener('click', async () => { if (await copyImage()) toast('画像をコピーしました。投稿画面で貼り付けてね'); });
+});
+$('#imgCopyBtn').addEventListener('click', async () => toast(await copyImage() ? '画像をコピーしました' : 'この環境では画像コピーできません。「画像保存」を使ってね'));
 if (navigator.share) {
   const nb = $('#nativeBtn'); nb.hidden = false;
   nb.addEventListener('click', async () => {
-    try { await navigator.share({ text: shareText(), url: shareUrl() }); } catch (e) { /* キャンセル */ }
+    const data = { text: shareText(), url: shareUrl() };
+    try {
+      if (shareBlob) {
+        const f = new File([shareBlob], 'migaki-gacha.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [f] })) data.files = [f];
+      }
+      await navigator.share(data);
+    } catch (e) { /* キャンセル */ }
   });
 }
 $('#copyBtn').addEventListener('click', async () => {
   const txt = shareText() + '\n' + shareUrl();
-  try { await navigator.clipboard.writeText(txt); toast('コピーしました'); }
+  try { await navigator.clipboard.writeText(txt); toast('文章をコピーしました'); }
   catch (e) {
     const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast('コピーしました'); } catch (e2) { toast('コピーできませんでした'); }
+    try { document.execCommand('copy'); toast('文章をコピーしました'); } catch (e2) { toast('コピーできませんでした'); }
     ta.remove();
   }
 });
