@@ -310,6 +310,19 @@ function chime(order) {
   for (let i = 0; i < n; i++) tone(scale[Math.min(i, scale.length - 1)] * (order >= 3 ? 1 : 1), i * 0.09, 0.5, order >= 3 ? 'triangle' : 'sine', 0.06);
   if (order >= 2) tone(261.63, 0, 0.9, 'triangle', 0.05);
 }
+let strikeN = 0, lastStrike = 0;
+function pok() {
+  const a = ensureAudio(); if (!a) return;
+  const t = a.currentTime, f = (strikeN % 2 ? 430 : 310) * rand(.96, 1.04);
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = 'triangle'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * .42, t + .08);
+  g.gain.setValueAtTime(.16, t); g.gain.exponentialRampToValueAtTime(.001, t + .1);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + .11);
+  const c = a.createOscillator(), cg = a.createGain();
+  c.type = 'square'; c.frequency.setValueAtTime(1100, t); c.frequency.exponentialRampToValueAtTime(260, t + .025);
+  cg.gain.setValueAtTime(.05, t); cg.gain.exponentialRampToValueAtTime(.001, t + .03);
+  c.connect(cg).connect(a.destination); c.start(t); c.stop(t + .035);
+}
 let lastSqueak = 0;
 function squeak() {
   const now = performance.now();
@@ -442,7 +455,6 @@ function feed(p, e) {
   if (lastP) {
     const d = Math.hypot(p.x - lastP.x, p.y - lastP.y), n = Math.max(1, Math.ceil(d / (brushR * .4)));
     for (let i = 1; i <= n; i++) stamp(lastP.x + (p.x - lastP.x) * i / n, lastP.y + (p.y - lastP.y) * i / n);
-    if (d > 3) squeak();
   } else stamp(p.x, p.y);
   const R = L / 2, q = { x: (p.x - R) / R, y: (p.y - R) / R, t: p.t, s: strokeId };
   if (!lastS || lastS.s !== strokeId || Math.hypot(q.x - lastS.x, q.y - lastS.y) >= SAMPLE_STEP) { pts.push(q); lastS = q; }
@@ -474,6 +486,19 @@ function lockGem() {
   el.tease.className = 'tease tease-' + kind;
 }
 
+// ポコポコ叩くリズム：押している間、一定間隔でハンマーが振り下ろされる
+const STRIKE_MS = 125;
+function strike(now) {
+  lastStrike = now; strikeN++;
+  if (lastP) stamp(lastP.x, lastP.y);
+  fxChip(pad.x, pad.y); fxChip(pad.x, pad.y);
+  if (strikeN % 3 === 0) fxSparkle(pad.x, pad.y);
+  pad.ring = 1;
+  pok();
+  try { if (navigator.vibrate) navigator.vibrate(6); } catch (e) { /* 無視 */ }
+  if (el.shape.animate) el.shape.animate([{ transform: 'translateY(2.5px) scale(.992)' }, { transform: 'none' }], { duration: 110, easing: 'ease-out' });
+}
+
 function onDown(e) {
   if (state !== 'polish') return;
   e.preventDefault();
@@ -481,8 +506,9 @@ function onDown(e) {
   ensureAudio();
   down = true; strokeId++; lastP = null; lastS = null;
   el.prompt.classList.add('off');
-  feed(toLogical(e), e);
   pad.show = true; movePad(e);
+  feed(toLogical(e), e);
+  strike(performance.now());
 }
 function onMove(e) {
   movePad(e);
@@ -507,7 +533,7 @@ el.mud.addEventListener('contextmenu', (e) => e.preventDefault());
 const fxc = el.fx.getContext('2d');
 let fw = 0, fh = 0;
 const parts = [];
-const pad = { x: 0, y: 0, a: 0, show: false };
+const pad = { x: 0, y: 0, a: 0, show: false, ring: 0 };
 function fxResize() {
   const r = el.stage.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
   fw = r.width; fh = r.height;
@@ -539,6 +565,8 @@ let lastT = performance.now();
 function fxLoop(t) {
   const dt = Math.min(.05, (t - lastT) / 1000); lastT = t;
   fxc.clearRect(0, 0, fw, fh);
+  if (down && state === 'polish' && t - lastStrike >= STRIKE_MS) strike(t);
+  pad.ring = Math.max(0, pad.ring - dt * 7);
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i]; p.age += dt;
     if (p.age >= p.max) { parts.splice(i, 1); continue; }
@@ -553,10 +581,12 @@ function fxLoop(t) {
   pad.a += ((pad.show && state === 'polish' ? 1 : 0) - pad.a) * Math.min(1, dt * 14);
   if (pad.a > .02) {
     const r = brushR * (el.ball.getBoundingClientRect().width / L), s = r * 1.5;
-    const swing = down ? Math.sin(t / 60) * 0.45 : 0;
+    const u = Math.min(1, (t - lastStrike) / STRIKE_MS);
+    const ang = down ? -0.55 - 0.7 * Math.sin(u * Math.PI) : -0.9 - 0.08 * Math.sin(t / 300);
+    const sq = down ? 1 - 0.1 * (1 - u) * (1 - u) : 1;
     fxc.save(); fxc.globalAlpha = pad.a * .95; fxc.translate(pad.x, pad.y);
-    fxc.strokeStyle = 'rgba(255,255,255,.35)'; fxc.lineWidth = 1.5; fxc.setLineDash([4, 4]); fxc.beginPath(); fxc.arc(0, 0, r, 0, TAU); fxc.stroke(); fxc.setLineDash([]);
-    fxc.rotate(-0.75 + swing);
+    fxc.strokeStyle = `rgba(255,255,255,${.3 + pad.ring * .5})`; fxc.lineWidth = 1.5 + pad.ring * 1.5; fxc.setLineDash([4, 4]); fxc.beginPath(); fxc.arc(0, 0, r * (1 + pad.ring * .18), 0, TAU); fxc.stroke(); fxc.setLineDash([]);
+    fxc.rotate(ang); fxc.scale(sq, sq);
     fxc.fillStyle = '#8b5a2b'; fxc.beginPath(); fxc.roundRect(-s * .1, s * .15, s * .2, s * 1.7, s * .08); fxc.fill();
     fxc.strokeStyle = '#4a2c10'; fxc.lineWidth = 1.2; fxc.stroke();
     const hg = fxc.createLinearGradient(0, -s * .3, 0, s * .3); hg.addColorStop(0, '#e6e9ef'); hg.addColorStop(.5, '#9aa3b2'); hg.addColorStop(1, '#5b6474');
