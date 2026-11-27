@@ -73,7 +73,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 .tabs button.on{background:var(--fire);color:#2a1000;border-color:var(--fire2)}
 .tabs[hidden]{display:none}
 #rkStatus{color:var(--mute);font-size:3.2cqw;margin-bottom:2cqw;min-height:4cqw}
-#rrankOn{font-size:4cqw;font-weight:800;color:var(--fire2)}
+#rrankOn,#rrankAcc{font-size:4cqw;font-weight:800;color:var(--fire2)}
 .rk{list-style:none;margin:0 0 2cqw;padding:0;text-align:left}
 .rk li{display:grid;grid-template-columns:9cqw 1fr auto;gap:2cqw;align-items:baseline;padding:2cqw 2.4cqw;margin-bottom:1.2cqw;
   background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;font-size:3.8cqw}
@@ -128,6 +128,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
   <div class="ov" id="ovRank"><div class="card">
     <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
     <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
+    <div class="tabs" id="rkMetric"><button id="mtTime" data-i="mTime">速さ</button><button id="mtAcc" data-i="mAcc">正確さ</button></div>
     <div class="sub" id="rkSub"></div>
     <div id="rkStatus"></div>
     <ol class="rk" id="rkList"></ol>
@@ -139,6 +140,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
     <div id="rtime"></div>
     <div id="rrank"></div>
     <div id="rrankOn"></div>
+    <div id="rrankAcc"></div>
     <div id="newbest" data-i="newBest">🏆 ベスト更新！</div>
     <div class="stat">
       <div><small data-i="sAcc">正確さ</small><b id="sAcc"></b></div>
@@ -176,7 +178,7 @@ const $ = id => document.getElementById(id);
 
 // ───────── 記録 ─────────
 function loadRec() {
-  const d = { bestTime: 0, plays: 0, name: '', ranks: [], lang: '' };
+  const d = { bestTime: 0, plays: 0, name: '', ranks: [], accRanks: [], lang: '' };
   try { Object.assign(d, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   return d;
 }
@@ -198,6 +200,8 @@ const I18N = {
     h1: 'もっと速く こすれ！', h2: '煙が出てきた！', h3: 'おがくずに 火種が！', h4: 'もうすぐ着火！！',
     jBack: '戻し', jFlat: 'ヨコすぎ', jSteep: 'タテすぎ', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'ざつ',
     r0: '火の神', r1: '炎の達人', r2: '縄文の匠', r3: '石器時代の民', r4: 'たき火見習い', r5: 'まだ寒い',
+    mTime: '⏱ 速さ', mAcc: '🎯 正確さ', subOnA: 'みんなの正確さTOP10（1人1記録）', subLocalA: 'この端末の正確さTOP10',
+    rowInfoA: '{0}秒 ・ {1}', rrankAccIn: '正確さランキング {0}位！', rrankAccOut: '正確さランク圏外（10位まで）', rrankAccOnIn: 'オンライン正確さ {0}位！', rrankAccOnOut: 'オンライン正確さ圏外',
     tabOnline: 'オンライン', tabLocal: 'この端末', subOn: 'みんなの最速10人（1人1記録）', subLocal: 'この端末の最速10回',
     rkLoading: '読み込み中…', rkFail: 'ランキングを取得できませんでした', rkOffline: 'オンラインランキングは未接続です',
     rrankOnIn: 'オンライン {0}位！', rrankOnOut: 'オンライン圏外（10位まで）', rrankOnFail: 'オンラインには登録できませんでした', rrankOnSend: 'オンラインに登録中…',
@@ -220,6 +224,8 @@ const I18N = {
     h1: 'Rub faster!', h2: 'Smoke is rising!', h3: 'An ember in the sawdust!', h4: 'Almost there!!',
     jBack: 'Reset', jFlat: 'Too flat', jSteep: 'Too steep', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'Sloppy',
     r0: 'God of Fire', r1: 'Flame Master', r2: 'Jomon Artisan', r3: 'Stone Age Folk', r4: 'Campfire Rookie', r5: 'Still Cold',
+    mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 10 most accurate players (best each)', subLocalA: 'Top 10 most accurate runs on this device',
+    rowInfoA: '{0}s ・ {1}', rrankAccIn: 'Accuracy rank #{0}!', rrankAccOut: 'Not in the accuracy top 10', rrankAccOnIn: 'Online accuracy #{0}!', rrankAccOnOut: 'Not in the online accuracy top 10',
     tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 10 fastest players (best time each)', subLocal: 'Top 10 fastest runs on this device',
     rkLoading: 'Loading…', rkFail: 'Couldn\'t load the ranking', rkOffline: 'Online ranking is not connected',
     rrankOnIn: 'Online rank #{0}!', rrankOnOut: 'Not in the online top 10', rrankOnFail: 'Couldn\'t post to the online ranking', rrankOnSend: 'Posting to the online ranking…',
@@ -432,7 +438,9 @@ function renderResultText() {
   if (!result) return;
   const r = result;
   if (!Online.kind) $('rrankOn').textContent = '';
+  else if (!$('rrankAcc').textContent) $('rrankAcc').textContent = '';
   $('rrank').textContent = r.pos && r.pos <= 10 ? t('rrankIn', r.pos) : t('rrankOut');
+  if (!Online.kind) $('rrankAcc').textContent = r.posA && r.posA <= 10 ? t('rrankAccIn', r.posA) : t('rrankAccOut');
   $('rank').textContent = rankName(r.ri);
   $('rtime').innerHTML = r.t.toFixed(2) + '<small> ' + t('unit') + '</small>';
   $('newbest').style.display = r.isBest ? 'block' : 'none';
@@ -453,7 +461,7 @@ function makeCard() {
 function showResult() {
   if (mode !== 'ignite') return;
   mode = 'result';
-  const acc = n ? qSum / n : 0;
+  const acc = n ? Math.round(qSum / n * 10000) / 10000 : 0;
   const isBest = !rec.bestTime || elapsed < rec.bestTime;
   rec.plays++;
   if (isBest) rec.bestTime = elapsed;
@@ -461,8 +469,12 @@ function showResult() {
   rec.ranks = (rec.ranks || []).concat(entry).sort((a, b) => a.t - b.t || a.d - b.d);
   const pos = rec.ranks.indexOf(entry) + 1;
   rec.ranks = rec.ranks.slice(0, 10);
+  rec.accRanks = (rec.accRanks || []).concat(entry).sort((x, y) => y.a - x.a || x.t - y.t || x.d - y.d);
+  const posA = rec.accRanks.indexOf(entry) + 1;
+  rec.accRanks = rec.accRanks.slice(0, 10);
   saveRec();
-  result = { d: entry.d, t: elapsed, acc, combo: maxCombo, n, ri: rankIdx(elapsed), pos, isBest };
+  result = { d: entry.d, t: elapsed, acc, combo: maxCombo, n, ri: rankIdx(elapsed), pos, posA, isBest };
+  $('rrankAcc').textContent = '';
   renderResultText();
   postOnline(entry);
   $('hud').classList.remove('on'); $('combo').classList.remove('on');
@@ -878,7 +890,7 @@ function frame(now) {
 // ───────── 画面遷移 ─────────
 // オンラインランキングの窓口。claude.ai の Artifact では共有DB、それ以外は REST（下記）に接続する。
 //   REST: <meta name="ranking-endpoint" content="https://…"> か window.HIOKOSHI_RANK_URL を設定すると、
-//   GET  {url}/scores?limit=10 → [{n,t,a,d,u?}, …]（タイム昇順＝速い順）
+//   GET  {url}/scores?limit=10[&metric=acc] → [{n,t,a,d,u?}, …]（既定はタイム昇順＝速い順、metric=acc は正確さの高い順）
 //   POST {url}/scores  {n,t,a} → 1人1記録のベスト更新は サーバー側で処理
 const Online = {
   kind: null, db: null, uid: null, url: null, fs: null, fdb: null,
@@ -907,35 +919,41 @@ const Online = {
     const u = window.HIOKOSHI_RANK_URL || (m && m.content);
     if (u && /^https?:/.test(u)) { this.url = u.replace(/\/$/, ''); this.kind = 'rest'; }
   },
-  async top(n = 10) {
+  // metric: 'time'（速い順）| 'acc'（正確さの高い順、同率はタイムが速い順）
+  async top(metric = 'time', n = 10) {
+    const acc = metric === 'acc', col = acc ? 'accuracy' : 'scores', field = acc ? 'a' : 't';
+    const take = acc ? 50 : n;               // 正確さは同率の並べ替えのため多めに取る
+    let docs;
     if (this.kind === 'db') {
-      const snap = await this.db.collection('scores').orderBy('t', 'asc').limit(n).get();
-      return snap.docs.map(d => d.data()).filter(e => e && typeof e.t === 'number');
-    }
-    if (this.kind === 'fb') {
+      const snap = await this.db.collection(col).orderBy(field, acc ? 'desc' : 'asc').limit(take).get();
+      docs = snap.docs.map(d => d.data());
+    } else if (this.kind === 'fb') {
       const f = this.fs;
-      const snap = await f.getDocs(f.query(f.collection(this.fdb, 'scores'), f.orderBy('t', 'asc'), f.limit(n)));
-      return snap.docs.map(d => d.data()).filter(e => e && typeof e.t === 'number');
-    }
-    if (this.kind === 'rest') {
-      const r = await fetch(this.url + '/scores?limit=' + n);
+      const snap = await f.getDocs(f.query(f.collection(this.fdb, col), f.orderBy(field, acc ? 'desc' : 'asc'), f.limit(take)));
+      docs = snap.docs.map(d => d.data());
+    } else if (this.kind === 'rest') {
+      const r = await fetch(this.url + '/scores?limit=' + take + (acc ? '&metric=acc' : ''));
       if (!r.ok) throw new Error('http ' + r.status);
-      return (await r.json()).slice(0, n);
-    }
-    throw new Error('offline');
+      docs = await r.json();
+    } else throw new Error('offline');
+    docs = docs.filter(e => e && typeof e.t === 'number' && typeof e.a === 'number');
+    if (acc) docs.sort((x, y) => y.a - x.a || x.t - y.t);
+    return docs.slice(0, n);
   },
   async submit(e) {
     if (this.kind === 'db') {
       if (!this.uid) throw new Error('no user');
-      const ref = this.db.doc('scores/' + this.uid);
-      const cur = await ref.get();
-      if (cur.exists && cur.data().t <= e.t) return;
-      await ref.set({ n: e.n, t: e.t, a: e.a, d: e.d, u: this.uid });
+      const base = { n: e.n, t: e.t, a: e.a, d: e.d, u: this.uid };
+      const r1 = this.db.doc('scores/' + this.uid), c1 = await r1.get();
+      if (!(c1.exists && c1.data().t <= e.t)) await r1.set(base);
+      const r2 = this.db.doc('accuracy/' + this.uid), c2 = await r2.get();
+      if (!(c2.exists && c2.data().a >= e.a)) await r2.set(base);
     } else if (this.kind === 'fb') {
-      const f = this.fs, ref = f.doc(this.fdb, 'scores', this.uid);
-      const cur = await f.getDoc(ref);
-      if (cur.exists() && cur.data().t <= e.t) return;
-      await f.setDoc(ref, { n: String(e.n).slice(0, 8), t: e.t, a: e.a, d: e.d, u: this.uid });
+      const f = this.fs, base = { n: String(e.n).slice(0, 8), t: e.t, a: e.a, d: e.d, u: this.uid };
+      const r1 = f.doc(this.fdb, 'scores', this.uid), c1 = await f.getDoc(r1);
+      if (!(c1.exists() && c1.data().t <= e.t)) await f.setDoc(r1, base);
+      const r2 = f.doc(this.fdb, 'accuracy', this.uid), c2 = await f.getDoc(r2);
+      if (!(c2.exists() && c2.data().a >= e.a)) await f.setDoc(r2, base);
     } else if (this.kind === 'rest') {
       const r = await fetch(this.url + '/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n: e.n, t: e.t, a: e.a }) });
       if (!r.ok) throw new Error('http ' + r.status);
@@ -944,52 +962,60 @@ const Online = {
 };
 const isMine = (e, hl) => !!hl && ((e.u && Online.uid && e.u === Online.uid) || e.d === hl);
 
-let rankTab = 'local', rankHl = null, rankToken = 0;
-function drawRankList(list, hl) {
+let rankTab = 'local', rankMetric = 'time', rankHl = null, rankToken = 0;
+function drawRankList(list, hl, metric) {
   const ul = $('rkList'); ul.textContent = '';
   if (!list.length) { ul.innerHTML = '<div class="empty">' + t('empty') + '</div>'; return; }
   list.forEach((e, i) => {
     const li = document.createElement('li');
     if (isMine(e, hl)) li.className = 'me';
-    const d = new Date(e.d);
-    li.innerHTML = `<span class="n">${i + 1}</span><span></span><b>${Number(e.t).toFixed(2)}${t('unit')}</b>`;
+    const d = new Date(e.d), date = (d.getMonth() + 1) + '/' + d.getDate();
+    const big = metric === 'acc' ? (e.a * 100).toFixed(1) + '%' : Number(e.t).toFixed(2) + t('unit');
+    li.innerHTML = `<span class="n">${i + 1}</span><span></span><b>${big}</b>`;
     const mid = li.children[1];
     mid.textContent = String(e.n || '');
     const em = document.createElement('em');
-    em.textContent = t('rowInfo', Math.round(e.a * 100), (d.getMonth() + 1) + '/' + d.getDate());
+    em.textContent = metric === 'acc' ? t('rowInfoA', Number(e.t).toFixed(2), date) : t('rowInfo', Math.round(e.a * 100), date);
     mid.appendChild(em);
     ul.appendChild(li);
   });
 }
-async function showRank(hl, tab) {
+async function showRank(hl, tab, metric) {
   if (hl !== undefined) rankHl = hl;
   if (tab) rankTab = tab;
-  const online = !!Online.kind;
+  if (metric) rankMetric = metric;
+  const online = !!Online.kind, acc = rankMetric === 'acc';
   $('rkTabs').hidden = !online;
   if (!online) rankTab = 'local';
   $('tabOn').classList.toggle('on', rankTab === 'online');
   $('tabLocal').classList.toggle('on', rankTab === 'local');
-  $('rkSub').textContent = t(rankTab === 'online' ? 'subOn' : 'subLocal');
+  $('mtTime').classList.toggle('on', !acc);
+  $('mtAcc').classList.toggle('on', acc);
+  $('rkSub').textContent = t((rankTab === 'online' ? 'subOn' : 'subLocal') + (acc ? 'A' : ''));
   const my = ++rankToken;
-  if (rankTab === 'local') { $('rkStatus').textContent = online ? '' : t('rkOffline'); drawRankList(rec.ranks || [], rankHl); return; }
+  if (rankTab === 'local') {
+    $('rkStatus').textContent = online ? '' : t('rkOffline');
+    drawRankList(acc ? (rec.accRanks || []) : (rec.ranks || []), rankHl, rankMetric); return;
+  }
   $('rkStatus').textContent = t('rkLoading'); $('rkList').textContent = '';
   try {
-    const list = await Online.top(10);
+    const list = await Online.top(rankMetric, 10);
     if (my !== rankToken) return;
-    $('rkStatus').textContent = ''; drawRankList(list, rankHl);
+    $('rkStatus').textContent = ''; drawRankList(list, rankHl, rankMetric);
   } catch (e) { if (my === rankToken) $('rkStatus').textContent = t('rkFail'); }
 }
 // 結果画面：オンラインへ登録して順位を表示
 async function postOnline(entry) {
-  const el = $('rrankOn');
+  const el = $('rrankOn'), ea = $('rrankAcc');
   if (!Online.kind) { el.textContent = ''; return; }
   el.textContent = t('rrankOnSend');
   try {
     await Online.submit(entry);
-    const list = await Online.top(10);
+    const [lt, la] = await Promise.all([Online.top('time', 10), Online.top('acc', 10)]);
     if (!result || result.d !== entry.d) return;
-    const idx = list.findIndex(e => isMine(e, entry.d));
-    el.textContent = idx >= 0 ? t('rrankOnIn', idx + 1) : t('rrankOnOut');
+    const i1 = lt.findIndex(e => isMine(e, entry.d)), i2 = la.findIndex(e => isMine(e, entry.d));
+    el.textContent = i1 >= 0 ? t('rrankOnIn', i1 + 1) : t('rrankOnOut');
+    ea.textContent = i2 >= 0 ? t('rrankAccOnIn', i2 + 1) : t('rrankAccOnOut');
   } catch (e) { if (result && result.d === entry.d) el.textContent = t('rrankOnFail'); }
 }
 function refreshTitle() {
@@ -1012,6 +1038,8 @@ let rankFrom = 'ovTitle';
 function openRank(from, hl) { rankFrom = from; showRank(hl || null, Online.kind ? 'online' : 'local'); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
 $('bRank').onclick = () => openRank('ovTitle');
 $('bRank2').onclick = () => openRank('ovResult', result && result.d);
+$('mtTime').onclick = () => showRank(undefined, undefined, 'time');
+$('mtAcc').onclick = () => showRank(undefined, undefined, 'acc');
 $('tabOn').onclick = () => showRank(undefined, 'online');
 $('tabLocal').onclick = () => showRank(undefined, 'local');
 $('bRankBack').onclick = () => { $('ovRank').classList.remove('on'); $(rankFrom).classList.add('on'); };

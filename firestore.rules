@@ -16,6 +16,16 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // 正確さランキング用：最高正確さの記録（同じく1人1ドキュメント）
+    match /accuracy/{uid} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid && validScore(request.resource.data, uid);
+      allow update: if request.auth != null && request.auth.uid == uid
+                    && validScore(request.resource.data, uid)
+                    && request.resource.data.a > resource.data.a;
+      allow delete: if false;
+    }
+
     function validScore(d, uid) {
       return d.keys().hasOnly(['n', 't', 'a', 'd', 'u'])
         && d.keys().hasAll(['n', 't', 'a', 'd', 'u'])
