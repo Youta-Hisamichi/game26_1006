@@ -377,7 +377,7 @@ function commit(s) {
   const dt = Math.max(24, s.et - s.st);
   const v = L / dt;                                   // px/ms
   if (r < -0.35) { floatText(t('jBack'), 'rgba(200,200,200,.9)'); return; }   // 持ち替えの上向き動作
-  const accA = clamp(1 - Math.abs(r - IDEAL_R) / 0.7, 0, 1);              // 斜め下の正確さ
+  const accA = clamp(1 - Math.abs(r - IDEAL_R) / 0.75, 0, 1);              // 斜め下の正確さ
   const ratio = lastL ? Math.min(L, lastL) / Math.max(L, lastL) : 1;
   const cons = clamp((ratio - .4) / .5, 0, 1);                             // 長さの安定
   const q = accA * (0.7 + 0.3 * cons);
@@ -386,7 +386,7 @@ function commit(s) {
   const lenF = clamp(L / 90, 0.4, 1.3);
   if (q >= .5) { combo++; maxCombo = Math.max(maxCombo, combo); } else if (q < .3) combo = 0;
   const mult = 1 + Math.min(combo, 24) * 0.035;
-  const gain = 4.6 * q * spd * lenF * mult;
+  const gain = 5.0 * q * spd * lenF * mult;
   n++; qSum += q;
   T = Math.min(100, T + gain);
   depth += clamp(dy, 0, 200) / 900;
@@ -577,7 +577,7 @@ function audioFrame() {
   if (!ac || !rubGain) return;
   const on = !muted && down && (mode === 'play' || mode === 'ready');
   // 擦りの質(soundQ)で音色を変える：良いほど高く澄んだ音、悪いほど低くざらついた音
-  const vol = Math.min(.28, rubSpeed * .18) * (.55 + .45 * soundQ);
+  const vol = Math.min(.2, rubSpeed * .13) * (.55 + .45 * soundQ);
   rubGain.gain.setTargetAtTime(on ? vol : 0, ac.currentTime, .03);
   rubFilter.frequency.setTargetAtTime(350 + soundQ * 1300 + rubSpeed * 500 + T * 6, ac.currentTime, .05);
   rubFilter.Q.setTargetAtTime(.6 + soundQ * 3.2, ac.currentTime, .05);
@@ -598,9 +598,9 @@ function strokeSound(q, bad) {
   if (bad || q < .3) { tone(150, .1, .045, 'triangle'); burst(0, .07, 320, .06, 'lowpass'); return; }
   const idx = Math.min(Math.max(combo, 0), 14);      // コンボが続くほど音階を駆け上がる
   const f = noteHz(idx);
-  if (q < .6) { tone(f / 2, .12, .05, 'triangle'); }
-  else if (q < .85) { tone(f, .16, .07, 'triangle'); tone(f * 2, .1, .02, 'sine'); }
-  else { tone(f, .2, .09, 'sine'); tone(f * 2, .16, .04, 'sine'); tone(f * 3, .1, .015, 'sine'); }
+  if (q < .6) { tone(f / 2, .12, .07, 'triangle'); }
+  else if (q < .85) { tone(f, .16, .1, 'triangle'); tone(f * 2, .1, .03, 'sine'); }
+  else { tone(f, .2, .13, 'sine'); tone(f * 2, .16, .055, 'sine'); tone(f * 3, .1, .02, 'sine'); }
 }
 function burst(delay, dur, freq, vol, type) {
   if (!ac || muted) return;
@@ -855,7 +855,7 @@ function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; clock += dt;
   if (mode === 'play') {
     elapsed = (now - tStart) / 1000;
-    T = Math.max(0, T - (1.1 + .045 * T) * dt);
+    T = Math.max(0, T - (1.05 + .042 * T) * dt);
     stalled += dt;
     if (T < 0.5 && elapsed > 90) elapsed = 99.99;
   }
