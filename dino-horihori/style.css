@@ -27,7 +27,7 @@ h1{
 .lead{margin:4px 0 0;font-size:13px;color:var(--muted)}
 
 /* score */
-.scorebar{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:stretch}
+.scorebar{display:grid;grid-template-columns:1.5fr 1fr 1fr auto auto;gap:8px;margin-bottom:12px;align-items:stretch}
 .sbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px;display:flex;flex-direction:column;justify-content:center;min-width:0}
 .sbox .label{font-size:10px;letter-spacing:.08em;color:var(--muted)}
 .sbox b{font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -245,3 +245,5 @@ h1{
 
 .res-cap{text-align:center;font-size:12px;color:#d9d2ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gem-slot svg{filter:drop-shadow(0 6px 10px #000a)}
+
+.lang-btn{font:inherit;font-weight:800;font-size:12px;width:auto;min-width:44px;padding:0 8px;cursor:pointer}

@@ -13,15 +13,16 @@
 <body>
 <main class="wrap">
   <header class="top">
-    <h1>恐竜ほりほり</h1>
-    <p class="lead">ハンマーで岩をコツコツ掘って、恐竜を掘り当てよう。</p>
+    <h1 data-i18n="title">恐竜ほりほり</h1>
+    <p class="lead" data-i18n="lead">ハンマーで岩をコツコツ掘って、恐竜を掘り当てよう。</p>
   </header>
 
   <section class="scorebar" aria-label="スコア">
     <div class="sbox main"><span class="label">TOTAL SCORE</span><b id="total">0</b></div>
-    <div class="sbox"><span class="label">図鑑</span><b id="dexCount">0/0</b></div>
-    <div class="sbox"><span class="label">掘った数</span><b id="polishCount">0</b></div>
-    <button id="mute" class="icon-btn" type="button" aria-label="サウンド切り替え">🔊</button>
+    <div class="sbox"><span class="label" data-i18n="lblDex">図鑑</span><b id="dexCount">0/0</b></div>
+    <div class="sbox"><span class="label" data-i18n="lblDug">掘った数</span><b id="polishCount">0</b></div>
+    <button id="lang" class="icon-btn lang-btn" type="button" aria-label="Language">EN</button>
+    <button id="mute" class="icon-btn" type="button" data-i18n-aria="muteAria" aria-label="サウンド切り替え">🔊</button>
   </section>
 
   <section class="stage" id="stage" aria-label="ゲーム画面">
@@ -37,7 +38,7 @@
         <svg class="rim" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon id="rimPoly" points=""/></svg>
       </div>
       <div class="rays" id="rays"></div>
-      <div class="prompt" id="prompt">ほりほり<br>しよう</div>
+      <div class="prompt" id="prompt" data-i18n-html="prompt">ほりほり<br>しよう</div>
     </div>
     <div class="pedestal"></div>
     <div class="flash" id="flash"></div>
@@ -47,7 +48,7 @@
       <div class="hud" id="hud">
         <div class="hud-msg" id="msg">岩をなぞってほりほりしよう</div>
         <div class="bar"><i id="bar"></i></div>
-        <div class="hud-sub">掘り方で、出やすい恐竜が変わるかも…？</div>
+        <div class="hud-sub" data-i18n="hudSub">掘り方で、出やすい恐竜が変わるかも…？</div>
       </div>
       <div class="result" id="result" hidden>
         <div class="res-top">
@@ -61,7 +62,7 @@
           <span class="res-prob" id="rProb"></span>
           <span class="res-style" id="rStyle"></span>
         </div>
-        <button class="btn primary wide" id="nextBtn" type="button">つぎの岩を掘る</button>
+        <button class="btn primary wide" id="nextBtn" type="button" data-i18n="next">つぎの岩を掘る</button>
       </div>
     </div>
   </section>
@@ -69,33 +70,33 @@
   <section class="share" id="shareRow" aria-label="シェア">
     <div class="share-head">
       <img id="shareThumb" alt="シェア用画像" width="64" height="64">
-      <div><b>シェア</b><small id="shareNote">画像つきで投稿できます</small></div>
+      <div><b data-i18n="shareTitle">シェア</b><small id="shareNote" data-i18n="shareNote">画像つきで投稿できます</small></div>
     </div>
     <div class="share-grid">
-      <button class="btn primary all" id="allBtn" type="button">シェア先を一覧から選ぶ</button>
+      <button class="btn primary all" id="allBtn" type="button" data-i18n="allBtn">シェア先を一覧から選ぶ</button>
       <a class="btn s-x" id="xBtn" target="_blank" rel="noopener" href="#">𝕏</a>
       <a class="btn s-line" id="lineBtn" target="_blank" rel="noopener" href="#">LINE</a>
       <a class="btn s-fb" id="fbBtn" target="_blank" rel="noopener" href="#">Facebook</a>
       <a class="btn s-bsky" id="bskyBtn" target="_blank" rel="noopener" href="#">Bluesky</a>
       <a class="btn s-th" id="thBtn" target="_blank" rel="noopener" href="#">Threads</a>
-      <button class="btn" id="imgCopyBtn" type="button">画像コピー</button>
-      <a class="btn" id="imgSaveBtn" download="migaki-gacha.png" href="#">画像保存</a>
-      <button class="btn" id="copyBtn" type="button">文章コピー</button>
+      <button class="btn" id="imgCopyBtn" type="button" data-i18n="imgCopy">画像コピー</button>
+      <a class="btn" id="imgSaveBtn" download="migaki-gacha.png" href="#" data-i18n="imgSave">画像保存</a>
+      <button class="btn" id="copyBtn" type="button" data-i18n="txtCopy">文章コピー</button>
     </div>
   </section>
 
   <section class="rank" id="rankSec" aria-label="ランキング" hidden>
-    <h2>ランキング</h2>
+    <h2 data-i18n="rankTitle">ランキング</h2>
     <div class="tabs" role="tablist">
-      <button class="tab on" data-tab="total" type="button">スコア順</button>
-      <button class="tab" data-tab="dex" type="button">図鑑順</button>
+      <button class="tab on" data-tab="total" type="button" data-i18n="tabScore">スコア順</button>
+      <button class="tab" data-tab="dex" type="button" data-i18n="tabDex">図鑑順</button>
     </div>
     <ol class="rank-list" id="rankList"></ol>
     <p class="rank-note" id="rankNote"></p>
   </section>
 
   <section class="codex" aria-label="恐竜図鑑">
-    <h2>恐竜図鑑</h2>
+    <h2 data-i18n="codexTitle">恐竜図鑑</h2>
     <div id="codex"></div>
   </section>
 
@@ -105,10 +106,10 @@
 </main>
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-card" role="dialog" aria-modal="true" aria-label="シェア先を選ぶ">
-    <b>シェア先を選ぶ</b>
-    <small>押すと画像をコピーして開きます。投稿画面で貼り付けてね。</small>
+    <b data-i18n="sheetTitle">シェア先を選ぶ</b>
+    <small data-i18n="sheetNote">押すと画像をコピーして開きます。投稿画面で貼り付けてね。</small>
     <div class="sheet-grid" id="sheetGrid"></div>
-    <button class="btn" id="sheetClose" type="button">閉じる</button>
+    <button class="btn" id="sheetClose" type="button" data-i18n="sheetClose">閉じる</button>
   </div>
 </div>
 <div id="toast" role="status"></div>

@@ -11,6 +11,62 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fmt = (n) => Math.round(n).toLocaleString('ja-JP');
 const rand = (a, b) => a + Math.random() * (b - a);
 
+/* ============================================================
+   言語（日本語 / English）
+============================================================ */
+const LANG_KEY = 'dino-horihori:lang';
+let lang = 'ja';
+try { lang = localStorage.getItem(LANG_KEY) || ((navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'); } catch (e) { /* 無視 */ }
+const I18N = {
+  ja: {
+    title: '恐竜ほりほり', tag: '#恐竜ほりほり', lead: 'ハンマーで岩をコツコツ掘って、恐竜を掘り当てよう。',
+    lblDex: '図鑑', lblDug: '掘った数', prompt: 'ほりほり<br>しよう', hudSub: '掘り方で、出やすい恐竜が変わるかも…？',
+    next: 'つぎの岩を掘る', shareTitle: 'シェア', shareNote: '画像つきで投稿できます', allBtn: 'シェア先を一覧から選ぶ',
+    imgCopy: '画像コピー', imgSave: '画像保存', txtCopy: '文章コピー', rankTitle: 'ランキング', tabScore: 'スコア順', tabDex: '図鑑順',
+    codexTitle: '恐竜図鑑', reset: 'データを消去', resetArm: '本当に消す？もう一度押すと消去', sheetTitle: 'シェア先を選ぶ',
+    sheetNote: '押すと画像をコピーして開きます。投稿画面で貼り付けてね。', sheetClose: '閉じる', muteAria: 'サウンド切り替え', langBtn: 'EN',
+    msg0: (n) => `${n}の岩をハンマーでほりほり`, msg1: 'コツ コツ…', msg2: 'いい感じ…！', msg3: '中に何かある…！', msg4: 'もうすぐ…！！', msgHit: '…！',
+    h_cw: '時計まわりにぐるぐる', h_ccw: '反時計まわりにぐるぐる', h_vert: '縦にゴシゴシ', h_horiz: '横にゴシゴシ', h_slow: 'ゆっくり丁寧に', h_fast: 'すばやく', h_tap: 'こまめに指を離しながら', h_cross: '縦と横をまぜて',
+    s_cw: '時計まわり', s_ccw: '反時計まわり', s_vert: '縦ゴシゴシ', s_horiz: '横ゴシゴシ', s_slow: 'ゆっくり', s_fast: 'スピード', s_tap: 'こまめ', s_cross: '縦横ミックス',
+    hintNeutral: 'どんな掘り方でも出会える、ふつうの恐竜ネタ。', hintStyle: (l) => l.join(' ＋ ') + '掘ると出やすい',
+    comp: 'コンプ率', found: (n, m) => `${n}/${m}種`, baseRate: '基本確率', unknown: '？？？',
+    prob: (p) => '確率 ' + p, styleLbl: '掘りのクセ：', styleNone: 'なし（ふつうに掘った）', sep: '・',
+    shareGeneric: (tag) => `恐竜ほりほりで遊んでる！ハンマーで岩を掘って恐竜を集めよう🦖 ${tag}`,
+    shareLast: (n, st, cap, sc, tot, own, all, pct, tag) => `恐竜ほりほりで【${n}】(${st})を掘り当てた！${cap ? '「' + cap + '」' : ''} +${sc}pt\nトータル ${tot}pt／図鑑 ${own}/${all}（${pct}%） 🦖 ${tag}`,
+    imgGen1: 'ハンマーで岩を掘って', imgGen2: '恐竜を集めよう', imgTotal: (t, own, all, pct) => `TOTAL ${t} pt　／　図鑑 ${own}/${all}（${pct}%）`,
+    toastImgPaste: '画像をコピーしました。投稿画面で貼り付けてね', toastImg: '画像をコピーしました', toastImgFail: 'この環境では画像コピーできません。「画像保存」を使ってね', toastImgFail2: 'この環境では画像コピーできません',
+    toastTxt: '文章をコピーしました', toastCopyFail: 'コピーできませんでした',
+    rankEmpty: 'まだ誰も載っていません。最初の1位になろう！', you: 'あなた', anon: '名無しの発掘隊', best: '最高',
+    rankDexSub: (t, b) => `${t}pt ・ 最高 ${b}`, rankScoreSub: (d, all, b) => `図鑑 ${d}/${all} ・ 最高 ${b}`, rankVal: (n) => `${n}種`,
+    rankNoId: 'この環境ではあなたのスコアは記録されません。', rankRO: '閲覧のみの権限のため、あなたのスコアはランキングに載りません。', rankOk: '掘るたびにスコアが自動で登録されます。',
+    rankTimeout: 'ランキングに接続できません。しばらくしてから開き直してください。', rankFail: 'ランキングを読み込めませんでした。',
+  },
+  en: {
+    title: 'Dino Dig', tag: '#DinoDig', lead: 'Hammer away at the rock and dig up a dinosaur.',
+    lblDex: 'Dex', lblDug: 'Digs', prompt: 'Tap<br>tap!', hudSub: 'How you dig may change which dinosaur you find…',
+    next: 'Dig the next rock', shareTitle: 'Share', shareNote: 'Post with an image', allBtn: 'Choose where to share',
+    imgCopy: 'Copy image', imgSave: 'Save image', txtCopy: 'Copy text', rankTitle: 'Ranking', tabScore: 'By score', tabDex: 'By dex',
+    codexTitle: 'Dino Dex', reset: 'Erase data', resetArm: 'Sure? Press again to erase', sheetTitle: 'Share to…',
+    sheetNote: 'Tapping copies the image, then opens the site. Paste it in your post.', sheetClose: 'Close', muteAria: 'Toggle sound', langBtn: '日本語',
+    msg0: (n) => `Tap the ${n.toLowerCase()} rock with your hammer`, msg1: 'Tap tap…', msg2: 'Looking good!', msg3: 'Something is in there…!', msg4: 'Almost there!!', msgHit: '…!',
+    h_cw: 'in clockwise circles', h_ccw: 'in counter-clockwise circles', h_vert: 'in vertical strokes', h_horiz: 'in horizontal strokes', h_slow: 'slowly and carefully', h_fast: 'fast', h_tap: 'in short taps (lift your finger often)', h_cross: 'in both vertical and horizontal strokes',
+    s_cw: 'Clockwise', s_ccw: 'Counter-cw', s_vert: 'Vertical', s_horiz: 'Horizontal', s_slow: 'Slow', s_fast: 'Fast', s_tap: 'Taps', s_cross: 'Cross',
+    hintNeutral: 'Shows up no matter how you dig.', hintStyle: (l) => 'Likelier if you dig ' + l.join(' + '),
+    comp: 'Complete', found: (n, m) => `${n}/${m} found`, baseRate: 'Base rate', unknown: '???',
+    prob: (p) => 'Odds ' + p, styleLbl: 'Your style: ', styleNone: 'none (plain digging)', sep: ', ',
+    shareGeneric: (tag) => `Playing Dino Dig! Hammer rocks and collect dinosaurs 🦖 ${tag}`,
+    shareLast: (n, st, cap, sc, tot, own, all, pct, tag) => `I dug up ${n} (${st}) in Dino Dig!${cap ? ' "' + cap + '"' : ''} +${sc}pt\nTotal ${tot}pt / Dex ${own}/${all} (${pct}%) 🦖 ${tag}`,
+    imgGen1: 'Hammer the rock,', imgGen2: 'collect dinosaurs', imgTotal: (t, own, all, pct) => `TOTAL ${t} pt  /  Dex ${own}/${all} (${pct}%)`,
+    toastImgPaste: 'Image copied. Paste it in your post.', toastImg: 'Image copied', toastImgFail: 'Image copy is not available here. Use "Save image".', toastImgFail2: 'Image copy is not available here',
+    toastTxt: 'Text copied', toastCopyFail: 'Could not copy',
+    rankEmpty: 'Nobody is on the board yet. Be the first!', you: 'You', anon: 'Anonymous digger', best: 'Best',
+    rankDexSub: (t, b) => `${t}pt · Best ${b}`, rankScoreSub: (d, all, b) => `Dex ${d}/${all} · Best ${b}`, rankVal: (n) => `${n} found`,
+    rankNoId: 'Your score is not recorded in this environment.', rankRO: 'View-only access: your score will not appear on the board.', rankOk: 'Your score is posted automatically after each dig.',
+    rankTimeout: 'Cannot reach the ranking. Please reopen later.', rankFail: 'Could not load the ranking.',
+  },
+};
+const T = (k, ...a) => { const v = (I18N[lang] && I18N[lang][k]) != null ? I18N[lang][k] : I18N.ja[k]; return typeof v === 'function' ? v(...a) : v; };
+
 const COOL_MS = 10 * 60 * 1000;     // 一度出た「クセ付き恐竜」が眠る時間
 const SAVE_KEY = 'dino-horihori:v1';
 const MUTE_KEY = 'dino-horihori:mute';
@@ -90,10 +146,14 @@ const GEMS = [
   { id: 'm_claw', name: 'ラプトルの爪', emoji: '🦖', img: '', cap: '後ろ足の大きな鎌のような爪。', r: 'SR', shape: 'round', c: ['#d6fbff', '#6fdcf0', '#1a8fb0'], styles: ['fast'] },
 ];
 const GEM_BY_ID = Object.fromEntries(GEMS.map((g) => [g.id, g]));
+const ENG = {"quartz": ["What \"Dinosaur\" Means", "\"Terrible lizard.\""], "obsidian": ["Feathered Dinosaurs", "Many dinosaurs were fluffy."], "agate": ["Camptosaurus", "A plant-eater that could walk on two legs."], "fluorite": ["Hypsilophodon", "A small dinosaur that scurried around."], "m_pien": ["How \"Jurassic\" Got Its Name", "Named after the Jura Mountains in Switzerland."], "m_natsu": ["Dinosaur Eggshell", "Surprisingly thin and fragile."], "m_paw": ["Heterodontosaurus", "A small dinosaur with fang-like teeth."], "m_dash": ["Gallimimus", "Ostrich-like. Runs about 60 km/h."], "garnet": ["Triceratops", "Charges with three horns."], "lapis": ["Stegosaurus", "Famous for its back plates."], "peridot": ["Brachiosaurus", "Its neck is so long it stretches straight up."], "citrine": ["Ankylosaurus", "Armor and a tail like a hammer."], "amethyst": ["Apatosaurus", "Plods along heavily."], "rosequartz": ["Protoceratops", "Fossils are common in the desert."], "moonstone": ["Velociraptor", "Smaller than you think, but fast."], "m_dog": ["Mosquito in Amber", "The idea behind a famous movie scene."], "m_robo": ["Dinosaur DNA", "Said not to survive in reality."], "m_crab": ["Ripples in a Cup of Water", "The footsteps are getting closer."], "m_elev": ["Camarasaurus", "Its neck shoots straight up."], "m_deli": ["Oldest-ish Dinosaur Fossil", "From rock about 230 million years old."], "ruby": ["Tyrannosaurus", "The king. Tiny arms, though."], "sapphire": ["Spinosaurus", "A fish-eater with a huge sail."], "emerald": ["Diplodocus", "Neck and tail are both far too long."], "topaz": ["Iguanodon", "Thumb spikes as weapons."], "tanzanite": ["Argentinosaurus", "Among the largest ever. Walks slowly."], "pinktour": ["Oviraptor", "Sat on its eggs to keep them warm."], "aquamarine": ["Deinonychus", "A hunter with sickle claws."], "m_coffee": ["T. rex's Eyesight", "Possibly very good."], "m_slot": ["T. rex's Bite Force", "Several times a crocodile's."], "m_hero": ["Dinosaur Theme Park Island", "Island parks are safe… not always."], "m_enter": ["Stegosaurus's Tiny Brain", "Said to be walnut-sized."], "m_nap": ["Brachiosaurus's Blood Pressure", "A neck that long makes pumping blood hard."], "diamond": ["Utahraptor", "The biggest of the raptors."], "alexandrite": ["Giganotosaurus", "Maybe bigger than T. rex."], "pigeon": ["Carcharodontosaurus", "Teeth like a great white shark."], "kashmir": ["Allosaurus", "The top hunter of the Jurassic."], "demantoid": ["Supersaurus", "An extra-long neck."], "heliodor": ["Deinocheirus", "Known only from its arms for decades."], "padparadscha": ["Titanosaurus", "A whole nest of eggs was found."], "m_loop": ["Birds Are Dinosaurs", "Chickens are living dinosaur relatives."], "m_time": ["The 66-Million-Year-Old Impact", "Said to have triggered the extinction."], "m_ladder": ["Dinosaurs Faded Slowly", "Extinction took a long time."], "m_monkey": ["Life-Size Velociraptor", "About turkey-sized, unlike the movies."], "opal": ["Tyrannosaurus rex", "King of kings. A full skeleton unearthed!"], "sage": ["Bruhathkayosaurus", "Possibly the largest dinosaur ever."], "stardust": ["Patagotitan", "A giant that walks slowly."], "m_trend": ["Troodon", "Said to be a smart dinosaur."], "m_zen": ["Dreadnoughtus", "Its name means \"fears nothing.\""], "m_chicken": ["Chicken-Tyrannosaurus", "Research to turn chickens back into dinosaurs is real."], "m_hat": ["Dr. Grant's Hat", "Digging and adventure both start with a hat."], "m_shades": ["The Mathematician's Shades", "The chaos theorist's signature item."], "m_claw": ["Raptor's Claw", "A big sickle-shaped claw on the hind foot."]};
+const gname = (g) => (lang === 'en' && ENG[g.id]) ? ENG[g.id][0] : g.name;
+const gcap = (g) => (lang === 'en' && ENG[g.id]) ? ENG[g.id][1] : g.cap;
+
 
 function hintFor(g) {
-  if (!g.styles.length) return 'どんな掘り方でも出会える、ふつうの恐竜ネタ。';
-  return g.styles.map((k) => STYLE_HINT[k]).join(' ＋ ') + '掘ると出やすい';
+  if (!g.styles.length) return T('hintNeutral');
+  return T('hintStyle', g.styles.map((k) => T('h_' + k)));
 }
 
 /* ============================================================
@@ -259,6 +319,8 @@ const SHAPES = [
   { id: 'flower', name: 'お花', w: 2, gen: () => param((t) => { const r = .76 + .24 * Math.cos(6 * t); return [Math.cos(t) * r, Math.sin(t) * r]; }) },
   { id: 'cube', name: 'まる四角', w: 2, gen: () => param((t) => { const c = Math.cos(t), s = Math.sin(t); return [Math.sign(c) * Math.pow(Math.abs(c), .5), Math.sign(s) * Math.pow(Math.abs(s), .5)]; }) },
 ].map((s) => ({ ...s, pts: resamplePoly(fitPoly(s.gen()), 120) }));
+const SHAPE_EN = { round: 'Round', egg: 'Egg', heart: 'Heart', star: 'Star', drop: 'Drop', hex: 'Hexagon', diamond: 'Diamond', tri: 'Triangle', flower: 'Flower', cube: 'Rounded square' };
+const shapeName = (s) => (lang === 'en' ? SHAPE_EN[s.id] : s.name);
 function pickShape(prevId) {
   const list = SHAPES.filter((s) => s.id !== prevId), sum = list.reduce((a, s) => a + s.w, 0);
   let x = Math.random() * sum; for (const s of list) { x -= s.w; if (x < 0) return s; }
@@ -445,9 +507,11 @@ function measureClean() {
 }
 let lastMeasure = 0;
 
+let curProg = 0;
 function setProgress(p) {
+  curProg = p;
   el.bar.style.width = (p * 100).toFixed(1) + '%';
-  const m = p <= 0 ? `${curShape.name}の岩をハンマーでほりほり` : p < .3 ? 'コツ コツ…' : p < .6 ? 'いい感じ…！' : p < .85 ? '中に何かある…！' : 'もうすぐ…！！';
+  const m = p <= 0 ? T('msg0', shapeName(curShape)) : p < .3 ? T('msg1') : p < .6 ? T('msg2') : p < .85 ? T('msg3') : T('msg4');
   if (el.msg.textContent !== m) el.msg.textContent = m;
 }
 
@@ -590,6 +654,7 @@ function fxLoop(t) {
     const ang = down ? -0.55 - 0.7 * Math.sin(u * Math.PI) : -0.65 + 0.05 * Math.sin(t / 300);
     fxc.save(); fxc.globalAlpha = pad.a * .95; fxc.translate(pad.x, pad.y);
     fxc.strokeStyle = `rgba(255,255,255,${.3 + pad.ring * .5})`; fxc.lineWidth = 1.5 + pad.ring * 1.5; fxc.setLineDash([4, 4]); fxc.beginPath(); fxc.arc(0, 0, r * (1 + pad.ring * .18), 0, TAU); fxc.stroke(); fxc.setLineDash([]);
+    fxc.translate(s * 0.45, -s * 0.45);   // 叩く面（頭の左下）が指す位置にくるようにずらす
     { const hl = s * 1.6; fxc.translate(-hl * Math.sin(-0.55), hl * Math.cos(-0.55)); fxc.rotate(ang); fxc.translate(0, -hl); }   // 支点は握る棒の下のほう
     fxc.fillStyle = '#8b5a2b'; fxc.beginPath(); fxc.roundRect(-s * .1, s * .15, s * .2, s * 1.7, s * .08); fxc.fill();
     fxc.strokeStyle = '#4a2c10'; fxc.lineWidth = 1.2; fxc.stroke();
@@ -622,16 +687,16 @@ function renderScores(animate) {
 function renderCodex() {
   const now = Date.now(), rates = baseRates();
   const own = ownedCount(), pct = Math.floor(own / GEMS.length * 100);
-  const sum = `<div class="dexsum"><div><small>コンプ率</small><br><b>${pct}%</b></div><div class="dexbar"><i style="width:${own / GEMS.length * 100}%"></i></div><small>${own}/${GEMS.length}種</small></div>`;
+  const sum = `<div class="dexsum"><div><small>${T('comp')}</small><br><b>${pct}%</b></div><div class="dexbar"><i style="width:${own / GEMS.length * 100}%"></i></div><small>${T('found', own, GEMS.length)}</small></div>`;
   el.codex.innerHTML = sum + RARITY_KEYS.map((rk) => {
     const list = GEMS.filter((g) => g.r === rk), have = list.filter((g) => save.counts[g.id] > 0).length;
     const cards = list.map((g) => {
       const n = save.counts[g.id] || 0, color = RARITY[g.r].color;
-      if (!n) return `<div class="card unknown ${g.r}" style="--rc:${color}">${gemSVG(g)}<span class="nm">？？？</span><span class="rbadge" style="opacity:.5"><span class="badge ${g.r}">${g.r}</span><span class="stars">${stars(g.r)}</span></span></div>`;
+      if (!n) return `<div class="card unknown ${g.r}" style="--rc:${color}">${gemSVG(g)}<span class="nm">${T('unknown')}</span><span class="rbadge" style="opacity:.5"><span class="badge ${g.r}">${g.r}</span><span class="stars">${stars(g.r)}</span></span></div>`;
       const cd = g.styles.length && (save.cool[g.id] || 0) > now ? `<span class="sleep" data-until="${save.cool[g.id]}"></span>` : '';
-      return `<div class="card known ${g.r}" style="--rc:${color}">${cd}${gemSVG(g)}<span class="nm">${g.name}</span><span class="rbadge"><span class="badge ${g.r}">${g.r}</span><span class="stars">${stars(g.r)}</span></span><span class="meta">${fmt(RARITY[g.r].score)}pt ・ ×${n}</span><span class="hint">${hintFor(g)}</span></div>`;
+      return `<div class="card known ${g.r}" style="--rc:${color}">${cd}${gemSVG(g)}<span class="nm">${gname(g)}</span><span class="rbadge"><span class="badge ${g.r}">${g.r}</span><span class="stars">${stars(g.r)}</span></span><span class="meta">${fmt(RARITY[g.r].score)}pt ・ ×${n}</span><span class="hint">${hintFor(g)}</span></div>`;
     }).join('');
-    return `<div class="grp"><div class="grp-h"><span class="badge ${rk}">${rk}</span><span class="stars">${stars(rk)}</span><span>${have}/${list.length}　${fmt(RARITY[rk].score)}pt　基本確率 ${fmtPct(rates[rk])}</span></div><div class="grid">${cards}</div></div>`;
+    return `<div class="grp"><div class="grp-h"><span class="badge ${rk}">${rk}</span><span class="stars">${stars(rk)}</span><span>${have}/${list.length}　${fmt(RARITY[rk].score)}pt　${T('baseRate')} ${fmtPct(rates[rk])}</span></div><div class="grid">${cards}</div></div>`;
   }).join('');
   tickSleep();
 }
@@ -666,7 +731,7 @@ async function finish() {
   await sleep(500);
 
   // 溜め
-  el.msg.textContent = '…！';
+  el.msg.textContent = T('msgHit');
   el.ball.style.setProperty('--dur', R.rumble + 'ms');
   el.ball.classList.add('rumble', 'charge');
   const cx = fw / 2, cy = el.ball.offsetTop + el.ball.offsetHeight / 2;
@@ -700,17 +765,20 @@ async function finish() {
   showResult(gem, scores, isNew, prob);
 }
 
+let lastResult = null;
 function showResult(gem, scores, isNew, prob) {
+  lastResult = [gem, scores, isNew, prob];
   const R = RARITY[gem.r];
   el.rBadge.textContent = gem.r; el.rBadge.className = 'badge ' + gem.r;
-  el.rName.textContent = gem.name;
+  el.rName.textContent = gname(gem);
+  el.rName.style.fontSize = gname(gem).length > 20 ? '15px' : gname(gem).length > 13 ? '18px' : '';
   el.rNew.hidden = !isNew;
   el.rScore.textContent = fmt(R.score);
   $('#rStars').textContent = stars(gem.r);
-  $('#rCap').textContent = gem.cap;
-  $('#rProb').textContent = '確率 ' + fmtPct(prob);
+  $('#rCap').textContent = gcap(gem);
+  $('#rProb').textContent = T('prob', fmtPct(prob));
   const top = Object.entries(scores).filter(([, v]) => v >= .25).sort((a, b) => b[1] - a[1]).slice(0, 2);
-  el.rStyle.textContent = top.length ? '掘りのクセ：' + top.map(([k, v]) => `${STYLE_SHORT[k]} ${Math.round(v * 100)}%`).join('・') : '掘りのクセ：なし（ふつうに掘った）';
+  el.rStyle.textContent = top.length ? T('styleLbl') + top.map(([k, v]) => `${T('s_' + k)} ${Math.round(v * 100)}%`).join(T('sep')) : T('styleLbl') + T('styleNone');
   el.hud.hidden = true; el.result.hidden = false;
   state = 'result';
   updateShareLink();
@@ -739,9 +807,10 @@ el.next.addEventListener('click', nextBall);
 /* ---------- シェア ---------- */
 function shareUrl() { return location.href.split('#')[0]; }
 function shareText() {
-  const l = save.last;
-  if (!l) return '恐竜ほりほりで遊んでる！ハンマーで岩を掘って恐竜を集めよう🦖 #恐竜ほりほり';
-  return `恐竜ほりほりで【${l.name}】(${stars(l.r)})を掘り当てた！${l.cap ? '「' + l.cap + '」' : ''} +${fmt(l.score)}pt\nトータル ${fmt(save.total)}pt／図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%） 🦖 #恐竜ほりほり`;
+  const l = save.last, tag = T('tag');
+  if (!l) return T('shareGeneric', tag);
+  const gm = GEM_BY_ID[l.id], own = ownedCount();
+  return T('shareLast', gm ? gname(gm) : l.name, stars(l.r), gm ? gcap(gm) : l.cap, fmt(l.score), fmt(save.total), own, GEMS.length, Math.floor(own / GEMS.length * 100), tag);
 }
 function toast(msg) {
   el.toast.textContent = msg; el.toast.classList.add('show');
@@ -763,7 +832,7 @@ async function makeShareImage() {
   const glow = x.createRadialGradient(W / 2, 430, 20, W / 2, 430, 330);
   glow.addColorStop(0, col + 'cc'); glow.addColorStop(1, col + '00'); x.fillStyle = glow; x.fillRect(0, 60, W, 740);
   x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillStyle = '#ffe9a8'; x.font = `900 60px ${font}`; x.fillText('恐竜ほりほり', W / 2, 90);
+  x.fillStyle = '#ffe9a8'; x.font = `900 60px ${font}`; x.fillText(T('title'), W / 2, 90);
   if (g) {
     const svg = gemSVG(g).replace('<svg viewBox', '<svg width="512" height="512" viewBox');
     const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
@@ -773,14 +842,14 @@ async function makeShareImage() {
     } catch (e) { /* 画像なしで続行 */ }
     URL.revokeObjectURL(url);
     x.fillStyle = col; x.font = `900 54px ${font}`; x.fillText(stars(g.r), W / 2, 745);
-    x.fillStyle = '#fff'; x.font = `900 92px ${font}`; x.fillText(g.name, W / 2, 830, 980);
-    x.fillStyle = '#d9d2ff'; x.font = `700 40px ${font}`; x.fillText(g.cap || '', W / 2, 898, 980);
+    x.fillStyle = '#fff'; x.font = `900 92px ${font}`; x.fillText(gname(g), W / 2, 830, 980);
+    x.fillStyle = '#d9d2ff'; x.font = `700 40px ${font}`; x.fillText(gcap(g) || '', W / 2, 898, 980);
     x.fillStyle = '#ffe9a8'; x.font = `800 56px ${font}`; x.fillText(`+${fmt(l.score)} pt`, W / 2, 965);
   } else {
-    x.fillStyle = '#fff'; x.font = `900 84px ${font}`; x.fillText('ハンマーで岩を掘って', W / 2, 420); x.fillText('恐竜を集めよう', W / 2, 530);
+    x.fillStyle = '#fff'; x.font = `900 84px ${font}`; x.fillText(T('imgGen1'), W / 2, 420); x.fillText(T('imgGen2'), W / 2, 530);
   }
   x.fillStyle = '#cfc8f5'; x.font = `700 38px ${font}`;
-  x.fillText(`TOTAL ${fmt(save.total)} pt　／　図鑑 ${ownedCount()}/${GEMS.length}（${Math.floor(ownedCount() / GEMS.length * 100)}%）`, W / 2, 1035);
+  x.fillText(T('imgTotal', fmt(save.total), ownedCount(), GEMS.length, Math.floor(ownedCount() / GEMS.length * 100)), W / 2, 1035);
   shareDataUrl = cv.toDataURL('image/png');
   shareBlob = await new Promise((r) => cv.toBlob(r, 'image/png'));
   $('#shareThumb').src = shareDataUrl; $('#imgSaveBtn').href = shareDataUrl;
@@ -800,9 +869,9 @@ async function copyImage() {
 }
 // 各サービスは画像を直接受け取れないので、押したときに画像をコピーしておく（投稿画面で貼り付け）
 ['xBtn', 'lineBtn', 'fbBtn', 'bskyBtn', 'thBtn'].forEach((id) => {
-  $('#' + id).addEventListener('click', async () => { if (await copyImage()) toast('画像をコピーしました。投稿画面で貼り付けてね'); });
+  $('#' + id).addEventListener('click', async () => { if (await copyImage()) toast(T('toastImgPaste')); });
 });
-$('#imgCopyBtn').addEventListener('click', async () => toast(await copyImage() ? '画像をコピーしました' : 'この環境では画像コピーできません。「画像保存」を使ってね'));
+$('#imgCopyBtn').addEventListener('click', async () => toast(await copyImage() ? T('toastImg') : T('toastImgFail')));
 function serviceList() {
   const t = shareText(), u = shareUrl(), tu = t + '\n' + u, e = encodeURIComponent;
   return [
@@ -815,21 +884,21 @@ function serviceList() {
     ['Telegram', 's-tg', 'https://t.me/share/url?url=' + e(u) + '&text=' + e(t)],
     ['WhatsApp', 's-wa', 'https://wa.me/?text=' + e(tu)],
     ['Reddit', 's-rd', 'https://www.reddit.com/submit?url=' + e(u) + '&title=' + e(t.split('\n')[0])],
-    ['はてブ', 's-hb', 'https://b.hatena.ne.jp/entry/panel/?url=' + e(u) + '&btitle=' + e(t.split('\n')[0])],
+    ...(lang === 'ja' ? [['はてブ', 's-hb', 'https://b.hatena.ne.jp/entry/panel/?url=' + e(u) + '&btitle=' + e(t.split('\n')[0])]] : []),
   ];
 }
 const sheet = $('#sheet');
 function openSheet() {
   $('#sheetGrid').innerHTML = serviceList().map(([n, c, href]) => `<a class="btn ${c}" target="_blank" rel="noopener" href="${href}">${n}</a>`).join('')
-    + '<button class="btn" data-act="img" type="button">画像コピー</button><button class="btn" data-act="txt" type="button">文章コピー</button>';
+    + `<button class="btn" data-act="img" type="button">${T('imgCopy')}</button><button class="btn" data-act="txt" type="button">${T('txtCopy')}</button>`;
   sheet.hidden = false;
 }
 const closeSheet = () => { sheet.hidden = true; };
 sheet.addEventListener('click', async (ev) => {
   if (ev.target === sheet) return closeSheet();
   const a = ev.target.closest('a'), b = ev.target.closest('button[data-act]');
-  if (a && await copyImage()) toast('画像をコピーしました。投稿画面で貼り付けてね');
-  if (b && b.dataset.act === 'img') toast(await copyImage() ? '画像をコピーしました' : 'この環境では画像コピーできません');
+  if (a && await copyImage()) toast(T('toastImgPaste'));
+  if (b && b.dataset.act === 'img') toast(await copyImage() ? T('toastImg') : T('toastImgFail2'));
   if (b && b.dataset.act === 'txt') $('#copyBtn').click();
 });
 $('#sheetClose').addEventListener('click', closeSheet);
@@ -851,10 +920,10 @@ $('#allBtn').addEventListener('click', async () => {
 });
 $('#copyBtn').addEventListener('click', async () => {
   const txt = shareText() + '\n' + shareUrl();
-  try { await navigator.clipboard.writeText(txt); toast('文章をコピーしました'); }
+  try { await navigator.clipboard.writeText(txt); toast(T('toastTxt')); }
   catch (e) {
     const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast('文章をコピーしました'); } catch (e2) { toast('コピーできませんでした'); }
+    try { document.execCommand('copy'); toast(T('toastTxt')); } catch (e2) { toast(T('toastCopyFail')); }
     ta.remove();
   }
 });
@@ -863,7 +932,7 @@ $('#copyBtn').addEventListener('click', async () => {
 /* ============================================================
    ランキング（共有データベースが使えるときだけ表示）
 ============================================================ */
-let rankDb = null, rankUser = null, myId = null, canWrite = null, rankRows = [], rankTab = 'total', rankSynced = false, rankSeq = 0, pushChain = Promise.resolve();
+let rankNoteKey = '', rankDb = null, rankUser = null, myId = null, canWrite = null, rankRows = [], rankTab = 'total', rankSynced = false, rankSeq = 0, pushChain = Promise.resolve();
 const bestOrder = () => GEMS.reduce((m, g) => (save.counts[g.id] > 0 ? Math.max(m, RARITY[g.r].order) : m), -1);
 function myScoreDoc() { return { total: save.total, dex: ownedCount(), best: bestOrder(), polished: save.polished, updated: Date.now() }; }
 function pushScore() {
@@ -881,19 +950,19 @@ async function renderRank() {
   const ps = rankUser ? await rankUser.profiles(shown.map((r) => r.id)) : {};
   if (seq !== rankSeq) return;
   const ol = $('#rankList'); ol.textContent = '';
-  if (!shown.length) { const li = document.createElement('li'); li.textContent = 'まだ誰も載っていません。最初の1位になろう！'; li.style.display = 'block'; ol.appendChild(li); return; }
+  if (!shown.length) { const li = document.createElement('li'); li.textContent = T('rankEmpty'); li.style.display = 'block'; ol.appendChild(li); return; }
   shown.forEach((r) => {
     const rank = rows.indexOf(r) + 1, p = ps[r.id], isMe = r.id === myId;
     const li = document.createElement('li'); if (isMe) li.className = 'me';
     const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = rank;
     const img = document.createElement('img'); img.alt = ''; if (p && p.avatarUrl) img.src = p.avatarUrl;
     const who = document.createElement('div'); who.className = 'who';
-    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (p && p.name) || (isMe ? 'あなた' : '名無しの発掘隊');
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (p && p.name) || (isMe ? T('you') : T('anon'));
     if (isMe) { const y = document.createElement('i'); y.className = 'you'; y.textContent = 'YOU'; y.style.fontStyle = 'normal'; nm.appendChild(y); }
     const sub = document.createElement('span'); sub.className = 'sub';
-    sub.textContent = rankTab === 'dex' ? `${fmt(r.total)}pt ・ 最高 ${r.best >= 0 ? RARITY_KEYS[4 - r.best] : '-'}` : `図鑑 ${r.dex}/${GEMS.length} ・ 最高 ${r.best >= 0 ? RARITY_KEYS[4 - r.best] : '-'}`;
+    { const bs = r.best >= 0 ? RARITY_KEYS[4 - r.best] : '-'; sub.textContent = rankTab === 'dex' ? T('rankDexSub', fmt(r.total), bs) : T('rankScoreSub', r.dex, GEMS.length, bs); }
     who.append(nm, sub);
-    const val = document.createElement('span'); val.className = 'val'; val.textContent = rankTab === 'dex' ? `${r.dex}種` : `${fmt(r.total)}pt`;
+    const val = document.createElement('span'); val.className = 'val'; val.textContent = rankTab === 'dex' ? T('rankVal', r.dex) : `${fmt(r.total)}pt`;
     li.append(pos, img, who, val); ol.appendChild(li);
   });
 }
@@ -907,14 +976,14 @@ async function initRanking() {
     canWrite = user ? await user.can('data.write') : null;
     $('#rankSec').hidden = false;
     const note = $('#rankNote');
-    note.textContent = !myId ? 'この環境ではあなたのスコアは記録されません。' : canWrite === false ? '閲覧のみの権限のため、あなたのスコアはランキングに載りません。' : '掘るたびにスコアが自動で登録されます。';
-    const timer = setTimeout(() => { note.textContent = 'ランキングに接続できません。しばらくしてから開き直してください。'; }, 10000);
+    rankNoteKey = !myId ? 'rankNoId' : canWrite === false ? 'rankRO' : 'rankOk'; note.textContent = T(rankNoteKey);
+    const timer = setTimeout(() => { rankNoteKey = 'rankTimeout'; note.textContent = T(rankNoteKey); }, 10000);
     db.collection('dino_scores').limit(200).onSnapshot((snap) => {
       if (!snap.metadata.fromCache) clearTimeout(timer);
       rankRows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       renderRank();
       if (!rankSynced) { rankSynced = true; pushScore(); }
-    }, () => { clearTimeout(timer); note.textContent = 'ランキングを読み込めませんでした。'; });
+    }, () => { clearTimeout(timer); rankNoteKey = 'rankFail'; note.textContent = T(rankNoteKey); });
     document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
       rankTab = b.dataset.tab; document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === b)); renderRank();
     }));
@@ -930,8 +999,8 @@ muteBtn.addEventListener('click', () => {
 });
 $('#resetBtn').addEventListener('click', () => {
   const b = $('#resetBtn');
-  if (!b.dataset.arm) { b.dataset.arm = '1'; b.textContent = '本当に消す？もう一度押すと消去'; setTimeout(() => { delete b.dataset.arm; b.textContent = 'データを消去'; }, 4000); return; }
-  delete b.dataset.arm; b.textContent = 'データを消去';
+  if (!b.dataset.arm) { b.dataset.arm = '1'; b.textContent = T('resetArm'); setTimeout(() => { delete b.dataset.arm; b.textContent = T('reset'); }, 4000); return; }
+  delete b.dataset.arm; b.textContent = T('reset');
   save = { total: 0, polished: 0, counts: {}, cool: {}, last: null };
   writeSave(); shownTotal = 0; renderScores(false); renderCodex();
   if (rankDb && myId) rankDb.doc('dino_scores/' + myId).delete().catch(() => {});
@@ -948,6 +1017,29 @@ fxResize();
 newBall();
 requestAnimationFrame(fxLoop);
 
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.title = T('title');
+  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = T(n.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((n) => { n.innerHTML = T(n.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', T(n.dataset.i18nAria)); });
+  $('#shareThumb').alt = T('shareTitle');
+  const rb = $('#resetBtn'); if (!rb.dataset.arm) rb.textContent = T('reset');
+  const lb = $('#lang'); lb.textContent = T('langBtn');
+  if (state === 'polish') setProgress(curProg);
+  renderScores(false); renderCodex(); updateShareLink();
+  if (state === 'result' && lastResult) { const [gm, sc, nw, pr] = lastResult; showResult(gm, sc, nw, pr); }
+  if (rankNoteKey) $('#rankNote').textContent = T(rankNoteKey);
+  if (rankDb) renderRank();
+  if (!sheet.hidden) openSheet();
+}
+$('#lang').addEventListener('click', () => {
+  lang = lang === 'ja' ? 'en' : 'ja';
+  try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* 無視 */ }
+  applyLang();
+});
+applyLang();
 initRanking();
 
 // テスト・調整用
