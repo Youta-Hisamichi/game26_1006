@@ -381,7 +381,7 @@ function commit(s) {
   const dt = Math.max(24, s.et - s.st);
   const v = L / dt;                                   // px/ms
   if (r < -0.35) { floatText(t('jBack'), 'rgba(200,200,200,.9)'); return; }   // 持ち替えの上向き動作
-  const accA = clamp(1 - Math.abs(r - IDEAL_R) / 0.8, 0, 1);              // 斜め下の正確さ
+  const accA = clamp(1 - Math.abs(r - IDEAL_R) / 0.7, 0, 1);              // 斜め下の正確さ
   const ratio = lastL ? Math.min(L, lastL) / Math.max(L, lastL) : 1;
   const cons = clamp((ratio - .4) / .5, 0, 1);                             // 長さの安定
   const q = accA * (0.7 + 0.3 * cons);
@@ -390,7 +390,7 @@ function commit(s) {
   const lenF = clamp(L / 90, 0.4, 1.3);
   if (q >= .5) { combo++; maxCombo = Math.max(maxCombo, combo); } else if (q < .3) combo = 0;
   const mult = 1 + Math.min(combo, 24) * 0.035;
-  const gain = 5.4 * q * spd * lenF * mult;
+  const gain = 4.6 * q * spd * lenF * mult;
   n++; qSum += q;
   T = Math.min(100, T + gain);
   depth += clamp(dy, 0, 200) / 900;
@@ -405,6 +405,7 @@ function commit(s) {
   else if (q >= .3) { txt = t('jOk'); col = '#d9d9d9'; }
   else { txt = t('jSloppy'); col = '#ff9a7a'; }
   floatText(txt, col);
+  strokeSound(q, r < 0.2 || r > 1.5);
   // おがくず
   for (let i = 0; i < 4; i++) dust.push({
     x: P.x + rnd(-6, 6), y: P.y, vx: s.dir * rnd(30, 110) * -1 + rnd(-30, 30), vy: rnd(-90, -20),
@@ -416,7 +417,7 @@ function commit(s) {
 
 function floatText(text, color) {
   for (const f of floaters) f.ty -= 50;          // 古い表示は押し上げて、少し残す
-  floaters.push({ text, color, x: P.x, y: 430, ty: 430, age: 0, life: 1.1 });
+  floaters.push({ text, color, x: P.x, y: 430, ty: 430, age: 0, life: 1.8 });
   if (floaters.length > 3) floaters.shift();
 }
 
@@ -565,7 +566,7 @@ function toast(s) {
 }
 
 // ───────── 音 ─────────
-let ac, rubGain, rubFilter, muted = false, noiseBuf;
+let ac, rubGain, rubFilter, muted = false, noiseBuf, soundQ = .5;
 function initAudio() {
   if (ac || muted) return;
   try {
@@ -582,8 +583,27 @@ function initAudio() {
 function audioFrame() {
   if (!ac || !rubGain) return;
   const on = !muted && down && (mode === 'play' || mode === 'ready');
-  rubGain.gain.setTargetAtTime(on ? Math.min(.45, rubSpeed * .3) : 0, ac.currentTime, .03);
-  rubFilter.frequency.setTargetAtTime(500 + rubSpeed * 700 + T * 8, ac.currentTime, .05);
+  // 擦りの質(soundQ)で音色を変える：良いほど高く澄んだ音、悪いほど低くざらついた音
+  const vol = Math.min(.45, rubSpeed * .3) * (.55 + .45 * soundQ);
+  rubGain.gain.setTargetAtTime(on ? vol : 0, ac.currentTime, .03);
+  rubFilter.frequency.setTargetAtTime(350 + soundQ * 1300 + rubSpeed * 500 + T * 6, ac.currentTime, .05);
+  rubFilter.Q.setTargetAtTime(.6 + soundQ * 3.2, ac.currentTime, .05);
+}
+function tone(freq, dur, vol, type) {
+  if (!ac || muted) return;
+  const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime;
+  o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .005); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+  o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + dur + .02);
+}
+// 判定ごとの一打の音
+function strokeSound(q, bad) {
+  soundQ = bad ? Math.min(q, .15) : q;
+  if (!ac || muted) return;
+  if (bad || q < .3) { tone(120, .09, .05, 'sawtooth'); burst(0, .08, 300, .12, 'lowpass'); }
+  else if (q < .6) { burst(0, .06, 900, .08); }
+  else if (q < .85) { tone(700, .07, .035, 'triangle'); burst(0, .05, 1800, .07); }
+  else { tone(1000 + Math.min(combo, 24) * 30, .07, .04, 'sine'); burst(0, .04, 3200, .08); }
 }
 function burst(delay, dur, freq, vol, type) {
   if (!ac || muted) return;
@@ -796,7 +816,7 @@ function drawGuide() {
 function drawFloaters() {
   ctx.textAlign = 'center'; ctx.font = `900 44px ${FONT}`; ctx.lineWidth = 7; ctx.lineJoin = 'round';
   for (const f of floaters) {
-    ctx.globalAlpha = clamp((1 - f.age / f.life) * 2.2, 0, 1); ctx.strokeStyle = '#000'; ctx.strokeText(f.text, f.x, f.y);
+    ctx.globalAlpha = clamp((1 - f.age / f.life) * 1.6, 0, 1); ctx.strokeStyle = '#000'; ctx.strokeText(f.text, f.x, f.y);
     ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
   }
   ctx.globalAlpha = 1;
@@ -838,7 +858,7 @@ function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; clock += dt;
   if (mode === 'play') {
     elapsed = (now - tStart) / 1000;
-    T = Math.max(0, T - (1.0 + .04 * T) * dt);
+    T = Math.max(0, T - (1.1 + .045 * T) * dt);
     stalled += dt;
     if (T < 0.5 && elapsed > 90) elapsed = 99.99;
   }
