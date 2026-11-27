@@ -200,7 +200,7 @@ const I18N = {
     hReady: '棒を ジグザグに こすって スタート！', hIgnite: '🔥 着火！！', hStall: '斜め下へ 右・左・右・左…と 交互に！',
     h1: 'もっと速く こすれ！', h2: '煙が出てきた！', h3: 'おがくずに 火種が！', h4: 'もうすぐ着火！！',
     jBack: '戻し', jFlat: 'ヨコすぎ', jSteep: 'タテすぎ', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'ざつ',
-    r0: '火の神', r1: '炎の達人', r2: '縄文の匠', r3: '石器時代の民', r4: 'たき火見習い', r5: 'まだ寒い',
+    s1: '炎竜王', s2: '太陽神', s3: '創世の炎', r0: '火の神', r1: '炎の達人', r2: '縄文の匠', r3: '石器時代の民', r4: 'たき火見習い', r5: 'まだ寒い',
     mTime: '⏱ 速さ', mAcc: '🎯 正確さ', subOnA: 'みんなの正確さTOP10（1人1記録）', subLocalA: 'この端末の正確さTOP10',
     playNo: '{0}回目', rowInfoA: '{0}秒 ・ {1}', rrankAccIn: '正確さランキング {0}位！', rrankAccOut: '正確さランク圏外（10位まで）', rrankAccOnIn: 'オンライン正確さ {0}位！', rrankAccOnOut: 'オンライン正確さ圏外',
     tabOnline: 'オンライン', tabLocal: 'この端末', subOn: 'みんなの最速10人（1人1記録）', subLocal: 'この端末の最速10回',
@@ -224,7 +224,7 @@ const I18N = {
     hReady: 'Rub the stick in a zigzag to start!', hIgnite: '🔥 Ignited!!', hStall: 'Alternate down-right, down-left, down-right…',
     h1: 'Rub faster!', h2: 'Smoke is rising!', h3: 'An ember in the sawdust!', h4: 'Almost there!!',
     jBack: 'Reset', jFlat: 'Too flat', jSteep: 'Too steep', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'Sloppy',
-    r0: 'God of Fire', r1: 'Flame Master', r2: 'Jomon Artisan', r3: 'Stone Age Folk', r4: 'Campfire Rookie', r5: 'Still Cold',
+    s1: 'Flame Dragon King', s2: 'Sun God', s3: 'Genesis Flame', r0: 'God of Fire', r1: 'Flame Master', r2: 'Jomon Artisan', r3: 'Stone Age Folk', r4: 'Campfire Rookie', r5: 'Still Cold',
     mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 10 most accurate players (best each)', subLocalA: 'Top 10 most accurate runs on this device',
     playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'Accuracy rank #{0}!', rrankAccOut: 'Not in the accuracy top 10', rrankAccOnIn: 'Online accuracy #{0}!', rrankAccOnOut: 'Not in the online accuracy top 10',
     tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 10 fastest players (best time each)', subLocal: 'Top 10 fastest runs on this device',
@@ -431,7 +431,7 @@ function ignite() {
 }
 
 // ───────── スコア ─────────
-const RANKS = [[3.5, '🔥', 'r0'], [5.5, '🌋', 'r1'], [8, '🪨', 'r2'], [12, '🏹', 'r3'], [18, '🍂', 'r4'], [Infinity, '🥶', 'r5']];   // 着火タイム(秒)未満で到達
+const RANKS = [[2.5, '🌌', 's3'], [2.8, '☀️', 's2'], [3.1, '🐉', 's1'], [3.5, '🔥', 'r0'], [5.5, '🌋', 'r1'], [8, '🪨', 'r2'], [12, '🏹', 'r3'], [18, '🍂', 'r4'], [Infinity, '🥶', 'r5']];   // 着火タイム(秒)未満で到達
 const rankIdx = sec => RANKS.findIndex(r => sec < r[0]);
 const rankName = i => RANKS[i][1] + ' ' + t(RANKS[i][2]);
 
