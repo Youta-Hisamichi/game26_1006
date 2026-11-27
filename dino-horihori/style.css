@@ -36,12 +36,12 @@ h1{
 
 /* stage */
 .stage{
-  position:relative;width:100%;aspect-ratio:1/1.15;border-radius:22px;overflow:hidden;
+  position:relative;width:100%;aspect-ratio:1/1.3;border-radius:22px;overflow:hidden;
   background:#3b2a1c;
   border:1px solid var(--line);box-shadow:0 20px 50px #0009, inset 0 0 60px #00000055;
   user-select:none;-webkit-user-select:none;
 }
-.ball{position:absolute;left:21%;width:58%;top:7%;aspect-ratio:1;--amp:2}
+.ball{position:absolute;left:21%;width:58%;top:6.2%;aspect-ratio:1;--amp:2}
 .shape{position:absolute;inset:0;filter:drop-shadow(0 8px 10px #000a);transition:filter .3s}
 .shape>.ball-inner,.shape>#mud,.shape>.glass{clip-path:var(--clip,circle(50%))}
 .shape.open>.ball-inner{clip-path:none;background:none}
@@ -82,7 +82,7 @@ h1{
 }
 .rays.on{opacity:.6}
 @keyframes spin{to{transform:rotate(360deg)}}
-.pedestal{position:absolute;left:18%;width:64%;top:55%;height:6%;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,#000000aa,#00000000 70%);z-index:0}
+.pedestal{position:absolute;left:18%;width:64%;top:50.5%;height:5.5%;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,#000000aa,#00000000 70%);z-index:0}
 .ball{z-index:2}
 .rumble{animation:rumble .1s linear infinite}
 .rumble .shape{filter:drop-shadow(0 0 16px var(--rc)) drop-shadow(0 0 40px var(--rc))}
@@ -100,7 +100,7 @@ h1{
 #fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
 
 /* dock */
-.dock{position:absolute;left:0;right:0;bottom:0;height:38%;padding:0 14px 14px;display:flex;align-items:flex-end;z-index:4;background:linear-gradient(transparent,#1c120acc 55%)}
+.dock{position:absolute;left:0;right:0;bottom:0;min-height:36%;padding:0 14px 14px;display:flex;align-items:flex-end;z-index:4;background:linear-gradient(transparent,#1c120acc 55%)}
 .hud,.result{width:100%}
 .hud{text-align:center}
 .hud-msg{font-weight:800;font-size:16px;margin-bottom:8px;text-shadow:0 2px 6px #000a}
@@ -109,8 +109,8 @@ h1{
 .hud-sub{margin-top:8px;font-size:11px;color:var(--muted)}
 .result{display:grid;gap:6px;animation:up .45s cubic-bezier(.2,1,.3,1) both}
 @keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.res-top{display:flex;align-items:center;gap:8px;justify-content:center;min-width:0}
-.res-name{font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-top{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;justify-content:center;min-width:0}
+.res-name{flex:1 0 100%;order:3;font-size:22px;white-space:normal;overflow-wrap:anywhere;line-height:1.15;text-align:center;min-width:0}
 .badge{font-weight:900;font-size:12px;padding:2px 8px;border-radius:99px;color:#0d0a1f;background:var(--N);letter-spacing:.05em;flex:none}
 .badge.R{background:var(--R)}.badge.SR{background:var(--SR)}.badge.SSR{background:var(--SSR);color:#fff}.badge.UR{background:var(--rainbow)}
 .new{font-weight:900;font-size:11px;color:#fff;background:#ff4f7b;border-radius:6px;padding:2px 6px;animation:blink .8s steps(2) infinite;flex:none}
@@ -236,7 +236,7 @@ h1{
 .rank-list .you{font-size:9px;font-weight:900;background:#ff4f7b;color:#fff;border-radius:5px;padding:1px 5px;margin-left:6px}
 .rank-note{font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.5}
 
-.res-cap{text-align:center;font-size:12px;color:#d9d2ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-cap{text-align:center;font-size:12px;line-height:1.25;color:#d9d2ff;white-space:normal}
 .gem-slot svg{filter:drop-shadow(0 6px 10px #000a)}
 
 .lang-btn{font:inherit;font-weight:800;font-size:12px;width:auto;min-width:44px;padding:0 8px;cursor:pointer}

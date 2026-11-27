@@ -855,7 +855,8 @@ function showResult(gem, scores, isNew, prob) {
   const R = RARITY[gem.r];
   el.rBadge.textContent = gem.r; el.rBadge.className = 'badge ' + gem.r;
   el.rName.textContent = gname(gem);
-  el.rName.style.fontSize = gname(gem).length > 20 ? '15px' : gname(gem).length > 13 ? '18px' : '';
+  { const nl = gname(gem).length; el.rName.style.fontSize = nl > 24 ? '13px' : nl > 18 ? '15px' : nl > 13 ? '17px' : ''; }
+  { const cl = gcap(gem).length; $('#rCap').style.fontSize = cl > 34 ? '10.5px' : cl > 24 ? '11px' : ''; }
   el.rNew.hidden = !isNew;
   el.rScore.textContent = fmt(R.score);
   $('#rStars').textContent = stars(gem.r);
@@ -1128,5 +1129,5 @@ applyLang();
 initRanking();
 
 // テスト・調整用
-window.Migaki = { analyzeStyle, gemWeights, pickGem, GEMS, RARITY, COOL_MS, get state() { return state; } };
+window.Migaki = { showResult, GEM_BY_ID, setLang: (l) => { lang = l; applyLang(); }, analyzeStyle, gemWeights, pickGem, GEMS, RARITY, COOL_MS, get state() { return state; } };
 })();
