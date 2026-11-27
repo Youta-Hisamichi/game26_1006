@@ -970,7 +970,7 @@ function renderGlobal(){
   const ol=$('glList');ol.textContent='';
   for(const x of glData){const li=document.createElement('li');li.textContent=`${x.name}　${fmtR(x.total)}${L('点',' pts')}`;if(x.id===uid)li.className='me';ol.appendChild(li);}
 }
-const defaultName=()=>(lang==='en'?'Guest#':'ななし#')+Math.floor(1000+Math.random()*9000);
+const defaultName=()=>(lang==='en'?'Guest':'ななし')+Math.floor(1000+Math.random()*9000);
 async function renameGlobal(){
   const name=Array.from($('glName').value.trim()).slice(0,25).join('');if(!name||!fbOn())return;
   lsSet(RK_NAME,name);
@@ -1020,7 +1020,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.11.0',BUILD='2026-11-27 17:26 JST';
+const VERSION='1.11.1',BUILD='2026-11-27 23:53 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -1179,7 +1179,9 @@ document.addEventListener('keydown',e=>{
 {const qs=new URLSearchParams(location.search);let l=qs.get('lang');
  if(l!=='ja'&&l!=='en'){try{l=localStorage.getItem('mojibonsai_lang');}catch(e){}}
  if(l!=='ja'&&l!=='en')l=(navigator.language||'ja').toLowerCase().startsWith('ja')?'ja':'en';
- lang=l;applyLang();renderHist();if(fbOn()&&!joined())autoRegister();else loadGlobal();
+ lang=l;
+ {const nm=lsGet(RK_NAME);if(nm&&/^(ななし|Guest)#\d+$/.test(nm)){lsSet(RK_NAME,nm.replace('#',''));if(joined()&&fbOn())fbSync().then(()=>loadGlobal()).catch(()=>{});}} // 以前の自動名（ななし#1234）から # を外す
+ applyLang();renderHist();if(fbOn()&&!joined())autoRegister();else loadGlobal();
  try{new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)&&!glSeen){glSeen=true;loadGlobal(true);}}).observe($('gl'));}catch(e){glSeen=true;loadGlobal(true);}
  requestAnimationFrame(n=>{last=n;frame(n);});
  const q=qs.get('t');
