@@ -68,7 +68,7 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
 #glJoin input{font-size:14px;padding:6px 8px;border-radius:8px}
 #glJoin button,#glRefresh,#glMore{font-size:13px;padding:6px 12px}
 #glMore,#glRefresh{background:var(--card);color:var(--ink);border:1px solid var(--line)}
-#gl ol{margin:6px 0;padding-left:2.4em;max-height:480px;overflow:auto}
+#gl ol{margin:6px 0;padding-left:2.4em}
 #glCount{font-weight:bold;margin:2px 0}
 #glCount:empty{display:none}
 #gl li.me{font-weight:bold;color:var(--accent)}
@@ -1019,7 +1019,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.10.1',BUILD='2026-11-26 23:20 JST';
+const VERSION='1.10.2',BUILD='2026-11-27 13:39 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
