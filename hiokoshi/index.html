@@ -37,23 +37,26 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-a
 #combo{position:absolute;left:3cqw;bottom:3cqw;font-size:6cqw;font-weight:900;color:var(--good);
   text-shadow:0 .4cqw 0 #000;opacity:0;transition:opacity .15s}
 #combo.on{opacity:1}
-.ov{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:4cqw;
+.ov{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:2cqw 4cqw;
   background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.78),rgba(8,4,2,.95))}
 .ov.on{display:flex}
-.card{width:100%;max-height:100%;overflow:auto;text-align:center;scrollbar-width:none}
+.card{width:100%;max-height:100%;overflow-y:auto;overscroll-behavior:contain;text-align:center;scrollbar-width:none;
+  padding:5cqw 0;touch-action:pan-y;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 4cqw,#000 calc(100% - 4cqw),transparent 100%);
+  mask-image:linear-gradient(to bottom,transparent 0,#000 4cqw,#000 calc(100% - 4cqw),transparent 100%)}
 .card::-webkit-scrollbar{display:none}
-h1{margin:0;font-size:12cqw;line-height:1.05;font-weight:900;color:var(--fire2);
+h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
   text-shadow:0 .6cqw 0 #7a2a00,0 0 5cqw #ff7a1a88}
-.sub{color:var(--mute);font-size:3.6cqw;margin:1.5cqw 0 3.5cqw}
-.how{background:#00000055;border:.4cqw solid var(--line);border-radius:3cqw;padding:3cqw;
-  text-align:left;font-size:3.6cqw;line-height:1.6;margin-bottom:3.5cqw}
+.sub{color:var(--mute);font-size:3.4cqw;margin:1cqw 0 2.5cqw}
+.how{background:#00000055;border:.4cqw solid var(--line);border-radius:3cqw;padding:2.4cqw;
+  text-align:left;font-size:3.2cqw;line-height:1.55;margin-bottom:2.5cqw}
 .how b{color:var(--fire2)}
-.rec{display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;margin-bottom:4cqw}
+.rec{display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;margin-bottom:2.5cqw}
 .rec div,.stat div{background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw 1cqw}
 .rec small,.stat small{display:block;font-size:2.8cqw;color:var(--mute)}
 .rec b,.stat b{font-size:4.8cqw;font-variant-numeric:tabular-nums}
-.btn{display:block;width:100%;border:0;border-radius:3cqw;padding:3.4cqw;margin-top:2.4cqw;font:inherit;
-  font-size:5cqw;font-weight:900;color:#2a1000;cursor:pointer;
+.btn{display:block;width:100%;border:0;border-radius:3cqw;padding:2.6cqw;margin-top:2cqw;font:inherit;
+  font-size:4.6cqw;font-weight:900;color:#2a1000;cursor:pointer;
   background:linear-gradient(#ffd34d,#ff8a1f);box-shadow:0 1cqw 0 #8a3a00,0 2cqw 4cqw #0008}
 .btn:active{transform:translateY(.8cqw);box-shadow:0 .2cqw 0 #8a3a00}
 .btn.sec{background:linear-gradient(#e8d5b5,#b99a6e);box-shadow:0 1cqw 0 #5a4326,0 2cqw 4cqw #0008}
@@ -68,7 +71,7 @@ h1{margin:0;font-size:12cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 #total{margin-bottom:1cqw;font-size:4.4cqw;color:var(--mute)}
 #total b{color:var(--ink);font-size:6cqw;font-variant-numeric:tabular-nums}
 #preview{width:100%;border-radius:2cqw;border:.4cqw solid var(--line);margin-top:2cqw;display:block}
-#nameRow{display:flex;gap:2cqw;align-items:center;margin-bottom:3cqw;font-size:3.6cqw;color:var(--mute)}
+#nameRow{display:flex;gap:2cqw;align-items:center;margin-bottom:2cqw;font-size:3.4cqw;color:var(--mute)}
 #nameRow input{flex:1;min-width:0;background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw;color:var(--ink);font:inherit;font-size:4cqw}
 #rrank{margin-top:1cqw;font-size:4.4cqw;font-weight:800;color:var(--good)}
 .rk{list-style:none;margin:0 0 2cqw;padding:0;text-align:left}
@@ -179,6 +182,19 @@ function loadRec() {
 const rec = loadRec();
 function saveRec() { try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch (e) {} }
 const fmt = n => Math.round(n).toLocaleString('en-US');
+
+// ───────── 画面サイズに合わせて枠を収める ─────────
+const stageEl = $('stage');
+function fit() {
+  const vv = window.visualViewport;
+  const w = Math.min(window.innerWidth, vv ? vv.width : 1e9);
+  const h = Math.min(window.innerHeight, vv ? vv.height : 1e9);
+  const sw = Math.max(120, Math.min(w, h * .75));
+  stageEl.style.width = sw + 'px'; stageEl.style.height = sw / .75 + 'px';
+}
+fit();
+window.addEventListener('resize', fit);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
 
 // ───────── Canvas ─────────
 const cv = $('cv'), ctx = cv.getContext('2d');
