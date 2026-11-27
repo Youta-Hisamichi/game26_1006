@@ -434,7 +434,7 @@ function newBall() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   el.mud.width = el.mud.height = Math.round(L * dpr);
   mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  brushR = Math.max(16, el.stage.getBoundingClientRect().width * 0.72 * 0.085);   // 磨き布の大きさは元のまま
+  brushR = Math.max(22, el.stage.getBoundingClientRect().width * 0.72 * 0.14);
   paintMud();
   lastMeasure = 0;
   locked = null; el.tease.className = 'tease tease-n'; el.tease.style.opacity = .2;
