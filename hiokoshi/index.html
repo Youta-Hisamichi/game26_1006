@@ -76,7 +76,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 #rkStatus{color:var(--mute);font-size:3.2cqw;margin-bottom:2cqw;min-height:4cqw}
 #rrankOn,#rrankAcc{font-size:4cqw;font-weight:800;color:var(--fire2)}
 .rk{list-style:none;margin:0 0 2cqw;padding:0;text-align:left}
-.rk li{display:grid;grid-template-columns:9cqw 1fr auto;gap:2cqw;align-items:baseline;padding:2cqw 2.4cqw;margin-bottom:1.2cqw;
+.rk li{display:grid;grid-template-columns:10cqw 1fr auto;gap:2cqw;align-items:baseline;padding:1.4cqw 2.4cqw;margin-bottom:.8cqw;
   background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;font-size:3.8cqw}
 .rk li.me{border-color:var(--fire2);background:#ff7a1a33}
 .rk b{font-variant-numeric:tabular-nums;font-size:4.4cqw}
@@ -127,6 +127,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
   </div></div>
 
   <div class="ov" id="ovRank"><div class="card">
+    <div class="langrow"><button class="ib lang" id="bRankBack2" data-i="back">もどる</button></div>
     <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
     <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
     <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="8" data-p="anon" autocomplete="off"></div>
@@ -173,6 +174,7 @@ const REV = 14;                        // 反転とみなす戻り量(px)
 const MIN_LEN = 36;                    // ストロークとみなす最小長(px)
 const IDEAL_R = 0.7;                   // 理想の傾き(下/横)。約35°
 const KEY = 'hiokoshi.v1';
+const RANK_MAX = 100;                  // ランキングの表示・保持件数
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -202,12 +204,12 @@ const I18N = {
     h1: 'もっと速く こすれ！', h2: '煙が出てきた！', h3: 'おがくずに 火種が！', h4: 'もうすぐ着火！！',
     jBack: '戻し', jFlat: 'ヨコすぎ', jSteep: 'タテすぎ', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'ざつ',
     s1: '炎竜王', s2: '太陽神', s3: '創世の炎', r0: '火の神', r1: '炎の達人', r2: '縄文の匠', r3: '石器時代の民', r4: 'たき火見習い', r5: 'まだ寒い',
-    mTime: '⏱ 速さ', mAcc: '🎯 正確さ', subOnA: 'みんなの正確さTOP10（1人1記録）', subLocalA: 'この端末の正確さTOP10',
-    playNo: '{0}回目', rowInfoA: '{0}秒 ・ {1}', rrankAccIn: '正確さランキング {0}位！', rrankAccOut: '正確さランク圏外（10位まで）', rrankAccOnIn: 'オンライン正確さ {0}位！', rrankAccOnOut: 'オンライン正確さ圏外',
-    tabOnline: 'オンライン', tabLocal: 'この端末', subOn: 'みんなの最速10人（1人1記録）', subLocal: 'この端末の最速10回',
+    mTime: '⏱ 速さ', mAcc: '🎯 正確さ', subOnA: 'みんなの正確さTOP100（1人1記録）', subLocalA: 'この端末の正確さTOP100',
+    playNo: '{0}回目', rowInfoA: '{0}秒 ・ {1}', rrankAccIn: '正確さランキング {0}位！', rrankAccOut: '正確さランク圏外（100位まで）', rrankAccOnIn: 'オンライン正確さ {0}位！', rrankAccOnOut: 'オンライン正確さ圏外',
+    tabOnline: 'オンライン', tabLocal: 'この端末', subOn: 'みんなの最速100人（1人1記録）', subLocal: 'この端末の最速100回',
     rkLoading: '読み込み中…', rkFail: 'ランキングを取得できませんでした', rkOffline: 'オンラインランキングは未接続です',
-    rrankOnIn: 'オンライン {0}位！', rrankOnOut: 'オンライン圏外（10位まで）', rrankOnFail: 'オンラインには登録できませんでした', rrankOnSend: 'オンラインに登録中…',
-    rrankIn: 'ランキング {0}位！', rrankOut: 'ランク圏外（10位まで）', empty: 'まだ記録がありません',
+    rrankOnIn: 'オンライン {0}位！', rrankOnOut: 'オンライン圏外（100位まで）', rrankOnFail: 'オンラインには登録できませんでした', rrankOnSend: 'オンラインに登録中…',
+    rrankIn: 'ランキング {0}位！', rrankOut: 'ランク圏外（100位まで）', empty: 'まだ記録がありません',
     rowInfo: '正確さ{0}% ・ {1}',
     cardTitle: '火おこしRTA', cardStats: '正確さ {0}% / 最大コンボ {1} / {2}ストローク', tag: '#火おこしRTA',
     shareText: '火おこしRTA 🔥 {0}秒で着火！（{1}） #火おこしRTA',
@@ -226,12 +228,12 @@ const I18N = {
     h1: 'Rub faster!', h2: 'Smoke is rising!', h3: 'An ember in the sawdust!', h4: 'Almost there!!',
     jBack: 'Reset', jFlat: 'Too flat', jSteep: 'Too steep', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'Sloppy',
     s1: 'Flame Dragon King', s2: 'Sun God', s3: 'Genesis Flame', r0: 'God of Fire', r1: 'Flame Master', r2: 'Jomon Artisan', r3: 'Stone Age Folk', r4: 'Campfire Rookie', r5: 'Still Cold',
-    mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 10 most accurate players (best each)', subLocalA: 'Top 10 most accurate runs on this device',
-    playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'Accuracy rank #{0}!', rrankAccOut: 'Not in the accuracy top 10', rrankAccOnIn: 'Online accuracy #{0}!', rrankAccOnOut: 'Not in the online accuracy top 10',
-    tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 10 fastest players (best time each)', subLocal: 'Top 10 fastest runs on this device',
+    mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 100 most accurate players (best each)', subLocalA: 'Top 100 most accurate runs on this device',
+    playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'Accuracy rank #{0}!', rrankAccOut: 'Not in the accuracy top 100', rrankAccOnIn: 'Online accuracy #{0}!', rrankAccOnOut: 'Not in the online accuracy top 100',
+    tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 100 fastest players (best time each)', subLocal: 'Top 100 fastest runs on this device',
     rkLoading: 'Loading…', rkFail: 'Couldn\'t load the ranking', rkOffline: 'Online ranking is not connected',
-    rrankOnIn: 'Online rank #{0}!', rrankOnOut: 'Not in the online top 10', rrankOnFail: 'Couldn\'t post to the online ranking', rrankOnSend: 'Posting to the online ranking…',
-    rrankIn: 'Rank #{0}!', rrankOut: 'Not in the top 10', empty: 'No records yet',
+    rrankOnIn: 'Online rank #{0}!', rrankOnOut: 'Not in the online top 100', rrankOnFail: 'Couldn\'t post to the online ranking', rrankOnSend: 'Posting to the online ranking…',
+    rrankIn: 'Rank #{0}!', rrankOut: 'Not in the top 100', empty: 'No records yet',
     rowInfo: 'Acc {0}% ・ {1}',
     cardTitle: 'Fire Starter RTA', cardStats: 'Accuracy {0}% / Max combo {1} / {2} strokes', tag: '#FireStarterRTA',
     shareText: 'Fire Starter RTA 🔥 Lit in {0}s! ({1}) #FireStarterRTA',
@@ -441,8 +443,8 @@ function renderResultText() {
   const r = result;
   if (!Online.kind) $('rrankOn').textContent = '';
   else if (!$('rrankAcc').textContent) $('rrankAcc').textContent = '';
-  $('rrank').textContent = r.pos && r.pos <= 10 ? t('rrankIn', r.pos) : t('rrankOut');
-  if (!Online.kind) $('rrankAcc').textContent = r.posA && r.posA <= 10 ? t('rrankAccIn', r.posA) : t('rrankAccOut');
+  $('rrank').textContent = r.pos && r.pos <= RANK_MAX ? t('rrankIn', r.pos) : t('rrankOut');
+  if (!Online.kind) $('rrankAcc').textContent = r.posA && r.posA <= RANK_MAX ? t('rrankAccIn', r.posA) : t('rrankAccOut');
   $('rank').textContent = rankName(r.ri);
   $('rtime').innerHTML = r.t.toFixed(2) + '<small> ' + t('unit') + '</small>';
   $('newbest').style.display = r.isBest ? 'block' : 'none';
@@ -470,10 +472,10 @@ function showResult() {
   const entry = { p: rec.plays, t: elapsed, a: acc, n: rec.name || t('anon'), d: Date.now() };
   rec.ranks = (rec.ranks || []).concat(entry).sort((a, b) => a.t - b.t || a.d - b.d);
   const pos = rec.ranks.indexOf(entry) + 1;
-  rec.ranks = rec.ranks.slice(0, 10);
+  rec.ranks = rec.ranks.slice(0, RANK_MAX);
   rec.accRanks = (rec.accRanks || []).concat(entry).sort((x, y) => y.a - x.a || x.t - y.t || x.d - y.d);
   const posA = rec.accRanks.indexOf(entry) + 1;
-  rec.accRanks = rec.accRanks.slice(0, 10);
+  rec.accRanks = rec.accRanks.slice(0, RANK_MAX);
   saveRec();
   result = { d: entry.d, t: elapsed, acc, combo: maxCombo, n, ri: rankIdx(elapsed), pos, posA, isBest };
   $('rrankAcc').textContent = '';
@@ -922,9 +924,9 @@ const Online = {
     if (u && /^https?:/.test(u)) { this.url = u.replace(/\/$/, ''); this.kind = 'rest'; }
   },
   // metric: 'time'（速い順）| 'acc'（正確さの高い順、同率はタイムが速い順）
-  async top(metric = 'time', n = 10) {
+  async top(metric = 'time', n = RANK_MAX) {
     const acc = metric === 'acc', col = acc ? 'accuracy' : 'scores', field = acc ? 'a' : 't';
-    const take = acc ? 50 : n;               // 正確さは同率の並べ替えのため多めに取る
+    const take = acc ? Math.min(1000, n * 3) : n;               // 正確さは同率の並べ替えのため多めに取る
     let docs;
     if (this.kind === 'db') {
       const snap = await this.db.collection(col).orderBy(field, acc ? 'desc' : 'asc').limit(take).get();
@@ -979,7 +981,7 @@ let rankTab = 'local', rankMetric = 'time', rankHl = null, rankToken = 0;
 function drawRankList(list, hl, metric) {
   const ul = $('rkList'); ul.textContent = '';
   if (!list.length) { ul.innerHTML = '<div class="empty">' + t('empty') + '</div>'; return; }
-  list.forEach((e, i) => {
+  list.slice(0, RANK_MAX).forEach((e, i) => {
     const li = document.createElement('li');
     if (isMine(e, hl)) li.className = 'me';
     const d = new Date(e.d), date = (d.getMonth() + 1) + '/' + d.getDate();
@@ -1013,7 +1015,7 @@ async function showRank(hl, tab, metric) {
   }
   $('rkStatus').textContent = t('rkLoading'); $('rkList').textContent = '';
   try {
-    const list = await Online.top(rankMetric, 10);
+    const list = await Online.top(rankMetric, RANK_MAX);
     if (my !== rankToken) return;
     $('rkStatus').textContent = ''; drawRankList(list, rankHl, rankMetric);
   } catch (e) { if (my === rankToken) $('rkStatus').textContent = t('rkFail'); }
@@ -1025,7 +1027,7 @@ async function postOnline(entry) {
   el.textContent = t('rrankOnSend');
   try {
     await Online.submit(entry);
-    const [lt, la] = await Promise.all([Online.top('time', 10), Online.top('acc', 10)]);
+    const [lt, la] = await Promise.all([Online.top('time', RANK_MAX), Online.top('acc', RANK_MAX)]);
     if (!result || result.d !== entry.d) return;
     const i1 = lt.findIndex(e => isMine(e, entry.d)), i2 = la.findIndex(e => isMine(e, entry.d));
     el.textContent = i1 >= 0 ? t('rrankOnIn', i1 + 1) : t('rrankOnOut');
@@ -1069,7 +1071,7 @@ $('mtTime').onclick = () => showRank(undefined, undefined, 'time');
 $('mtAcc').onclick = () => showRank(undefined, undefined, 'acc');
 $('tabOn').onclick = () => showRank(undefined, 'online');
 $('tabLocal').onclick = () => showRank(undefined, 'local');
-$('bRankBack').onclick = () => { $('ovRank').classList.remove('on'); $(rankFrom).classList.add('on'); };
+$('bRankBack').onclick = $('bRankBack2').onclick = () => { $('ovRank').classList.remove('on'); $(rankFrom).classList.add('on'); window.scrollTo(0, 0); };
 $('bStart').onclick = () => { initAudio(); toReady(); };
 $('bAgain').onclick = toReady;
 $('bRetry').onclick = toReady;
