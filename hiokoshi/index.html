@@ -577,7 +577,7 @@ function audioFrame() {
   if (!ac || !rubGain) return;
   const on = !muted && down && (mode === 'play' || mode === 'ready');
   // 擦りの質(soundQ)で音色を変える：良いほど高く澄んだ音、悪いほど低くざらついた音
-  const vol = Math.min(.45, rubSpeed * .3) * (.55 + .45 * soundQ);
+  const vol = Math.min(.28, rubSpeed * .18) * (.55 + .45 * soundQ);
   rubGain.gain.setTargetAtTime(on ? vol : 0, ac.currentTime, .03);
   rubFilter.frequency.setTargetAtTime(350 + soundQ * 1300 + rubSpeed * 500 + T * 6, ac.currentTime, .05);
   rubFilter.Q.setTargetAtTime(.6 + soundQ * 3.2, ac.currentTime, .05);
@@ -593,10 +593,10 @@ function tone(freq, dur, vol, type) {
 function strokeSound(q, bad) {
   soundQ = bad ? Math.min(q, .15) : q;
   if (!ac || muted) return;
-  if (bad || q < .3) { tone(120, .09, .05, 'sawtooth'); burst(0, .08, 300, .12, 'lowpass'); }
-  else if (q < .6) { burst(0, .06, 900, .08); }
-  else if (q < .85) { tone(700, .07, .035, 'triangle'); burst(0, .05, 1800, .07); }
-  else { tone(1000 + Math.min(combo, 24) * 30, .07, .04, 'sine'); burst(0, .04, 3200, .08); }
+  if (bad || q < .3) { tone(120, .09, .03, 'sawtooth'); burst(0, .08, 300, .07, 'lowpass'); }
+  else if (q < .6) { burst(0, .06, 900, .05); }
+  else if (q < .85) { tone(700, .07, .02, 'triangle'); burst(0, .05, 1800, .04); }
+  else { tone(1000 + Math.min(combo, 24) * 30, .07, .025, 'sine'); burst(0, .04, 3200, .05); }
 }
 function burst(delay, dur, freq, vol, type) {
   if (!ac || muted) return;
