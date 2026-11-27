@@ -18,7 +18,7 @@ const MUTE_KEY = 'dino-horihori:mute';
 const RARITY = {
   N:   { score: 10,   w: 35,  boost: 2,   rumble: 350,  amp: 1,   color: '#a3adbd', order: 0 },
   R:   { score: 50,   w: 11.7, boost: 12,   rumble: 650,  amp: 2,   color: '#4cc38a', order: 1 },
-  SR:  { score: 500,  w: 3.23, boost: 40,  rumble: 1100, amp: 3.5, color: '#4da3ff', order: 2 },
+  SR:  { score: 500,  w: 3.0,  boost: 40,  rumble: 1100, amp: 3.5, color: '#4da3ff', order: 2 },
   SSR: { score: 5000, w: 0.863, boost: 120, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
   UR:  { score: 50000, w: 0.24, boost: 500, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
 };
@@ -87,6 +87,7 @@ const GEMS = [
   { id: 'm_chicken', name: 'ニワトリティラノ', emoji: '🐔', img: '', cap: 'ニワトリを恐竜に戻す研究は実在する。', r: 'SR', shape: 'round', c: ['#ffe0b0', '#ff9a4a', '#b3501a'], styles: ['tap'] },
   { id: 'm_hat', name: 'グラント博士の帽子', emoji: '🤠', img: '', cap: '発掘も冒険も、まずは帽子から。', r: 'SSR', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ['horiz'] },
   { id: 'm_shades', name: '数学博士のグラサン', emoji: '🕶️', img: '', cap: '混沌を語る数学者の決めアイテム。', r: 'SSR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ['slow'] },
+  { id: 'm_claw', name: 'ラプトルの爪', emoji: '🦖', img: '', cap: '後ろ足の大きな鎌のような爪。', r: 'SR', shape: 'round', c: ['#d6fbff', '#6fdcf0', '#1a8fb0'], styles: ['fast'] },
 ];
 const GEM_BY_ID = Object.fromEntries(GEMS.map((g) => [g.id, g]));
 
