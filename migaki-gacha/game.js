@@ -605,6 +605,7 @@ function showResult(gem, scores, isNew) {
   el.rStyle.textContent = top.length ? '磨きのクセ：' + top.map(([k, v]) => `${STYLE_SHORT[k]} ${Math.round(v * 100)}%`).join('・') : '磨きのクセ：なし（ふつうに磨いた）';
   el.hud.hidden = true; el.result.hidden = false;
   state = 'result';
+  updateShareLink();
   el.next.focus({ preventScroll: true });
 }
 
@@ -629,10 +630,8 @@ function toast(msg) {
   el.toast.textContent = msg; el.toast.classList.add('show');
   clearTimeout(toast.t); toast.t = setTimeout(() => el.toast.classList.remove('show'), 1800);
 }
-$('#xBtn').addEventListener('click', () => {
-  const u = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText()) + '&url=' + encodeURIComponent(shareUrl());
-  window.open(u, '_blank', 'noopener');
-});
+const xBtn = $('#xBtn');
+function updateShareLink() { xBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText()) + '&url=' + encodeURIComponent(shareUrl()); }
 if (navigator.share) {
   const nb = $('#nativeBtn'); nb.hidden = false;
   nb.addEventListener('click', async () => {
@@ -657,7 +656,9 @@ muteBtn.addEventListener('click', () => {
   drawMute(); if (!muted) { ensureAudio(); tone(880, 0, .15); }
 });
 $('#resetBtn').addEventListener('click', () => {
-  if (!confirm('図鑑とスコアを全部消します。よろしいですか？')) return;
+  const b = $('#resetBtn');
+  if (!b.dataset.arm) { b.dataset.arm = '1'; b.textContent = '本当に消す？もう一度押すと消去'; setTimeout(() => { delete b.dataset.arm; b.textContent = 'データを消去'; }, 4000); return; }
+  delete b.dataset.arm; b.textContent = 'データを消去';
   save = { total: 0, polished: 0, counts: {}, cool: {}, last: null };
   writeSave(); shownTotal = 0; renderScores(false); renderCodex();
 });
@@ -668,6 +669,7 @@ drawMute();
 shownTotal = save.total;
 renderScores(false);
 renderCodex();
+updateShareLink();
 fxResize();
 newBall();
 requestAnimationFrame(fxLoop);
