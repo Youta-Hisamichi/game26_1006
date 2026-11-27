@@ -16,11 +16,11 @@ const SAVE_KEY = 'migaki-gacha:v1';
 const MUTE_KEY = 'migaki-gacha:mute';
 
 const RARITY = {
-  N:   { score: 10,   w: 70,  boost: 2,   rumble: 350,  amp: 1,   color: '#a3adbd', order: 0 },
-  R:   { score: 50,   w: 20,  boost: 8,   rumble: 650,  amp: 2,   color: '#4cc38a', order: 1 },
-  SR:  { score: 200,  w: 6,   boost: 30,  rumble: 1100, amp: 3.5, color: '#4da3ff', order: 2 },
-  SSR: { score: 1000, w: 1.6, boost: 100, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
-  UR:  { score: 5000, w: 0.4, boost: 400, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
+  N:   { score: 10,   w: 35,  boost: 2,   rumble: 350,  amp: 1,   color: '#a3adbd', order: 0 },
+  R:   { score: 50,   w: 11.7, boost: 12,   rumble: 650,  amp: 2,   color: '#4cc38a', order: 1 },
+  SR:  { score: 200,  w: 3.5, boost: 40,  rumble: 1100, amp: 3.5, color: '#4da3ff', order: 2 },
+  SSR: { score: 1000, w: 1.02, boost: 120, rumble: 1700, amp: 5,   color: '#b86bff', order: 3 },
+  UR:  { score: 5000, w: 0.24, boost: 500, rumble: 2400, amp: 7,   color: '#ffd36b', order: 4 },
 };
 const stars = (r) => '★'.repeat(RARITY[r].order + 1) + '☆'.repeat(4 - RARITY[r].order);
 const RARITY_KEYS = ['UR', 'SSR', 'SR', 'R', 'N'];
@@ -36,8 +36,8 @@ const STYLE_SHORT = {
 
 // shape: brilliant | emerald | round | oval | drop | heart | star | cab
 const GEMS = [
-  { id: 'quartz',   name: 'とりあえず草', emoji: '🌱', cap: '生やしとけば間違いない。',         r: 'N', shape: 'round',   c: ['#f6f8fc', '#cfd6e6', '#8e99b3'], styles: [], w: 110 },
-  { id: 'obsidian', name: '既読スルー', emoji: '👀', cap: '見たけど返さない。',       r: 'N', shape: 'drop',    c: ['#7a7e92', '#2c2e3c', '#0c0d14'], styles: [], w: 110 },
+  { id: 'quartz',   name: 'とりあえず草', emoji: '🌱', cap: '生やしとけば間違いない。',         r: 'N', shape: 'round',   c: ['#f6f8fc', '#cfd6e6', '#8e99b3'], styles: [], w: 55 },
+  { id: 'obsidian', name: '既読スルー', emoji: '👀', cap: '見たけど返さない。',       r: 'N', shape: 'drop',    c: ['#7a7e92', '#2c2e3c', '#0c0d14'], styles: [], w: 55 },
   { id: 'agate',    name: 'ぬるぽ→ガッ', emoji: '🔨', cap: '条件反射でガッ。',         r: 'N', shape: 'cab',     c: ['#f3d9b1', '#c98f5a', '#7a4a2c'], styles: ['horiz'], deco: 'bands' },
   { id: 'fluorite', name: 'ゆっくり亀', emoji: '🐢', cap: '急がば回れ、亀は偉大。',         r: 'N', shape: 'emerald', c: ['#e0d4ff', '#8fd0c4', '#6a4fb0'], styles: ['slow'] },
   { id: 'garnet',   name: '回る寿司', emoji: '🍣', cap: '流れてくるのを待つだけの時間。',   r: 'R', shape: 'brilliant', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ['cw'] },
@@ -64,6 +64,26 @@ const GEMS = [
   { id: 'opal',     name: '全方位バズ砲', emoji: '🌈', cap: 'どっちに回してもバズる。', r: 'UR', shape: 'cab', c: ['#ffffff', '#9fd8ff', '#c47aff'], grad: ['#ff9ad0', '#ffe27a', '#7affc8', '#7ab8ff', '#c47aff'], deco: 'rainbow', styles: ['cw', 'ccw'] },
   { id: 'sage',     name: '大草原', emoji: '🌾', cap: '縦にも横にも草。',     r: 'UR', shape: 'star', c: ['#fff2a8', '#ff5a3c', '#8a0a2a'], styles: ['cross'] },
   { id: 'stardust', name: '最後のひとツイート', emoji: '🌙', cap: 'おやすみの前に、もう一回だけ。',       r: 'UR', shape: 'star', c: ['#ffffff', '#9fd8ff', '#6a5cff'], styles: ['slow', 'tap'] },
+  { id: 'm_pien', name: 'ぴえん', emoji: '🥺', cap: 'とりあえず泣いとく。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
+  { id: 'm_natsu', name: 'おつかれサマー', emoji: '🏖️', cap: '夏が終わるのは早い。', r: 'N', shape: 'round', c: ['#f0f2f8', '#b8c0d4', '#6c7690'], styles: [], w: 55 },
+  { id: 'm_paw', name: 'ぬこ様の足跡', emoji: '🐾', cap: '肉球は縦に並ぶ。', r: 'N', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
+  { id: 'm_dash', name: 'ダッシュで逃げる', emoji: '🏃', cap: 'とりあえず走る。', r: 'N', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
+  { id: 'm_dog', name: 'ぐるぐる目の犬', emoji: '😵‍💫', cap: '目が回るほど忙しい。', r: 'R', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_robo', name: 'ねじ巻きロボ', emoji: '🤖', cap: '巻き戻すとなぜか動く。', r: 'R', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_crab', name: 'カニ歩き選手', emoji: '🦀', cap: '横歩きが最速。', r: 'R', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
+  { id: 'm_elev', name: 'エレベーター待ち', emoji: '🛗', cap: '上か下か、それが問題。', r: 'R', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
+  { id: 'm_deli', name: 'ダッシュ宅配', emoji: '🛵', cap: '届くのが早すぎる。', r: 'R', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
+  { id: 'm_coffee', name: 'ぐるぐるコーヒー', emoji: '☕', cap: 'かき混ぜすぎて冷めた。', r: 'SR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_slot', name: '逆回転ルーレット', emoji: '🎰', cap: '外れたら逆に回せばいい。', r: 'SR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_hero', name: '横スクロール勇者', emoji: '🗡️', cap: '右へ右へ進むだけ。', r: 'SR', shape: 'round', c: ['#fff0a0', '#f7b92a', '#b36d08'], styles: ["'horiz'"] },
+  { id: 'm_enter', name: 'エンターキー連打', emoji: '⌨️', cap: '確定したいだけなのに。', r: 'SR', shape: 'round', c: ['#ffd0e4', '#ff7fb0', '#c0306f'], styles: ["'tap'"] },
+  { id: 'm_nap', name: '二度寝の誘惑', emoji: '🛌', cap: 'あと5分が永遠。', r: 'SR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'"] },
+  { id: 'm_loop', name: '無限ループ会議', emoji: '🔁', cap: '結論は次回に持ち越し。', r: 'SSR', shape: 'round', c: ['#ff9aa8', '#c4162f', '#6a0716'], styles: ["'cw'"] },
+  { id: 'm_time', name: '時間を巻き戻す猫', emoji: '⏳', cap: '昨日の自分を助けに行く。', r: 'SSR', shape: 'round', c: ['#8fc4ff', '#1f63e0', '#0a2a85'], styles: ["'ccw'"] },
+  { id: 'm_ladder', name: '終わらない縦スクロール', emoji: '🪜', cap: '指が筋肉痛になる。', r: 'SSR', shape: 'round', c: ['#b9f5c9', '#2eb86a', '#0a6a3a'], styles: ["'vert'"] },
+  { id: 'm_monkey', name: '爆速タイピング猿', emoji: '🐒', cap: 'シェイクスピアは書けない。', r: 'SSR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'"] },
+  { id: 'm_trend', name: 'トレンド入りの瞬間', emoji: '📈', cap: '気づけば世界のトレンド。', r: 'UR', shape: 'round', c: ['#ffffff', '#cfe9ff', '#8fb0d8'], styles: ["'fast'", "'tap'"] },
+  { id: 'm_zen', name: 'ゆっくり回る悟り', emoji: '🧘', cap: '右に回ると心が整う。', r: 'UR', shape: 'round', c: ['#e0c8ff', '#9a5de0', '#4a1f8f'], styles: ["'slow'", "'cw'"] },
 ];
 const GEM_BY_ID = Object.fromEntries(GEMS.map((g) => [g.id, g]));
 
