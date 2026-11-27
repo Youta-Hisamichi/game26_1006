@@ -148,6 +148,7 @@ h1{margin:0;font-size:12cqw;line-height:1.05;font-weight:900;color:var(--fire2);
       <button class="btn" id="bAgain">もう一回</button>
       <button class="btn sec" id="bHome">タイトル</button>
     </div>
+    <button class="btn sec" id="bRank2">🏆 ランキングを見る</button>
   </div></div>
 
   <div id="toast"></div>
@@ -351,8 +352,8 @@ function commit(s) {
 }
 
 function floatText(text, color) {
-  floaters.push({ text, color, x: P.x + rnd(-60, 60), y: 420 + rnd(-10, 10), age: 0, life: .7 });
-  if (floaters.length > 6) floaters.shift();
+  floaters.length = 0;   // 重ねず、常に最新の1つだけ
+  floaters.push({ text, color, x: P.x, y: 430, age: 0, life: .6 });
 }
 
 function ignite() {
@@ -387,7 +388,7 @@ function showResult() {
   rec.ranks = rec.ranks.slice(0, 10);
   saveRec();
   $('rrank').textContent = pos && pos <= 10 ? `ランキング ${pos}位！` : 'ランク圏外（10位まで）';
-  result = { t: elapsed, score, acc, combo: maxCombo, n, rank: rankOf(score), total: rec.total, isBest };
+  result = { d: entry.d, t: elapsed, score, acc, combo: maxCombo, n, rank: rankOf(score), total: rec.total, isBest };
   $('rank').textContent = result.rank;
   $('rtime').innerHTML = elapsed.toFixed(2) + '<small> 秒</small>';
   $('rscore').textContent = 'SCORE ' + fmt(score);
@@ -662,7 +663,7 @@ function updateParticles(dt) {
     p.x += (p.vx + Math.sin(clock * 12 + p.y * .05) * 18) * dt; p.y += p.vy * dt;
   }
   for (let i = floaters.length - 1; i >= 0; i--) {
-    const f = floaters[i]; f.age += dt; f.y -= 50 * dt;
+    const f = floaters[i]; f.age += dt; f.y -= 70 * dt;
     if (f.age > f.life) floaters.splice(i, 1);
   }
 }
@@ -723,7 +724,7 @@ function drawGuide() {
 function drawFloaters() {
   ctx.textAlign = 'center'; ctx.font = `900 44px ${FONT}`; ctx.lineWidth = 7; ctx.lineJoin = 'round';
   for (const f of floaters) {
-    ctx.globalAlpha = 1 - f.age / f.life; ctx.strokeStyle = '#000'; ctx.strokeText(f.text, f.x, f.y);
+    ctx.globalAlpha = Math.min(1, (1 - f.age / f.life) * 1.5); ctx.strokeStyle = '#000'; ctx.strokeText(f.text, f.x, f.y);
     ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
   }
   ctx.globalAlpha = 1;
@@ -815,8 +816,11 @@ function toTitle() {
   $('hud').classList.remove('on'); $('ovResult').classList.remove('on'); $('ovTitle').classList.add('on');
 }
 $('pname').addEventListener('input', e => { rec.name = e.target.value.trim().slice(0, 8); saveRec(); });
-$('bRank').onclick = () => { showRank(); $('ovTitle').classList.remove('on'); $('ovRank').classList.add('on'); };
-$('bRankBack').onclick = () => { $('ovRank').classList.remove('on'); $('ovTitle').classList.add('on'); };
+let rankFrom = 'ovTitle';
+function openRank(from, hl) { rankFrom = from; showRank(hl); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
+$('bRank').onclick = () => openRank('ovTitle');
+$('bRank2').onclick = () => openRank('ovResult', result && result.d);
+$('bRankBack').onclick = () => { $('ovRank').classList.remove('on'); $(rankFrom).classList.add('on'); };
 $('bStart').onclick = () => { initAudio(); toReady(); };
 $('bAgain').onclick = toReady;
 $('bRetry').onclick = toReady;
