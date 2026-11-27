@@ -132,7 +132,7 @@ function analyzeStyle(pts) {
   scores.slow = clamp((3 - v) / 1.5);
   scores.fast = clamp((v - 4.5) / 3.5);
   const n = strokes.size;
-  scores.tap = clamp((n - 7) / 7) * (total / n < 1.2 ? 1 : 0.4);
+  scores.tap = clamp((n - 5) / 6) * (total / n < 1.2 ? 1 : 0.4);
   return { scores, info };
 }
 
@@ -309,7 +309,7 @@ function squeak() {
 ============================================================ */
 const el = {
   stage: $('#stage'), ball: $('#ball'), inner: $('#ballInner'), core: $('#core'), slot: $('#gemSlot'), rays: $('#rays'),
-  mud: $('#mud'), fx: $('#fx'), prompt: $('#prompt'), flash: $('#flash'),
+  mud: $('#mud'), tease: $('#tease'), fx: $('#fx'), prompt: $('#prompt'), flash: $('#flash'),
   hud: $('#hud'), msg: $('#msg'), bar: $('#bar'), result: $('#result'),
   rBadge: $('#rBadge'), rName: $('#rName'), rNew: $('#rNew'), rScore: $('#rScore'), rStyle: $('#rStyle'),
   next: $('#nextBtn'), total: $('#total'), dex: $('#dexCount'), pol: $('#polishCount'), codex: $('#codex'),
@@ -322,6 +322,7 @@ let brushR = 26;
 const GRID = 40;
 let inside = [], done = [], insideCount = 0, cleared = 0;
 let state = 'polish';      // polish | reveal | result
+let locked = null;
 let pts = [], strokeId = 0, lastP = null, lastS = null, down = false;
 
 function paintMud() {
@@ -362,7 +363,7 @@ function newBall() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   el.mud.width = el.mud.height = Math.round(L * dpr);
   mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  brushR = L * 0.085;
+  brushR = L * 0.13;
   paintMud();
   const cs = L / GRID;
   inside = new Array(GRID * GRID); done = new Array(GRID * GRID).fill(0); insideCount = 0; cleared = 0;
@@ -370,6 +371,7 @@ function newBall() {
     const ok = Math.hypot((i + .5) * cs - L / 2, (j + .5) * cs - L / 2) < L / 2 * 0.93;
     inside[j * GRID + i] = ok; if (ok) insideCount++;
   }
+  locked = null; el.tease.className = 'tease tease-n'; el.tease.style.opacity = .2;
   pts = []; strokeId = 0; lastP = null; lastS = null; down = false;
   el.mud.classList.remove('gone'); el.mud.classList.add('fresh');
   el.prompt.classList.remove('off');
@@ -383,7 +385,7 @@ function stamp(x, y) {
   mctx.fillStyle = g; mctx.beginPath(); mctx.arc(x, y, r, 0, TAU); mctx.fill();
   mctx.globalCompositeOperation = 'source-over';
   // 進捗マーク
-  const cs = L / GRID, rr = r * 0.8;
+  const cs = L / GRID, rr = r * 0.85;
   const x0 = Math.max(0, Math.floor((x - rr) / cs)), x1 = Math.min(GRID - 1, Math.floor((x + rr) / cs));
   const y0 = Math.max(0, Math.floor((y - rr) / cs)), y1 = Math.min(GRID - 1, Math.floor((y + rr) / cs));
   for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) {
@@ -414,8 +416,23 @@ function feed(p, e) {
   lastP = p;
   if (e && Math.random() < .3) { const sp = stagePos(e); fxSparkle(sp.x, sp.y); }
   const prog = cleared / insideCount;
-  setProgress(Math.min(1, prog / 0.9));
-  if (prog >= 0.9 && state === 'polish') { down = false; finish(); }
+  setProgress(Math.min(1, prog / 0.85));
+  if (state === 'polish') {
+    if (!locked && prog >= 0.3 && pts.length >= 12) lockGem();
+    el.tease.style.opacity = (0.2 + Math.min(1, prog / 0.85) * 0.8).toFixed(2);
+  }
+  if (prog >= 0.85 && state === 'polish') { down = false; finish(); }
+}
+
+// 途中で中身を決めて、磨いた部分の光で予告する
+function lockGem() {
+  const { scores } = analyzeStyle(pts);
+  const gem = pickGem(scores, Date.now(), save.cool);
+  locked = gem;
+  const order = RARITY[gem.r].order;
+  let kind = ['n', 'r', 'sr', 'ssr', 'rainbow'][order];
+  if (order <= 1 && Math.random() < 0.07) kind = 'rainbow';   // たまに虹色のブラフ
+  el.tease.className = 'tease tease-' + kind;
 }
 
 function onDown(e) {
@@ -552,7 +569,7 @@ async function finish() {
   state = 'reveal';
   const { scores } = analyzeStyle(pts);
   const now = Date.now();
-  const gem = pickGem(scores, now, save.cool);
+  const gem = locked || pickGem(scores, now, save.cool);
   const R = RARITY[gem.r];
   const isNew = !(save.counts[gem.id] > 0);
 
@@ -573,6 +590,7 @@ async function finish() {
   el.ball.classList.remove('rumble', 'charge');
 
   // 登場
+  el.tease.style.opacity = 0;
   el.flash.classList.remove('go'); void el.flash.offsetWidth; el.flash.classList.add('go');
   el.slot.innerHTML = gemSVG(gem);
   el.slot.className = 'gem-slot pop';

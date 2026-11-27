@@ -161,3 +161,18 @@ h1{
 #toast.show{opacity:1;transform:translate(-50%,0)}
 @media (max-width:360px){.scorebar{grid-template-columns:1.4fr 1fr 1fr auto}.sbox b{font-size:15px}.sbox.main b{font-size:20px}}
 @media (prefers-reduced-motion:reduce){.prompt,.new,.rays,.gem-slot.idle svg{animation:none}}
+
+/* 磨いた部分の予告グロー */
+.tease{position:absolute;inset:0;opacity:.2;transition:opacity .25s;pointer-events:none}
+.tease-n{background:radial-gradient(circle at 50% 45%,#fff 0,#ffffff88 45%,transparent 78%);animation:tpulse 2.2s ease-in-out infinite}
+.tease-r{background:radial-gradient(circle at 50% 45%,#fff 0,#9fe8ff 40%,#ff9ae0 68%,transparent 85%);animation:thue 3s linear infinite,tpulse 1.6s ease-in-out infinite}
+.tease-sr{background:conic-gradient(#fff,#6fd0ff,#4da3ff,#fff,#9ffcff,#4da3ff,#fff);animation:tspin 2.4s linear infinite,thue2 2s linear infinite}
+.tease-ssr{background:conic-gradient(#fff,#b86bff,#ffd36b,#ff7ab8,#fff,#b86bff,#ffd36b,#fff);animation:tspin 1.2s linear infinite,tflick .35s steps(2) infinite}
+.tease-rainbow{background:conic-gradient(#ff3b3b,#ffd400,#2bff6a,#19e6ff,#3b5bff,#ff3bd9,#ff3b3b);animation:tspin .7s linear infinite,thue .9s linear infinite,tflick .16s steps(2) infinite}
+@keyframes tpulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.5)}}
+@keyframes thue{to{filter:hue-rotate(360deg) brightness(1.2)}}
+@keyframes thue2{from{filter:hue-rotate(-25deg)}50%{filter:hue-rotate(25deg)}to{filter:hue-rotate(-25deg)}}
+@keyframes tspin{to{transform:rotate(360deg)}}
+@keyframes tflick{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.tease{animation:none!important}}
+.btn{text-decoration:none;text-align:center}
