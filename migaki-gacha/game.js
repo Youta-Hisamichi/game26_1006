@@ -695,6 +695,7 @@ async function finish() {
   if (gem.styles.length) save.cool[gem.id] = now + COOL_MS;
   save.last = { id: gem.id, name: gem.name, r: gem.r, score: R.score };
   writeSave();
+  pushScore();
   renderScores(true);
   renderCodex();
 
@@ -860,6 +861,68 @@ $('#copyBtn').addEventListener('click', async () => {
   }
 });
 
+
+/* ============================================================
+   ランキング（共有データベースが使えるときだけ表示）
+============================================================ */
+let rankDb = null, rankUser = null, myId = null, canWrite = null, rankRows = [], rankTab = 'total', rankSynced = false, rankSeq = 0, pushChain = Promise.resolve();
+const bestOrder = () => GEMS.reduce((m, g) => (save.counts[g.id] > 0 ? Math.max(m, RARITY[g.r].order) : m), -1);
+function myScoreDoc() { return { total: save.total, dex: ownedCount(), best: bestOrder(), polished: save.polished, updated: Date.now() }; }
+function pushScore() {
+  if (!rankDb || !myId || canWrite === false || save.polished < 1) return;
+  const ref = rankDb.doc('scores/' + myId);
+  pushChain = pushChain.then(() => ref.set(myScoreDoc())).catch(() => {});
+}
+async function renderRank() {
+  const seq = ++rankSeq;
+  const key = rankTab === 'dex' ? (r) => r.dex * 1e9 + r.total : (r) => r.total * 1e3 + r.dex;
+  const rows = rankRows.filter((r) => typeof r.total === 'number').sort((a, b) => key(b) - key(a));
+  let shown = rows.slice(0, 20);
+  const myIdx = rows.findIndex((r) => r.id === myId);
+  if (myIdx >= 20) shown = shown.concat([rows[myIdx]]);
+  const ps = rankUser ? await rankUser.profiles(shown.map((r) => r.id)) : {};
+  if (seq !== rankSeq) return;
+  const ol = $('#rankList'); ol.textContent = '';
+  if (!shown.length) { const li = document.createElement('li'); li.textContent = 'まだ誰も載っていません。最初の1位になろう！'; li.style.display = 'block'; ol.appendChild(li); return; }
+  shown.forEach((r) => {
+    const rank = rows.indexOf(r) + 1, p = ps[r.id], isMe = r.id === myId;
+    const li = document.createElement('li'); if (isMe) li.className = 'me';
+    const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = rank;
+    const img = document.createElement('img'); img.alt = ''; if (p && p.avatarUrl) img.src = p.avatarUrl;
+    const who = document.createElement('div'); who.className = 'who';
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (p && p.name) || (isMe ? 'あなた' : '名無しの磨き人');
+    if (isMe) { const y = document.createElement('i'); y.className = 'you'; y.textContent = 'YOU'; y.style.fontStyle = 'normal'; nm.appendChild(y); }
+    const sub = document.createElement('span'); sub.className = 'sub';
+    sub.textContent = rankTab === 'dex' ? `${fmt(r.total)}pt ・ 最高 ${r.best >= 0 ? RARITY_KEYS[4 - r.best] : '-'}` : `図鑑 ${r.dex}/${GEMS.length} ・ 最高 ${r.best >= 0 ? RARITY_KEYS[4 - r.best] : '-'}`;
+    who.append(nm, sub);
+    const val = document.createElement('span'); val.className = 'val'; val.textContent = rankTab === 'dex' ? `${r.dex}種` : `${fmt(r.total)}pt`;
+    li.append(pos, img, who, val); ol.appendChild(li);
+  });
+}
+async function initRanking() {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db) return;
+    rankDb = db; rankUser = user;
+    myId = user ? await user.id() : null;
+    canWrite = user ? await user.can('data.write') : null;
+    $('#rankSec').hidden = false;
+    const note = $('#rankNote');
+    note.textContent = !myId ? 'この環境ではあなたのスコアは記録されません。' : canWrite === false ? '閲覧のみの権限のため、あなたのスコアはランキングに載りません。' : '磨くたびにスコアが自動で登録されます。';
+    const timer = setTimeout(() => { note.textContent = 'ランキングに接続できません。しばらくしてから開き直してください。'; }, 10000);
+    db.collection('scores').limit(200).onSnapshot((snap) => {
+      if (!snap.metadata.fromCache) clearTimeout(timer);
+      rankRows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderRank();
+      if (!rankSynced) { rankSynced = true; pushScore(); }
+    }, () => { clearTimeout(timer); note.textContent = 'ランキングを読み込めませんでした。'; });
+    document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
+      rankTab = b.dataset.tab; document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === b)); renderRank();
+    }));
+  } catch (e) { /* ランキングなしで続行 */ }
+}
+
 /* ---------- その他 ---------- */
 const muteBtn = $('#mute');
 const drawMute = () => { muteBtn.textContent = muted ? '🔇' : '🔊'; };
@@ -873,6 +936,7 @@ $('#resetBtn').addEventListener('click', () => {
   delete b.dataset.arm; b.textContent = 'データを消去';
   save = { total: 0, polished: 0, counts: {}, cool: {}, last: null };
   writeSave(); shownTotal = 0; renderScores(false); renderCodex();
+  if (rankDb && myId) rankDb.doc('scores/' + myId).delete().catch(() => {});
 });
 window.addEventListener('resize', fxResize);
 
@@ -885,6 +949,8 @@ updateShareLink();
 fxResize();
 newBall();
 requestAnimationFrame(fxLoop);
+
+initRanking();
 
 // テスト・調整用
 window.Migaki = { analyzeStyle, gemWeights, pickGem, GEMS, RARITY, COOL_MS, get state() { return state; } };
