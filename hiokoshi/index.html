@@ -207,7 +207,7 @@ const I18N = {
     rowInfo: '{0}秒 ・ 正確さ{1}% ・ {2}',
     cardTitle: '火おこしRTA', cardStats: '正確さ {0}% / 最大コンボ {1} / {2}ストローク', tag: '#火おこしRTA',
     shareText: '火おこしRTA 🔥 {0}秒で着火！ SCORE {1}（{2}） #火おこしRTA',
-    tWait: '画像を作っています…もう一度押してね', tSaved: '画像を保存しました。投稿に添付してね',
+    tWait: '画像を作っています…もう一度押してね', tSaved: '文面をコピーし、画像を保存しました。投稿に添付してね',
     tCopied: '文面をコピーしました。画像は長押し/右クリックで保存して添付してね', langBtn: 'EN', docTitle: '火おこしRTA'
   },
   en: {
@@ -229,7 +229,7 @@ const I18N = {
     rowInfo: '{0}s ・ Acc {1}% ・ {2}',
     cardTitle: 'Fire Starter RTA', cardStats: 'Accuracy {0}% / Max combo {1} / {2} strokes', tag: '#FireStarterRTA',
     shareText: 'Fire Starter RTA 🔥 Lit in {0}s! SCORE {1} ({2}) #FireStarterRTA',
-    tWait: 'Making the image… tap again', tSaved: 'Image saved. Attach it to your post.',
+    tWait: 'Making the image… tap again', tSaved: 'Text copied and image saved. Attach it to your post.',
     tCopied: 'Text copied. Long-press / right-click the image to save and attach it.', langBtn: '日本語', docTitle: 'Fire Starter RTA'
   }
 };
@@ -538,16 +538,29 @@ async function doShare() {
   const url = /^https?:/.test(location.protocol) ? location.href : '';
   if (!shareBlob) { toast(t('tWait')); return; }
   const file = new File([shareBlob], 'hiokoshi-rta.png', { type: 'image/png' });
-  const data = { title: t('docTitle'), text, files: [file] };
-  if (url) data.url = url;
-  if (navigator.canShare && navigator.canShare(data)) {
-    try { await navigator.share(data); return; }
-    catch (e) { if (e && e.name === 'AbortError') return; }
+  // 端末の共有シート（画像つき）。タップ直後に呼ぶ必要があるので、可否は同期で判定して最初に通るものを使う
+  const full = { title: t('docTitle'), text, files: [file] };
+  if (url) full.url = url;
+  const cands = [full, { text: url ? text + ' ' + url : text, files: [file] }, { files: [file] }];
+  if (navigator.share && navigator.canShare) {
+    const data = cands.find(d => { try { return navigator.canShare(d); } catch (e) { return false; } });
+    if (data) {
+      try { await navigator.share(data); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
   }
-  // フォールバック：画像を保存して X の投稿画面を開く
-  const a = document.createElement('a');
-  a.href = shareUrl; a.download = 'hiokoshi-rta.png';
-  document.body.appendChild(a); a.click(); a.remove();
+  // フォールバック：文面コピー + 画像保存 + X の投稿画面
+  try { navigator.clipboard.writeText(url ? text + ' ' + url : text).catch(() => {}); } catch (e) {}
+  let saved = false;
+  try {
+    const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+    if (dl) { await dl.save({ filename: 'hiokoshi-rta.png', data: shareBlob }); saved = true; }
+  } catch (e) {}
+  if (!saved && shareUrl) {
+    const a = document.createElement('a');
+    a.href = shareUrl; a.download = 'hiokoshi-rta.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
   const intent = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + (url ? '&url=' + encodeURIComponent(url) : '');
   window.open(intent, '_blank', 'noopener');
   toast(t('tSaved'));
