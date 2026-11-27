@@ -11,12 +11,13 @@
   --fire:#ff7a1a; --fire2:#ffc84a; --line:#5a3d26; --good:#9be564;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
   font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic","Meiryo","WenQuanYi Zen Hei",sans-serif;
-  overflow:hidden;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
-body{display:flex;align-items:center;justify-content:center}
-#stage{position:relative;width:min(100vw,75dvh);aspect-ratio:3/4;container-type:inline-size;background:#000;touch-action:none}
-canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  user-select:none;-webkit-user-select:none}
+body{display:flex;min-height:100dvh}
+#stage{position:relative;margin:auto;display:grid;width:min(100%,max(75dvh,320px));aspect-ratio:3/4;container-type:inline-size;background:#000}
+#stage>*{grid-area:1/1}
+canvas#cv{align-self:start;width:100%;height:auto;display:block;touch-action:none;cursor:grab}
 #hud{position:absolute;left:0;right:0;top:0;padding:2.5cqw 3cqw;pointer-events:none;display:none}
 #hud.on{display:block}
 .row{display:flex;align-items:flex-start;justify-content:space-between;gap:2cqw}
@@ -34,17 +35,13 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-a
 #glabels span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 #hint{margin-top:1.5cqw;text-align:center;font-size:4cqw;font-weight:700;min-height:5cqw;color:var(--fire2);
   text-shadow:0 .3cqw 0 #000}
-#combo{position:absolute;left:3cqw;bottom:3cqw;font-size:6cqw;font-weight:900;color:var(--good);
+#combo{position:absolute;left:3cqw;top:118cqw;font-size:6cqw;font-weight:900;color:var(--good);
   text-shadow:0 .4cqw 0 #000;opacity:0;transition:opacity .15s}
 #combo.on{opacity:1}
-.ov{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:2cqw 4cqw;
+.ov{display:none;align-self:stretch;align-items:center;justify-content:center;padding:2cqw 4cqw;
   background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.78),rgba(8,4,2,.95))}
 .ov.on{display:flex}
-.card{width:100%;max-height:100%;overflow-y:auto;overscroll-behavior:contain;text-align:center;scrollbar-width:none;
-  padding:5cqw 0;touch-action:pan-y;
-  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 4cqw,#000 calc(100% - 4cqw),transparent 100%);
-  mask-image:linear-gradient(to bottom,transparent 0,#000 4cqw,#000 calc(100% - 4cqw),transparent 100%)}
-.card::-webkit-scrollbar{display:none}
+.card{width:100%;text-align:center;padding:5cqw 0}
 h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
   text-shadow:0 .6cqw 0 #7a2a00,0 0 5cqw #ff7a1a88}
 .sub{color:var(--mute);font-size:3.4cqw;margin:1cqw 0 2.5cqw}
@@ -74,6 +71,12 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 #nameRow{display:flex;gap:2cqw;align-items:center;margin-bottom:2cqw;font-size:3.4cqw;color:var(--mute)}
 #nameRow input{flex:1;min-width:0;background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw;color:var(--ink);font:inherit;font-size:4cqw}
 #rrank{margin-top:1cqw;font-size:4.4cqw;font-weight:800;color:var(--good)}
+.tabs{display:flex;gap:2cqw;margin-bottom:2.5cqw}
+.tabs button{flex:1;padding:2.2cqw;border-radius:3cqw;border:.4cqw solid var(--line);background:#00000066;color:var(--mute);font:inherit;font-size:3.8cqw;font-weight:800;cursor:pointer}
+.tabs button.on{background:var(--fire);color:#2a1000;border-color:var(--fire2)}
+.tabs[hidden]{display:none}
+#rkStatus{color:var(--mute);font-size:3.2cqw;margin-bottom:2cqw;min-height:4cqw}
+#rrankOn{font-size:4cqw;font-weight:800;color:var(--fire2)}
 .rk{list-style:none;margin:0 0 2cqw;padding:0;text-align:left}
 .rk li{display:grid;grid-template-columns:9cqw 1fr auto;gap:2cqw;align-items:baseline;padding:2cqw 2.4cqw;margin-bottom:1.2cqw;
   background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;font-size:3.8cqw}
@@ -84,7 +87,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 .empty{color:var(--mute);padding:6cqw 0}
 .langrow{display:flex;justify-content:flex-end;margin-bottom:1cqw}
 .ib.lang{width:auto;min-width:9cqw;padding:0 2.4cqw;border-radius:5cqw;font-size:3.4cqw;font-weight:800;color:var(--ink)}
-#toast{position:absolute;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
+#toast{position:fixed;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
   padding:2cqw 4cqw;border-radius:3cqw;font-size:3.6cqw;opacity:0;transition:opacity .25s;pointer-events:none;
   max-width:90%;text-align:center;z-index:5}
 #toast.on{opacity:1}
@@ -128,7 +131,9 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 
   <div class="ov" id="ovRank"><div class="card">
     <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
-    <div class="sub" data-i="rankSub">この端末のベスト10（スコア順）</div>
+    <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
+    <div class="sub" id="rkSub"></div>
+    <div id="rkStatus"></div>
     <ol class="rk" id="rkList"></ol>
     <button class="btn" id="bRankBack" data-i="back">もどる</button>
   </div></div>
@@ -138,6 +143,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
     <div id="rtime"></div>
     <div id="rscore"></div>
     <div id="rrank"></div>
+    <div id="rrankOn"></div>
     <div id="newbest" data-i="newBest">🏆 ベスト更新！</div>
     <div class="stat">
       <div><small data-i="sAcc">正確さ</small><b id="sAcc"></b></div>
@@ -197,6 +203,9 @@ const I18N = {
     h1: 'もっと速く こすれ！', h2: '煙が出てきた！', h3: 'おがくずに 火種が！', h4: 'もうすぐ着火！！',
     jBack: '戻し', jFlat: 'ヨコすぎ', jSteep: 'タテすぎ', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'ざつ',
     r0: '火の神', r1: '炎の達人', r2: '縄文の匠', r3: '石器時代の民', r4: 'たき火見習い', r5: 'まだ寒い',
+    tabOnline: 'オンライン', tabLocal: 'この端末', subOn: 'みんなのベスト10（1人1記録）', subLocal: 'この端末のベスト10（スコア順）',
+    rkLoading: '読み込み中…', rkFail: 'ランキングを取得できませんでした', rkOffline: 'オンラインランキングは未接続です',
+    rrankOnIn: 'オンライン {0}位！', rrankOnOut: 'オンライン圏外（10位まで）', rrankOnFail: 'オンラインには登録できませんでした', rrankOnSend: 'オンラインに登録中…',
     rrankIn: 'ランキング {0}位！', rrankOut: 'ランク圏外（10位まで）', empty: 'まだ記録がありません',
     rowInfo: '{0}秒 ・ 正確さ{1}% ・ {2}',
     cardTitle: '火おこしRTA', cardStats: '正確さ {0}% / 最大コンボ {1} / {2}ストローク', tag: '#火おこしRTA',
@@ -216,6 +225,9 @@ const I18N = {
     h1: 'Rub faster!', h2: 'Smoke is rising!', h3: 'An ember in the sawdust!', h4: 'Almost there!!',
     jBack: 'Reset', jFlat: 'Too flat', jSteep: 'Too steep', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'Sloppy',
     r0: 'God of Fire', r1: 'Flame Master', r2: 'Jomon Artisan', r3: 'Stone Age Folk', r4: 'Campfire Rookie', r5: 'Still Cold',
+    tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 10 players (best score each)', subLocal: 'Top 10 on this device (by score)',
+    rkLoading: 'Loading…', rkFail: 'Couldn\'t load the ranking', rkOffline: 'Online ranking is not connected',
+    rrankOnIn: 'Online rank #{0}!', rrankOnOut: 'Not in the online top 10', rrankOnFail: 'Couldn\'t post to the online ranking', rrankOnSend: 'Posting to the online ranking…',
     rrankIn: 'Rank #{0}!', rrankOut: 'Not in the top 10', empty: 'No records yet',
     rowInfo: '{0}s ・ Acc {1}% ・ {2}',
     cardTitle: 'Fire Starter RTA', cardStats: 'Accuracy {0}% / Max combo {1} / {2} strokes', tag: '#FireStarterRTA',
@@ -230,19 +242,6 @@ const t = (k, ...a) => {
   a.forEach((x, i) => { v = v.replace('{' + i + '}', x); });
   return v;
 };
-
-// ───────── 画面サイズに合わせて枠を収める ─────────
-const stageEl = $('stage');
-function fit() {
-  const vv = window.visualViewport;
-  const w = Math.min(window.innerWidth, vv ? vv.width : 1e9);
-  const h = Math.min(window.innerHeight, vv ? vv.height : 1e9);
-  const sw = Math.max(120, Math.min(w, h * .75));
-  stageEl.style.width = sw + 'px'; stageEl.style.height = sw / .75 + 'px';
-}
-fit();
-window.addEventListener('resize', fit);
-if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
 
 // ───────── Canvas ─────────
 const cv = $('cv'), ctx = cv.getContext('2d');
@@ -440,6 +439,7 @@ const rankName = i => RANKS[i][1] + ' ' + t(RANKS[i][2]);
 function renderResultText() {
   if (!result) return;
   const r = result;
+  if (!Online.kind) $('rrankOn').textContent = '';
   $('rrank').textContent = r.pos && r.pos <= 10 ? t('rrankIn', r.pos) : t('rrankOut');
   $('rank').textContent = rankName(r.ri);
   $('rtime').innerHTML = r.t.toFixed(2) + '<small> ' + t('unit') + '</small>';
@@ -475,6 +475,7 @@ function showResult() {
   saveRec();
   result = { d: entry.d, t: elapsed, score, acc, combo: maxCombo, n, ri: rankIdx(score), pos, total: rec.total, isBest };
   renderResultText();
+  postOnline(entry);
   $('hud').classList.remove('on'); $('combo').classList.remove('on');
   $('ovResult').classList.add('on');
   makeCard();
@@ -853,22 +854,101 @@ function frame(now) {
 }
 
 // ───────── 画面遷移 ─────────
-function showRank(hl) {
+// オンラインランキングの窓口。claude.ai の Artifact では共有DB、それ以外は REST（下記）に接続する。
+//   REST: <meta name="ranking-endpoint" content="https://…"> か window.HIOKOSHI_RANK_URL を設定すると、
+//   GET  {url}/scores?limit=10 → [{n,s,t,a,d,u?}, …]（スコア降順）
+//   POST {url}/scores  {n,s,t,a} → 1人1記録のベスト更新は サーバー側で処理
+const Online = {
+  kind: null, db: null, uid: null, url: null,
+  async init() {
+    try {
+      if (window.claude && window.claude.use) {
+        const db = await window.claude.use('db');
+        if (db) {
+          const user = await window.claude.use('user');
+          this.uid = user && user.id ? await user.id() : null;
+          this.db = db; this.kind = 'db'; return;
+        }
+      }
+    } catch (e) {}
+    const m = document.querySelector('meta[name="ranking-endpoint"]');
+    const u = window.HIOKOSHI_RANK_URL || (m && m.content);
+    if (u && /^https?:/.test(u)) { this.url = u.replace(/\/$/, ''); this.kind = 'rest'; }
+  },
+  async top(n = 10) {
+    if (this.kind === 'db') {
+      const snap = await this.db.collection('scores').orderBy('s', 'desc').limit(n).get();
+      return snap.docs.map(d => d.data()).filter(e => e && typeof e.s === 'number');
+    }
+    if (this.kind === 'rest') {
+      const r = await fetch(this.url + '/scores?limit=' + n);
+      if (!r.ok) throw new Error('http ' + r.status);
+      return (await r.json()).slice(0, n);
+    }
+    throw new Error('offline');
+  },
+  async submit(e) {
+    if (this.kind === 'db') {
+      if (!this.uid) throw new Error('no user');
+      const ref = this.db.doc('scores/' + this.uid);
+      const cur = await ref.get();
+      if (cur.exists && cur.data().s >= e.s) return;
+      await ref.set({ n: e.n, s: e.s, t: e.t, a: e.a, d: e.d, u: this.uid });
+    } else if (this.kind === 'rest') {
+      const r = await fetch(this.url + '/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n: e.n, s: e.s, t: e.t, a: e.a }) });
+      if (!r.ok) throw new Error('http ' + r.status);
+    } else throw new Error('offline');
+  }
+};
+const isMine = (e, hl) => !!hl && ((e.u && Online.uid && e.u === Online.uid) || e.d === hl);
+
+let rankTab = 'local', rankHl = null, rankToken = 0;
+function drawRankList(list, hl) {
   const ul = $('rkList'); ul.textContent = '';
-  const list = rec.ranks || [];
   if (!list.length) { ul.innerHTML = '<div class="empty">' + t('empty') + '</div>'; return; }
   list.forEach((e, i) => {
     const li = document.createElement('li');
-    if (hl && e.d === hl) li.className = 'me';
+    if (isMine(e, hl)) li.className = 'me';
     const d = new Date(e.d);
     li.innerHTML = `<span class="n">${i + 1}</span><span></span><b>${fmt(e.s)}</b>`;
     const mid = li.children[1];
-    mid.textContent = e.n;
+    mid.textContent = String(e.n || '');
     const em = document.createElement('em');
-    em.textContent = t('rowInfo', e.t.toFixed(2), Math.round(e.a * 100), (d.getMonth() + 1) + '/' + d.getDate());
+    em.textContent = t('rowInfo', Number(e.t).toFixed(2), Math.round(e.a * 100), (d.getMonth() + 1) + '/' + d.getDate());
     mid.appendChild(em);
     ul.appendChild(li);
   });
+}
+async function showRank(hl, tab) {
+  if (hl !== undefined) rankHl = hl;
+  if (tab) rankTab = tab;
+  const online = !!Online.kind;
+  $('rkTabs').hidden = !online;
+  if (!online) rankTab = 'local';
+  $('tabOn').classList.toggle('on', rankTab === 'online');
+  $('tabLocal').classList.toggle('on', rankTab === 'local');
+  $('rkSub').textContent = t(rankTab === 'online' ? 'subOn' : 'subLocal');
+  const my = ++rankToken;
+  if (rankTab === 'local') { $('rkStatus').textContent = online ? '' : t('rkOffline'); drawRankList(rec.ranks || [], rankHl); return; }
+  $('rkStatus').textContent = t('rkLoading'); $('rkList').textContent = '';
+  try {
+    const list = await Online.top(10);
+    if (my !== rankToken) return;
+    $('rkStatus').textContent = ''; drawRankList(list, rankHl);
+  } catch (e) { if (my === rankToken) $('rkStatus').textContent = t('rkFail'); }
+}
+// 結果画面：オンラインへ登録して順位を表示
+async function postOnline(entry) {
+  const el = $('rrankOn');
+  if (!Online.kind) { el.textContent = ''; return; }
+  el.textContent = t('rrankOnSend');
+  try {
+    await Online.submit(entry);
+    const list = await Online.top(10);
+    if (!result || result.d !== entry.d) return;
+    const idx = list.findIndex(e => isMine(e, entry.d));
+    el.textContent = idx >= 0 ? t('rrankOnIn', idx + 1) : t('rrankOnOut');
+  } catch (e) { if (result && result.d === entry.d) el.textContent = t('rrankOnFail'); }
 }
 function refreshTitle() {
   $('pname').value = rec.name || '';
@@ -888,9 +968,11 @@ function toTitle() {
 }
 $('pname').addEventListener('input', e => { rec.name = e.target.value.trim().slice(0, 8); saveRec(); });
 let rankFrom = 'ovTitle';
-function openRank(from, hl) { rankFrom = from; showRank(hl); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
+function openRank(from, hl) { rankFrom = from; showRank(hl || null, Online.kind ? 'online' : 'local'); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
 $('bRank').onclick = () => openRank('ovTitle');
 $('bRank2').onclick = () => openRank('ovResult', result && result.d);
+$('tabOn').onclick = () => showRank(undefined, 'online');
+$('tabLocal').onclick = () => showRank(undefined, 'local');
 $('bRankBack').onclick = () => { $('ovRank').classList.remove('on'); $(rankFrom).classList.add('on'); };
 $('bStart').onclick = () => { initAudio(); toReady(); };
 $('bAgain').onclick = toReady;
@@ -909,7 +991,7 @@ function applyLang() {
   document.querySelectorAll('[data-p]').forEach(e => { e.placeholder = t(e.dataset.p); });
   document.querySelectorAll('.lang').forEach(e => { e.textContent = t('langBtn'); });
   lastHint = '';
-  if ($('ovRank').classList.contains('on')) showRank(result && result.d);
+  if ($('ovRank').classList.contains('on')) showRank();
   if (result && mode === 'result') { renderResultText(); makeCard(); }
 }
 function toggleLang() { lang = lang === 'ja' ? 'en' : 'ja'; rec.lang = lang; saveRec(); applyLang(); }
@@ -922,6 +1004,7 @@ window.__hioko = { get T() { return T; }, get mode() { return mode; }, get resul
 
 refreshTitle();
 applyLang();
+Online.init().then(() => { if ($('ovRank').classList.contains('on')) showRank(); });
 requestAnimationFrame(frame);
 })();
 </script>
