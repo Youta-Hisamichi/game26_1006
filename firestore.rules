@@ -11,7 +11,7 @@ service cloud.firestore {
       // 更新はタイムが縮まるときだけ
       allow update: if request.auth != null && request.auth.uid == uid
                     && validScore(request.resource.data, uid)
-                    && request.resource.data.t < resource.data.t;
+                    && (request.resource.data.t < resource.data.t || onlyNameChanged());
 
       allow delete: if false;
     }
@@ -22,8 +22,13 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == uid && validScore(request.resource.data, uid);
       allow update: if request.auth != null && request.auth.uid == uid
                     && validScore(request.resource.data, uid)
-                    && request.resource.data.a > resource.data.a;
+                    && (request.resource.data.a > resource.data.a || onlyNameChanged());
       allow delete: if false;
+    }
+
+    // 名前だけの変更（記録そのものは変えない）
+    function onlyNameChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['n']);
     }
 
     function validScore(d, uid) {

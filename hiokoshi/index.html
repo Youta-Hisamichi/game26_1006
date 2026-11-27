@@ -65,8 +65,8 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 #newbest{display:none;color:var(--good);font-weight:900;font-size:4cqw;margin-top:1cqw}
 .stat{display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;margin:3cqw 0}
 #preview{width:100%;border-radius:2cqw;border:.4cqw solid var(--line);margin-top:2cqw;display:block}
-#nameRow{display:flex;gap:2cqw;align-items:center;margin-bottom:2cqw;font-size:3.4cqw;color:var(--mute)}
-#nameRow input{flex:1;min-width:0;background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw;color:var(--ink);font:inherit;font-size:4cqw}
+#nameRow,#nameRow2{display:flex;gap:2cqw;align-items:center;margin-bottom:2cqw;font-size:3.4cqw;color:var(--mute)}
+#nameRow input,#nameRow2 input{flex:1;min-width:0;background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw;color:var(--ink);font:inherit;font-size:4cqw}
 #rrank{margin-top:1cqw;font-size:4.4cqw;font-weight:800;color:var(--good)}
 .tabs{display:flex;gap:2cqw;margin-bottom:2.5cqw}
 .tabs button{flex:1;padding:2.2cqw;border-radius:3cqw;border:.4cqw solid var(--line);background:#00000066;color:var(--mute);font:inherit;font-size:3.8cqw;font-weight:800;cursor:pointer}
@@ -129,6 +129,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
   <div class="ov" id="ovRank"><div class="card">
     <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
     <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
+    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="8" data-p="anon" autocomplete="off"></div>
     <div class="tabs" id="rkMetric"><button id="mtTime" data-i="mTime">速さ</button><button id="mtAcc" data-i="mAcc">正確さ</button></div>
     <div class="sub" id="rkSub"></div>
     <div id="rkStatus"></div>
@@ -941,6 +942,17 @@ const Online = {
     if (acc) docs.sort((x, y) => y.a - x.a || x.t - y.t);
     return docs.slice(0, n);
   },
+  // 名前の変更を、自分のオンライン記録にも反映する（タイムや正確さは変えない）
+  async rename(name) {
+    const n = String(name || '').slice(0, 8);
+    if (!n) return;
+    if (this.kind === 'db' && this.uid) {
+      for (const c of ['scores', 'accuracy']) { const ref = this.db.doc(c + '/' + this.uid); if ((await ref.get()).exists) await ref.update({ n }); }
+    } else if (this.kind === 'fb' && this.uid) {
+      const f = this.fs;
+      for (const c of ['scores', 'accuracy']) { const ref = f.doc(this.fdb, c, this.uid); if ((await f.getDoc(ref)).exists()) await f.updateDoc(ref, { n }); }
+    }
+  },
   async submit(e) {
     if (this.kind === 'db') {
       if (!this.uid) throw new Error('no user');
@@ -1021,7 +1033,7 @@ async function postOnline(entry) {
   } catch (e) { if (result && result.d === entry.d) el.textContent = t('rrankOnFail'); }
 }
 function refreshTitle() {
-  $('pname').value = rec.name || '';
+  $('pname').value = rec.name || ''; $('pname2').value = rec.name || '';
   $('tBest').textContent = rec.bestTime ? rec.bestTime.toFixed(2) + t('unit') : '-';
   $('tPlays').textContent = rec.plays;
 }
@@ -1035,7 +1047,20 @@ function toTitle() {
   mode = 'title'; resetRun(); refreshTitle();
   $('hud').classList.remove('on'); $('ovResult').classList.remove('on'); $('ovTitle').classList.add('on');
 }
-$('pname').addEventListener('input', e => { rec.name = e.target.value.trim().slice(0, 8); saveRec(); });
+function commitName(v) {
+  rec.name = String(v).trim().slice(0, 8);
+  const shown = rec.name || t('anon');
+  for (const list of [rec.ranks, rec.accRanks]) (list || []).forEach(e => { e.n = shown; });   // この端末の記録は同じ人のものとして改名
+  saveRec();
+  $('pname').value = $('pname2').value = rec.name;
+  if ($('ovRank').classList.contains('on')) showRank();
+  Online.rename(shown).then(() => { if ($('ovRank').classList.contains('on') && rankTab === 'online') showRank(); }).catch(() => {});
+}
+for (const id of ['pname', 'pname2']) {
+  $(id).addEventListener('input', e => { rec.name = e.target.value.trim().slice(0, 8); saveRec(); });
+  $(id).addEventListener('change', e => commitName(e.target.value));
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+}
 let rankFrom = 'ovTitle';
 function openRank(from, hl) { rankFrom = from; showRank(hl || null, Online.kind ? 'online' : 'local'); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
 $('bRank').onclick = () => openRank('ovTitle');
