@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0a1f">
+  <title>磨きガチャ</title>
+  <meta name="description" content="泥だらけの水晶玉を磨くと、中から宝石が出てくる。図鑑を集めよう。">
+  <meta property="og:title" content="磨きガチャ">
+  <meta property="og:description" content="泥だらけの水晶玉を磨いて、宝石を磨き出そう。磨き方にはクセがあるかも…？">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <h1>磨きガチャ</h1>
+    <p class="lead">泥だらけの水晶玉をこすって、宝石を磨き出そう。</p>
+  </header>
+
+  <section class="scorebar" aria-label="スコア">
+    <div class="sbox main"><span class="label">TOTAL SCORE</span><b id="total">0</b></div>
+    <div class="sbox"><span class="label">図鑑</span><b id="dexCount">0/0</b></div>
+    <div class="sbox"><span class="label">磨いた数</span><b id="polishCount">0</b></div>
+    <button id="mute" class="icon-btn" type="button" aria-label="サウンド切り替え">🔊</button>
+  </section>
+
+  <section class="stage" id="stage" aria-label="ゲーム画面">
+    <div class="ball" id="ball">
+      <div class="ball-inner" id="ballInner">
+        <div class="core" id="core"></div>
+        <div class="gem-slot" id="gemSlot"></div>
+      </div>
+      <div class="rays" id="rays"></div>
+      <canvas id="mud"></canvas>
+      <div class="glass"></div>
+      <div class="prompt" id="prompt">なぞって<br>磨こう</div>
+    </div>
+    <div class="pedestal"></div>
+    <div class="flash" id="flash"></div>
+    <canvas id="fx"></canvas>
+
+    <div class="dock">
+      <div class="hud" id="hud">
+        <div class="hud-msg" id="msg">水晶玉をなぞって磨こう</div>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="hud-sub">磨き方で、出やすい宝石が変わるかも…？</div>
+      </div>
+      <div class="result" id="result" hidden>
+        <div class="res-top">
+          <span class="badge" id="rBadge">N</span>
+          <b class="res-name" id="rName"></b>
+          <span class="new" id="rNew">NEW!</span>
+        </div>
+        <div class="res-mid">
+          <span class="res-score">+<b id="rScore">0</b> pt</span>
+          <span class="res-style" id="rStyle"></span>
+        </div>
+        <button class="btn primary wide" id="nextBtn" type="button">つぎの水晶玉を磨く</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="share-row" id="shareRow">
+    <button class="btn x" id="xBtn" type="button">𝕏 でシェア</button>
+    <button class="btn" id="nativeBtn" type="button" hidden>共有…</button>
+    <button class="btn" id="copyBtn" type="button">コピー</button>
+  </div>
+
+  <section class="codex" aria-label="宝石図鑑">
+    <h2>宝石図鑑</h2>
+    <div id="codex"></div>
+  </section>
+
+  <footer class="foot">
+    <button class="link" id="resetBtn" type="button">データを消去</button>
+  </footer>
+</main>
+<div id="toast" role="status"></div>
+<script src="game.js"></script>
+</body>
+</html>
