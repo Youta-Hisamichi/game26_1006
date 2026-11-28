@@ -177,6 +177,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 </div>
 
 <script src="firebase-config.js"></script>
+<script src="version.js"></script>
 <script>
 (() => {
 'use strict';
@@ -188,7 +189,7 @@ const REV = 14;                        // 反転とみなす戻り量(px)
 const MIN_LEN = 36;                    // ストロークとみなす最小長(px)
 const IDEAL_R = 0.7;                   // 理想の傾き(下/横)。約35°
 const KEY = 'hiokoshi.v1';
-const APP_VERSION = '1.0.0';           // 公開するたびに更新（タイトル画面の最下部に表示）
+const APP_VERSION = window.HIOKOSHI_VERSION || 'dev';   // firebase deploy のたびに自動で付与（scripts/write-version.js）
 const NAME_MAX = 30;                   // 名前の最大文字数
 const clipName = v => [...String(v || '')].slice(0, NAME_MAX).join('');
 const RANK_MAX = 100;                  // ランキングの表示・保持件数
