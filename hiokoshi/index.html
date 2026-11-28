@@ -238,8 +238,9 @@ const I18N = {
     rrankOnIn: 'オンライン {0}位！', rrankOnFail: 'オンラインには登録できませんでした', rrankOnSend: 'オンラインに登録中…',
     rrankIn: '自分ランキング {0}位！', empty: 'まだ記録がありません',
     rowInfo: '正確さ{0}% ・ {1}',
+    rkS: '速さ{0}位', rkA: '正確さ{0}位', rkC: 'コンボ{0}位',
     cardTitle: '火おこしRTA', cardStats: '正確さ {0}% / 最大コンボ {1} / {2}ストローク', tag: '#火おこしRTA',
-    shareText: '火おこしRTA 🔥 {0}秒で着火！（{1}） #火おこしRTA',
+    shareText: '火おこしRTA 🔥 {0}秒で着火！（{1}）{2} #火おこしRTA',
     tWait: '画像を作っています…もう一度押してね', tSaved: '文面をコピーし、画像を保存しました。投稿に添付してね',
     tCopied: '文面をコピーしました。画像は長押し/右クリックで保存して添付してね', langBtn: 'EN', docTitle: '火おこしRTA'
   },
@@ -266,8 +267,9 @@ const I18N = {
     rrankOnIn: 'Online rank #{0}!', rrankOnFail: 'Couldn\'t post to the online ranking', rrankOnSend: 'Posting to the online ranking…',
     rrankIn: 'My ranking #{0}!', empty: 'No records yet',
     rowInfo: 'Acc {0}% ・ {1}',
+    rkS: 'Speed #{0}', rkA: 'Accuracy #{0}', rkC: 'Combo #{0}',
     cardTitle: 'Fire Starter RTA', cardStats: 'Accuracy {0}% / Max combo {1} / {2} strokes', tag: '#FireStarterRTA',
-    shareText: 'Fire Starter RTA 🔥 Lit in {0}s! ({1}) #FireStarterRTA',
+    shareText: 'Fire Starter RTA 🔥 Lit in {0}s! ({1}){2} #FireStarterRTA',
     tWait: 'Making the image… tap again', tSaved: 'Text copied and image saved. Attach it to your post.',
     tCopied: 'Text copied. Long-press / right-click the image to save and attach it.', langBtn: '日本語', docTitle: 'Fire Starter RTA'
   }
@@ -489,10 +491,17 @@ function renderResultText() {
   $('sCombo').textContent = r.combo;
   $('sN').textContent = r.n;
 }
-function makeCard() {
-  shareBlob = null;
-  $('preview').removeAttribute('src');
+// オンラインランキングの順位（速さ・正確さ・コンボ）。「オンライン」の接頭語なしで並べる
+function rankParts(r) {
+  const k = r && r.ranks; if (!k) return [];
+  return [k.time && t('rkS', k.time), k.acc && t('rkA', k.acc), k.combo && t('rkC', k.combo)].filter(Boolean);
+}
+let cardToken = 0;
+function makeCard(keep) {
+  if (!keep) { shareBlob = null; $('preview').removeAttribute('src'); }
+  const my = ++cardToken;
   renderCard(result).then(blob => {
+    if (my !== cardToken) return;           // 古い描画結果で上書きしない
     shareBlob = blob;
     if (shareUrl) URL.revokeObjectURL(shareUrl);
     shareUrl = URL.createObjectURL(blob);
@@ -576,6 +585,8 @@ function renderCard(r) {
   g.fillStyle = '#ffc84a'; g.font = `900 58px ${FONT}`; g.fillText(rankName(r.ri), 560, 400);
   g.fillStyle = '#d6bf9c'; g.font = `600 30px ${FONT}`;
   g.fillText(t('cardStats', Math.round(r.acc * 100), r.combo, r.n), 560, 470);
+  const rp = rankParts(r);
+  if (rp.length) { g.fillStyle = '#ffc84a'; g.font = `800 34px ${FONT}`; g.fillText(rp.join(' ・ '), 560, 525); }
   g.fillStyle = '#b79b78'; g.font = `600 28px ${FONT}`; g.textAlign = 'right';
   g.fillText(t('tag'), 1160, 595);
   return new Promise(res => c.toBlob(res, 'image/png'));
@@ -615,7 +626,8 @@ async function shareImage(blob, text, filename) {
 async function doShare() {
   if (!result) return;
   if (!shareBlob) { toast(t('tWait')); return; }
-  await shareImage(shareBlob, t('shareText', result.t.toFixed(2), t(RANKS[result.ri][2])), 'hiokoshi-rta.png');
+  const rp = rankParts(result);
+  await shareImage(shareBlob, t('shareText', result.t.toFixed(2), t(RANKS[result.ri][2]), rp.length ? ' ' + rp.join('・') : ''), 'hiokoshi-rta.png');
 }
 async function doRankShare() {
   if (!rankBlob) { toast(t('tWait')); return; }
@@ -1328,6 +1340,8 @@ async function postOnline(entry) {
     el.textContent = p1 ? t('rrankOnIn', p1) : '';
     ea.textContent = p2 ? t('rrankAccOnIn', p2) : '';
     ec.textContent = p3 ? t('rrankComboOnIn', p3) : '';
+    result.ranks = { time: p1, acc: p2, combo: p3 };
+    makeCard(true);                       // 順位入りのシェア画像に作り直す
   } catch (e) { if (result && result.d === entry.d) el.textContent = t('rrankOnFail'); }
 }
 function refreshTitle() {
