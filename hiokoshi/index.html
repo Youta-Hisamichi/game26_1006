@@ -46,7 +46,7 @@ canvas#cv{align-self:start;width:100%;height:auto;display:block;touch-action:non
 .ov{display:none;align-self:stretch;align-items:center;justify-content:center;padding:2cqw 4cqw;
   background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.78),rgba(8,4,2,.95))}
 .ov.on{display:flex}
-.card{width:100%;text-align:center;padding:5cqw 0}
+.card{width:100%;text-align:center;padding:5cqw 0 18cqw}   /* 下に余白：SNSアプリ内ブラウザの下バーに隠れないように */
 h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
   text-shadow:0 .6cqw 0 #7a2a00,0 0 5cqw #ff7a1a88}
 .sub{color:var(--mute);font-size:3.4cqw;margin:1cqw 0 2.5cqw}
@@ -94,7 +94,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 .ib.lang,.ib.pill{width:auto;min-width:9cqw;padding:0 2.4cqw;border-radius:5cqw;font-size:3.4cqw;font-weight:800;color:var(--ink)}
 #ovResult.lock{pointer-events:none}   /* 結果画面が出た直後は、指のタップが下のボタンに当たらないようにする */
 #ovResult{background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.55),rgba(8,4,2,.82))}
-.stickybar{position:sticky;bottom:max(2cqw,env(safe-area-inset-bottom,0px));z-index:6;display:grid;grid-template-columns:1fr 1fr;gap:2.4cqw}
+.stickybar{position:sticky;bottom:0;z-index:6;padding:5cqw 0 calc(max(2cqw,env(safe-area-inset-bottom,0px)) + 14cqw);background:linear-gradient(to bottom,rgba(8,4,2,0),rgba(8,4,2,.96) 30%);display:grid;grid-template-columns:1fr 1fr;gap:2.4cqw}
 #toast{position:fixed;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
   padding:2cqw 4cqw;border-radius:3cqw;font-size:3.6cqw;opacity:0;transition:opacity .25s;pointer-events:none;
   max-width:90%;text-align:center;z-index:5}
