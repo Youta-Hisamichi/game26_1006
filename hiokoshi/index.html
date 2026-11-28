@@ -1286,22 +1286,26 @@ function toTitle() {
   mode = 'title'; resetRun(); refreshTitle();
   $('hud').classList.remove('on'); $('ovResult').classList.remove('on'); $('ovTitle').classList.add('on');
 }
+let lastCommittedName = rec.name || '', nameTimer;
 function commitName(v) {
-  rec.name = clipName(String(v).trim());
-  const shown = rec.name || anonName();
+  clearTimeout(nameTimer);
+  const name = clipName(String(v).trim());
+  rec.name = name;
+  for (const id of ['pname', 'pname2']) if (document.activeElement !== $(id)) $(id).value = name;   // 入力中の欄は書き換えない（末尾の空白などが消えるのを防ぐ）
+  if (name === lastCommittedName) { saveRec(); return; }            // 変わっていなければ何も送らない
+  lastCommittedName = name;
+  const shown = name || anonName();
   for (const list of [rec.ranks, rec.accRanks, rec.comboRanks]) (list || []).forEach(e => { e.n = shown; });   // この端末の記録は同じ人のものとして改名
   saveRec();
-  $('pname').value = $('pname2').value = rec.name;
   if ($('ovRank').classList.contains('on')) showRank();
   Online.rename(shown).then(() => { if ($('ovRank').classList.contains('on') && rankTab === 'online') showRank(); }).catch(() => {});
 }
 for (const id of ['pname', 'pname2']) {
-  let timer;
-  $(id).addEventListener('input', e => {      // 入力が止まったら自動で確定（OKボタンなし）
+  $(id).addEventListener('input', e => {      // 1文字ごとにはネットへ送らない。端末内に保存するだけ
     rec.name = clipName(e.target.value.trim()); saveRec();
-    clearTimeout(timer); const v = e.target.value; timer = setTimeout(() => commitName(v), 900);
+    clearTimeout(nameTimer); const v = e.target.value; nameTimer = setTimeout(() => commitName(v), 900);   // 入力が止まって0.9秒後に確定
   });
-  $(id).addEventListener('change', e => commitName(e.target.value));
+  $(id).addEventListener('change', e => commitName(e.target.value));   // フォーカスが外れたとき・Enter で即確定
   $(id).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
 }
 let rankFrom = 'ovTitle';
