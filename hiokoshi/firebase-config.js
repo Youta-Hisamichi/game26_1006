@@ -1,12 +1,10 @@
-// Firebase コンソールの「プロジェクトの設定 → マイアプリ（ウェブ）」にある設定を貼ります。
-// これは公開しても問題ない設定値です（守るのは firestore.rules の役目）。
-// null のままなら、オンラインランキングは使わず「この端末」のランキングだけになります。
-window.HIOKOSHI_FIREBASE = null;
-/* 例:
+// Firebase のウェブアプリ設定（公開しても問題ない値です。データを守るのは firestore.rules の役目）。
+// null にすると、オンラインランキングは使わず「この端末」のランキングだけになります。
 window.HIOKOSHI_FIREBASE = {
-  apiKey: "AIza...",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  appId: "1:1234567890:web:abcdef"
+  apiKey: "AIzaSyBruAYMi58WGeZm9ALsRDdtWcYYl3oCKhQ",
+  authDomain: "firestarterrta.firebaseapp.com",
+  projectId: "firestarterrta",
+  storageBucket: "firestarterrta.firebasestorage.app",
+  messagingSenderId: "182302851313",
+  appId: "1:182302851313:web:57565ea455e09e8fb8e950"
 };
-*/
