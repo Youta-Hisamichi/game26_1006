@@ -1192,6 +1192,14 @@ const Online = {
     } else throw new Error('offline');
   }
 };
+// 不適切な名前は、本人以外には「ななし」と表示する（本人の端末・本人のオンライン記録では、そのまま見える）
+const HIDDEN_NAME_PATTERNS = ['どうスクのライオン'];
+const normName = v => String(v || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+const shownName = (e, own) => {
+  const name = String(e.n || '');
+  const mine = own || (e.u && Online.uid && e.u === Online.uid);
+  return !mine && HIDDEN_NAME_PATTERNS.some(p => normName(name).includes(normName(p))) ? t('anon') : name;
+};
 const isMine = (e, hl) => !!hl && ((e.u && Online.uid && e.u === Online.uid) || e.d === hl);
 
 let rankTab = 'local', rankMetric = 'time', rankHl = null, rankToken = 0;
@@ -1201,7 +1209,7 @@ const rankInfo = (e, metric) => {
   const date = fmtDate(e);
   return metric === 'acc' ? t('rowInfoA', Number(e.t).toFixed(2), date) : metric === 'combo' ? t('rowInfoC', Number(e.t).toFixed(2), Math.round(e.a * 100), date) : t('rowInfo', Math.round(e.a * 100), date);
 };
-function drawRankList(list, hl, metric) {
+function drawRankList(list, hl, metric, own) {
   const ul = $('rkList'); ul.textContent = '';
   if (!list.length) { ul.innerHTML = '<div class="empty">' + t('empty') + '</div>'; return; }
   list.slice(0, RANK_MAX).forEach((e, i) => {
@@ -1209,13 +1217,13 @@ function drawRankList(list, hl, metric) {
     if (isMine(e, hl)) li.className = 'me';
     li.innerHTML = `<span class="n">${i + 1}</span><span></span><b>${rankBig(e, metric)}</b>`;
     const mid = li.children[1];
-    mid.textContent = String(e.n || '');
+    mid.textContent = shownName(e, own);
     const em = document.createElement('em');
     em.textContent = (e.p ? t('playNo', e.p) + ' ・ ' : '') + rankInfo(e, metric);
     mid.appendChild(em);
     ul.appendChild(li);
   });
-  makeRankCard(list.slice(0, RANK_MAX), hl, metric);
+  makeRankCard(list.slice(0, RANK_MAX), hl, metric, own);
 }
 
 // ランキングのシェア画像（上位10件を2列で）
@@ -1226,7 +1234,7 @@ function fitText(g, text, maxW) {
   while (a.length > 1 && g.measureText(a.join('') + '…').width > maxW) a.pop();
   return a.join('') + '…';
 }
-function makeRankCard(list, hl, metric) {
+function makeRankCard(list, hl, metric, own) {
   const my = ++rankCardToken; rankBlob = null;
   if (!list.length) return;
   const c = document.createElement('canvas'); c.width = 1200; c.height = 630;
@@ -1249,7 +1257,7 @@ function makeRankCard(list, hl, metric) {
     if (isMine(e, hl)) { g.strokeStyle = '#ffc84a'; g.lineWidth = 3; g.stroke(); }
     g.fillStyle = i < 3 ? '#ffc84a' : '#f6e7cf'; g.font = `900 40px ${FONT}`; g.textAlign = 'center'; g.fillText(String(i + 1), x + 44, y + 56); g.textAlign = 'left';
     g.fillStyle = '#f6e7cf'; g.font = `700 30px ${FONT}`; g.font = `800 38px ${FONT}`; const vw = g.measureText(rankBig(e, metric)).width; g.font = `700 30px ${FONT}`;
-    g.fillText(fitText(g, String(e.n || ''), colW - 92 - vw - 40), x + 92, y + 38);
+    g.fillText(fitText(g, shownName(e, own), colW - 92 - vw - 40), x + 92, y + 38);
     g.fillStyle = '#b79b78'; g.font = `500 20px ${FONT}`; g.fillText(rankInfo(e, metric), x + 92, y + 68);
     g.fillStyle = '#f6e7cf'; g.font = `800 38px ${FONT}`; g.textAlign = 'right'; g.fillText(rankBig(e, metric), x + colW - 22, y + 55); g.textAlign = 'left';
   });
@@ -1272,7 +1280,7 @@ async function showRank(hl, tab, metric) {
   const my = ++rankToken;
   if (rankTab === 'local') {
     $('rkStatus').textContent = online ? '' : t('rkOffline');
-    drawRankList(acc ? (rec.accRanks || []) : cmb ? (rec.comboRanks || []).filter(e => typeof e.c === 'number') : (rec.ranks || []), rankHl, rankMetric); return;
+    drawRankList(acc ? (rec.accRanks || []) : cmb ? (rec.comboRanks || []).filter(e => typeof e.c === 'number') : (rec.ranks || []), rankHl, rankMetric, true); return;
   }
   $('rkStatus').textContent = t('rkLoading'); $('rkList').textContent = '';
   try {
