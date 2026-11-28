@@ -87,6 +87,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 .ib.lang,.ib.pill{width:auto;min-width:9cqw;padding:0 2.4cqw;border-radius:5cqw;font-size:3.4cqw;font-weight:800;color:var(--ink)}
 #ovResult{background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.55),rgba(8,4,2,.82))}
 #bRankBack{position:sticky;bottom:max(2cqw,env(safe-area-inset-bottom,0px));z-index:6}
+.nameok{flex:none;padding:2cqw 4cqw;border-radius:2.4cqw;border:.4cqw solid #8fe6f2;background:#2fb7c9;color:#04222a;font:inherit;font-size:4cqw;font-weight:900;cursor:pointer}
 #toast{position:fixed;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
   padding:2cqw 4cqw;border-radius:3cqw;font-size:3.6cqw;opacity:0;transition:opacity .25s;pointer-events:none;
   max-width:90%;text-align:center;z-index:5}
@@ -123,7 +124,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
       <div><small data-i="recBest">ベスト</small><b id="tBest">-</b></div>
       <div><small data-i="recPlays">プレイ</small><b id="tPlays">0</b></div>
     </div>
-    <div id="nameRow"><label for="pname" data-i="nameLabel">なまえ</label><input id="pname" maxlength="8" data-p="anon" autocomplete="off"></div>
+    <div id="nameRow"><label for="pname" data-i="nameLabel">なまえ</label><input id="pname" maxlength="8" data-p="anon" autocomplete="off"><button class="nameok" id="pnameOk" data-i="ok">OK</button></div>
     <button class="btn" id="bStart" data-i="start">スタート</button>
     <button class="btn sec" id="bRank" data-i="rankBtn">🏆 ランキング</button>
   </div></div>
@@ -133,7 +134,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
     <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
     <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
     <div class="tabs" id="rkMetric"><button id="mtTime" data-i="mTime">速さ</button><button id="mtAcc" data-i="mAcc">正確さ</button></div>
-    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="8" data-p="anon" autocomplete="off"></div>
+    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="8" data-p="anon" autocomplete="off"><button class="nameok" id="pname2Ok" data-i="ok">OK</button></div>
     <div class="sub" id="rkSub"></div>
     <div id="rkStatus"></div>
     <ol class="rk" id="rkList"></ol>
@@ -201,14 +202,15 @@ const I18N = {
     recBest: 'ベスト', recPlays: 'プレイ', nameLabel: 'なまえ', anon: 'ななし',
     start: 'スタート', rankBtn: '🏆 ランキング', back: 'もどる',
     newBest: '🏆 ベスト更新！', sAcc: '正確さ', sCombo: '最大コンボ', sN: 'こすった数',
-    share: '📷 画像つきでシェア', again: 'もう一回', home: 'タイトル', rank2: '🏆 ランキングを見る',
+    share: 'シェア', again: 'もう一回', home: 'タイトル', rank2: '🏆 ランキングを見る',
     hReady: '棒を ジグザグに こすって スタート！', hIgnite: '🔥 着火！！', hStall: '斜め下へ 右・左・右・左…と 交互に！',
     h1: 'もっと速く こすれ！', h2: '煙が出てきた！', h3: 'おがくずに 火種が！', h4: 'もうすぐ着火！！',
     jBack: '戻し', jFlat: 'ヨコすぎ', jSteep: 'タテすぎ', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'ざつ',
     s1: '炎竜王', s2: '太陽神', s3: '創世の炎', r0: '火の神', r1: '炎の達人', r2: '縄文の匠', r3: '石器時代の民', r4: 'たき火見習い', r5: 'まだ寒い',
+    ok: 'OK', tNameSaved: 'なまえを保存しました',
     mTime: '⏱ 速さ', mAcc: '🎯 正確さ', subOnA: 'みんなの正確さTOP100（1人1記録）', subLocalA: 'この端末の正確さTOP100',
     playNo: '{0}回目', rowInfoA: '{0}秒 ・ {1}', rrankAccIn: '正確さランキング {0}位！', rrankAccOut: '正確さランク圏外（100位まで）', rrankAccOnIn: 'オンライン正確さ {0}位！', rrankAccOnOut: 'オンライン正確さ圏外',
-    tabOnline: 'オンライン', tabLocal: 'この端末', subOn: 'みんなの最速100人（1人1記録）', subLocal: 'この端末の最速100回',
+    tabOnline: 'オンライン', tabLocal: 'この端末', subOn: 'みんなの最速100人（1人1記録）', subLocal: 'この端末の最速TOP100',
     rkLoading: '読み込み中…', rkFail: 'ランキングを取得できませんでした', rkOffline: 'オンラインランキングは未接続です',
     rrankOnIn: 'オンライン {0}位！', rrankOnOut: 'オンライン圏外（100位まで）', rrankOnFail: 'オンラインには登録できませんでした', rrankOnSend: 'オンラインに登録中…',
     rrankIn: 'ランキング {0}位！', rrankOut: 'ランク圏外（100位まで）', empty: 'まだ記録がありません',
@@ -225,14 +227,15 @@ const I18N = {
     recBest: 'Best', recPlays: 'Plays', nameLabel: 'Name', anon: 'Anon',
     start: 'Start', rankBtn: '🏆 Ranking', back: 'Back',
     newBest: '🏆 New best!', sAcc: 'Accuracy', sCombo: 'Max combo', sN: 'Strokes',
-    share: '📷 Share with image', again: 'Again', home: 'Title', rank2: '🏆 View ranking',
+    share: 'Share', again: 'Again', home: 'Title', rank2: '🏆 View ranking',
     hReady: 'Rub the stick in a zigzag to start!', hIgnite: '🔥 Ignited!!', hStall: 'Alternate down-right, down-left, down-right…',
     h1: 'Rub faster!', h2: 'Smoke is rising!', h3: 'An ember in the sawdust!', h4: 'Almost there!!',
     jBack: 'Reset', jFlat: 'Too flat', jSteep: 'Too steep', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'Sloppy',
     s1: 'Flame Dragon King', s2: 'Sun God', s3: 'Genesis Flame', r0: 'God of Fire', r1: 'Flame Master', r2: 'Jomon Artisan', r3: 'Stone Age Folk', r4: 'Campfire Rookie', r5: 'Still Cold',
+    ok: 'OK', tNameSaved: 'Name saved',
     mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 100 most accurate players (best each)', subLocalA: 'Top 100 most accurate runs on this device',
     playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'Accuracy rank #{0}!', rrankAccOut: 'Not in the accuracy top 100', rrankAccOnIn: 'Online accuracy #{0}!', rrankAccOnOut: 'Not in the online accuracy top 100',
-    tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 100 fastest players (best time each)', subLocal: 'Top 100 fastest runs on this device',
+    tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 100 fastest players (best time each)', subLocal: 'Fastest TOP100 on this device',
     rkLoading: 'Loading…', rkFail: 'Couldn\'t load the ranking', rkOffline: 'Online ranking is not connected',
     rrankOnIn: 'Online rank #{0}!', rrankOnOut: 'Not in the online top 100', rrankOnFail: 'Couldn\'t post to the online ranking', rrankOnSend: 'Posting to the online ranking…',
     rrankIn: 'Rank #{0}!', rrankOut: 'Not in the top 100', empty: 'No records yet',
@@ -1205,6 +1208,7 @@ for (const id of ['pname', 'pname2']) {
   $(id).addEventListener('input', e => { rec.name = e.target.value.trim().slice(0, 8); saveRec(); });
   $(id).addEventListener('change', e => commitName(e.target.value));
   $(id).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+  $(id + 'Ok').onclick = () => { commitName($(id).value); $(id).blur(); toast(t('tNameSaved')); };
 }
 let rankFrom = 'ovTitle';
 function openRank(from, hl) { rankFrom = from; showRank(hl || null, Online.kind ? 'online' : 'local'); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
