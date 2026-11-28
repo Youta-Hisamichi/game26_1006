@@ -11,7 +11,7 @@ service cloud.firestore {
       // 更新はタイムが縮まるときだけ
       allow update: if request.auth != null && request.auth.uid == uid
                     && validScore(request.resource.data, uid)
-                    && (request.resource.data.t < resource.data.t || onlyNameChanged());
+                    && (request.resource.data.t < resource.data.t || onlyNameChanged() || wasUnplayed());
 
       allow delete: if false;
     }
@@ -22,7 +22,7 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == uid && validCombo(request.resource.data, uid);
       allow update: if request.auth != null && request.auth.uid == uid
                     && validCombo(request.resource.data, uid)
-                    && (request.resource.data.c > resource.data.c || onlyNameChanged());
+                    && (request.resource.data.c > resource.data.c || onlyNameChanged() || wasUnplayed());
       allow delete: if false;
     }
 
@@ -32,7 +32,7 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == uid && validScore(request.resource.data, uid);
       allow update: if request.auth != null && request.auth.uid == uid
                     && validScore(request.resource.data, uid)
-                    && (request.resource.data.a > resource.data.a || onlyNameChanged());
+                    && (request.resource.data.a > resource.data.a || onlyNameChanged() || wasUnplayed());
       allow delete: if false;
     }
 
@@ -41,9 +41,15 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['n']);
     }
 
+    // 未プレイの記録（アプリを開いただけ）：np=true、タイム99999・正確さ0・コンボ0 の固定値。最初のプレイで置き換えられる
+    function wasUnplayed() {
+      return resource.data.get('np', false) == true;
+    }
+
     function validCombo(d, uid) {
-      return d.keys().hasOnly(['n', 't', 'a', 'c', 'd', 'u'])
+      return d.keys().hasOnly(['n', 't', 'a', 'c', 'd', 'u', 'np'])
         && d.keys().hasAll(['n', 't', 'a', 'c', 'd', 'u'])
+        && (!d.keys().hasAny(['np']) || (d.np == true && d.t == 99999 && d.a == 0 && d.c == 0))
         && d.u == uid
         && d.n is string && d.n.size() >= 1 && d.n.size() <= 30
         && (d.t is int || d.t is float) && d.t > 0 && d.t < 100000
@@ -53,8 +59,9 @@ service cloud.firestore {
     }
 
     function validScore(d, uid) {
-      return d.keys().hasOnly(['n', 't', 'a', 'd', 'u'])
+      return d.keys().hasOnly(['n', 't', 'a', 'd', 'u', 'np'])
         && d.keys().hasAll(['n', 't', 'a', 'd', 'u'])
+        && (!d.keys().hasAny(['np']) || (d.np == true && d.t == 99999 && d.a == 0))
         && d.u == uid
         && d.n is string && d.n.size() >= 1 && d.n.size() <= 30
         && (d.t is int || d.t is float) && d.t > 0 && d.t < 100000

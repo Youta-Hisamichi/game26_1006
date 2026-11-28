@@ -230,7 +230,7 @@ const I18N = {
     mNametime: '速さランキング', mNameacc: '正確さランキング', mNamecombo: 'コンボランキング', rankShareText: '火おこしRTA 🏆 {0}（{1}）',
     mCombo: '🔥 コンボ', subOnC: 'みんなの最大コンボTOP100（1人1記録）', subLocalC: 'この端末の最大コンボTOP100', comboN: '{0}コンボ', rowInfoC: '{0}秒 ・ 正確さ{1}% ・ {2}',
     rrankComboIn: '自分コンボランキング {0}位！', rrankComboOnIn: 'オンラインコンボ {0}位！',
-    ok: 'OK', tNameSaved: 'なまえを保存しました',
+    ok: 'OK', tNameSaved: 'なまえを保存しました', unplayed: '未プレイ',
     mTime: '⏱ 速さ', mAcc: '🎯 正確さ', subOnA: 'みんなの正確さTOP100（1人1記録）', subLocalA: 'この端末の正確さTOP100',
     playNo: '{0}回目', rowInfoA: '{0}秒 ・ {1}', rrankAccIn: '自分正確さランキング {0}位！', rrankAccOnIn: 'オンライン正確さ {0}位！',
     tabOnline: 'オンライン', tabLocal: '自分', subOn: 'みんなの最速100人（1人1記録）', subLocal: 'この端末の最速TOP100',
@@ -258,7 +258,7 @@ const I18N = {
     mNametime: 'Speed Ranking', mNameacc: 'Accuracy Ranking', mNamecombo: 'Combo Ranking', rankShareText: 'Fire Starter RTA 🏆 {0} ({1})',
     mCombo: '🔥 Combo', subOnC: 'Top 100 combo players (best each)', subLocalC: 'Max combo TOP100 on this device', comboN: '{0} combo', rowInfoC: '{0}s ・ Acc {1}% ・ {2}',
     rrankComboIn: 'My combo rank #{0}!', rrankComboOnIn: 'Online combo #{0}!',
-    ok: 'OK', tNameSaved: 'Name saved',
+    ok: 'OK', tNameSaved: 'Name saved', unplayed: 'Not played',
     mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 100 most accurate players (best each)', subLocalA: 'Top 100 most accurate runs on this device',
     playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'My accuracy rank #{0}!', rrankAccOnIn: 'Online accuracy #{0}!',
     tabOnline: 'Online', tabLocal: 'Mine', subOn: 'Top 100 fastest players (best time each)', subLocal: 'Fastest TOP100 on this device',
@@ -1142,13 +1142,33 @@ const Online = {
     this.cache[metric + ':' + n] = { at: Date.now(), docs };
     return docs.slice();
   },
+  // アプリを開いた時点で、まだ記録が無ければ「未プレイ」として登録する（ランキングの末尾に出る。端末ごとに最初の1回だけ）
+  async touch() {
+    if (!this.uid) return;
+    const base = { n: clipName(rec.name || anonName()), t: 99999, a: 0, d: Date.now(), u: this.uid, np: true };
+    if (this.kind === 'fb') {
+      const f = this.fs, best = await this.ensureBest();
+      if (best.t != null || best.a != null || best.c != null) return;      // 既に記録（またはその枠）がある
+      await f.setDoc(f.doc(this.fdb, 'scores', this.uid), base);
+      await f.setDoc(f.doc(this.fdb, 'accuracy', this.uid), base);
+      await f.setDoc(f.doc(this.fdb, 'combo', this.uid), { ...base, c: 0 });
+      best.t = 99999; best.a = 0; best.c = 0; best.np = true; rec.onlineBest = best; saveRec();
+    } else if (this.kind === 'db') {
+      if ((await this.db.doc('scores/' + this.uid).get()).exists) return;
+      await this.db.doc('scores/' + this.uid).set(base);
+      await this.db.doc('accuracy/' + this.uid).set(base);
+      await this.db.doc('combo/' + this.uid).set({ ...base, c: 0 });
+    }
+    this.cache = {};
+  },
   // この端末が覚えている「自分のオンライン最高記録」。無ければサーバーから1回だけ読む
   async ensureBest() {
     const ob = rec.onlineBest;
     if (ob && ob.u === this.uid) return ob;
     const f = this.fs;
     const [d1, d2, d3] = await Promise.all(['scores', 'accuracy', 'combo'].map(c => f.getDoc(f.doc(this.fdb, c, this.uid))));
-    const best = { u: this.uid, t: d1.exists() ? d1.data().t : null, a: d2.exists() ? d2.data().a : null, c: d3.exists() ? d3.data().c : null };
+    const best = { u: this.uid, t: d1.exists() ? d1.data().t : null, a: d2.exists() ? d2.data().a : null, c: d3.exists() ? d3.data().c : null,
+      np: [d1, d2, d3].some(d => d.exists() && d.data().np === true) };      // np: 未プレイの記録（最初のプレイで置き換える）
     rec.onlineBest = best; saveRec();
     return best;
   },
@@ -1166,24 +1186,27 @@ const Online = {
     this.cache = {};
   },
   async submit(e) {
+    try { await this.ready; } catch (err) {}             // アプリを開いたときの「未プレイ」登録が終わってから
     if (this.kind === 'db') {
       if (!this.uid) throw new Error('no user');
       const base = { n: e.n, t: e.t, a: e.a, d: e.d, u: this.uid };
       const r1 = this.db.doc('scores/' + this.uid), c1 = await r1.get();
-      if (!(c1.exists && c1.data().t <= e.t)) await r1.set(base);
+      if (!(c1.exists && !c1.data().np && c1.data().t <= e.t)) await r1.set(base);
       const r2 = this.db.doc('accuracy/' + this.uid), c2 = await r2.get();
-      if (!(c2.exists && c2.data().a >= e.a)) await r2.set(base);
+      if (!(c2.exists && !c2.data().np && c2.data().a >= e.a)) await r2.set(base);
       const r3 = this.db.doc('combo/' + this.uid), c3 = await r3.get();
-      if (!(c3.exists && c3.data().c >= e.c)) await r3.set({ ...base, c: e.c });
+      if (!(c3.exists && !c3.data().np && c3.data().c >= e.c)) await r3.set({ ...base, c: e.c });
       this.cache = {};
     } else if (this.kind === 'fb') {
       // 読み取りは、この端末で初めてのときだけ。以降は覚えている最高記録と比べ、良くなった種類だけ書く
       const f = this.fs, base = { n: clipName(e.n), t: e.t, a: e.a, d: e.d, u: this.uid };
       const best = await this.ensureBest();
-      const flags = { time: best.t == null || e.t < best.t, acc: best.a == null || e.a > best.a, combo: best.c == null || e.c > best.c };
+      const fresh = best.np === true;                                   // 未プレイの枠は、最初のプレイで3つとも置き換える
+      const flags = { time: fresh || best.t == null || e.t < best.t, acc: fresh || best.a == null || e.a > best.a, combo: fresh || best.c == null || e.c > best.c };
       if (flags.time) { await f.setDoc(f.doc(this.fdb, 'scores', this.uid), base); best.t = e.t; rec.onlineBest = best; saveRec(); }
       if (flags.acc) { await f.setDoc(f.doc(this.fdb, 'accuracy', this.uid), base); best.a = e.a; rec.onlineBest = best; saveRec(); }
       if (flags.combo) { await f.setDoc(f.doc(this.fdb, 'combo', this.uid), { ...base, c: e.c }); best.c = e.c; rec.onlineBest = best; saveRec(); }
+      best.np = false; rec.onlineBest = best; saveRec();
       this.cache = {};
       return flags;
     } else if (this.kind === 'rest') {
@@ -1204,9 +1227,10 @@ const isMine = (e, hl) => !!hl && ((e.u && Online.uid && e.u === Online.uid) || 
 
 let rankTab = 'local', rankMetric = 'time', rankHl = null, rankToken = 0;
 const fmtDate = e => { const d = new Date(e.d); return (d.getMonth() + 1) + '/' + d.getDate(); };
-const rankBig = (e, metric) => metric === 'acc' ? (e.a * 100).toFixed(1) + '%' : metric === 'combo' ? t('comboN', e.c) : Number(e.t).toFixed(2) + t('unit');
+const rankBig = (e, metric) => e.np ? t('unplayed') : metric === 'acc' ? (e.a * 100).toFixed(1) + '%' : metric === 'combo' ? t('comboN', e.c) : Number(e.t).toFixed(2) + t('unit');
 const rankInfo = (e, metric) => {
   const date = fmtDate(e);
+  if (e.np) return date;                       // 未プレイ（アプリを開いただけ）の行
   return metric === 'acc' ? t('rowInfoA', Number(e.t).toFixed(2), date) : metric === 'combo' ? t('rowInfoC', Number(e.t).toFixed(2), Math.round(e.a * 100), date) : t('rowInfo', Math.round(e.a * 100), date);
 };
 function drawRankList(list, hl, metric, own) {
@@ -1383,7 +1407,8 @@ window.__hioko = { async card(ri, t) { const b = await renderCard({ t, acc: .97,
 $('appVer').textContent = /^\d/.test(APP_VERSION) ? 'v' + APP_VERSION : APP_VERSION;
 refreshTitle();
 applyLang();
-Online.init().then(() => { if ($('ovRank').classList.contains('on')) showRank(); });
+Online.ready = Online.init().then(() => Online.touch()).catch(() => {});
+Online.ready.then(() => { if ($('ovRank').classList.contains('on')) showRank(); });
 requestAnimationFrame(frame);
 })();
 </script>
