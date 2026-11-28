@@ -105,10 +105,10 @@ canvas{display:block;width:100%;aspect-ratio:640/520;border-radius:14px;border:2
   <div id="metrics"></div>
   <div id="meta"></div>
 </div>
-<div id="rk"><h2 data-i="rkh">この端末ランキング</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
 <div id="gl"><h2 data-i="glh">みんなのランキング（累計）</h2><div id="glStatus"></div><div id="glCount"></div>
   <div id="glJoin"><input id="glName" maxlength="50" autocomplete="off"><button type="button" id="glBtn" data-i="glRename">名前を変更</button></div>
   <ol id="glList"></ol><button type="button" id="glMore" data-i="glMore">もっと見る</button> <button type="button" id="glRefresh" data-i="glRefresh">更新</button></div>
+<div id="rk"><h2 data-i="rkh">この端末ランキング</h2><div id="rkTitle"></div><ol id="rkList"></ol><div id="rkEmpty" data-i="rkEmpty">まだ記録がありません。盆栽を育てよう！</div></div>
 <div id="hist" hidden><h2 data-i="hist">育てた盆栽</h2><div id="histlist"></div><button type="button" id="histReset" data-i="reset">ログと累計をリセット</button></div>
 <footer id="ver"></footer>
 <div id="dev"><a href="https://x.com/Hisashi_vc" target="_blank" rel="noopener noreferrer"><span data-i="dev">開発</span>: ひさしApp</a></div>
@@ -1020,7 +1020,7 @@ function renderRank(){
   for(const x of getBest()){const li=document.createElement('li');li.textContent=`${x.t}　${fmtR(x.n)}${L('点',' pts')}`;ol.appendChild(li);}
   $('rkEmpty').hidden=getBest().length>0;
 }
-const VERSION='1.11.1',BUILD='2026-11-27 23:53 JST';
+const VERSION='1.11.2',BUILD='2026-11-28 11:35 JST';
 const DURATION=4200,GOODMODES=['ok','glyph','withered','ufo','face','giant'];
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
