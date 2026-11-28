@@ -95,6 +95,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 #ovResult.lock{pointer-events:none}   /* 結果画面が出た直後は、指のタップが下のボタンに当たらないようにする */
 #ovResult{background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.55),rgba(8,4,2,.82))}
 .stickybar{position:sticky;bottom:0;z-index:6;padding:5cqw 0 calc(max(2cqw,env(safe-area-inset-bottom,0px)) + 14cqw);background:linear-gradient(to bottom,rgba(8,4,2,0),rgba(8,4,2,.96) 30%);display:grid;grid-template-columns:1fr 1fr;gap:2.4cqw}
+#appVer{margin-top:4cqw;font-size:3cqw;color:var(--mute);opacity:.8;font-variant-numeric:tabular-nums}
 #toast{position:fixed;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
   padding:2cqw 4cqw;border-radius:3cqw;font-size:3.6cqw;opacity:0;transition:opacity .25s;pointer-events:none;
   max-width:90%;text-align:center;z-index:5}
@@ -135,6 +136,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
     <div id="nameRow"><label for="pname" data-i="nameLabel">なまえ</label><input id="pname" maxlength="30" data-p="anon" autocomplete="off"></div>
     <button class="btn" id="bStart" data-i="start">スタート</button>
     <button class="btn sec" id="bRank" data-i="rankBtn">🏆 ランキング</button>
+    <div id="appVer"></div>
   </div></div>
 
   <div class="ov" id="ovRank"><div class="card">
@@ -186,6 +188,7 @@ const REV = 14;                        // 反転とみなす戻り量(px)
 const MIN_LEN = 36;                    // ストロークとみなす最小長(px)
 const IDEAL_R = 0.7;                   // 理想の傾き(下/横)。約35°
 const KEY = 'hiokoshi.v1';
+const APP_VERSION = '1.0.0';           // 公開するたびに更新（タイトル画面の最下部に表示）
 const NAME_MAX = 30;                   // 名前の最大文字数
 const clipName = v => [...String(v || '')].slice(0, NAME_MAX).join('');
 const RANK_MAX = 100;                  // ランキングの表示・保持件数
@@ -248,13 +251,13 @@ const I18N = {
     s1: 'Flame Dragon King', s2: 'Sun God', s3: 'Genesis Flame', r0: 'God of Fire', r1: 'Flame Master', r2: 'Jomon Artisan', r3: 'Stone Age Folk', r4: 'Campfire Rookie', r5: 'Still Cold',
     mNametime: 'Speed Ranking', mNameacc: 'Accuracy Ranking', mNamecombo: 'Combo Ranking', rankShareText: 'Fire Starter RTA 🏆 {0} ({1})',
     mCombo: '🔥 Combo', subOnC: 'Top 100 combo players (best each)', subLocalC: 'Max combo TOP100 on this device', comboN: '{0} combo', rowInfoC: '{0}s ・ Acc {1}% ・ {2}',
-    rrankComboIn: 'Self combo rank #{0}!', rrankComboOnIn: 'Online combo #{0}!',
+    rrankComboIn: 'My combo rank #{0}!', rrankComboOnIn: 'Online combo #{0}!',
     mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 100 most accurate players (best each)', subLocalA: 'Top 100 most accurate runs on this device',
-    playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'Self accuracy rank #{0}!', rrankAccOnIn: 'Online accuracy #{0}!',
+    playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'My accuracy rank #{0}!', rrankAccOnIn: 'Online accuracy #{0}!',
     tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 100 fastest players (best time each)', subLocal: 'Fastest TOP100 on this device',
     rkLoading: 'Loading…', rkFail: 'Couldn\'t load the ranking', rkOffline: 'Online ranking is not connected',
     rrankOnIn: 'Online rank #{0}!', rrankOnFail: 'Couldn\'t post to the online ranking', rrankOnSend: 'Posting to the online ranking…',
-    rrankIn: 'Self ranking #{0}!', empty: 'No records yet',
+    rrankIn: 'My ranking #{0}!', empty: 'No records yet',
     rowInfo: 'Acc {0}% ・ {1}',
     cardTitle: 'Fire Starter RTA', cardStats: 'Accuracy {0}% / Max combo {1} / {2} strokes', tag: '#FireStarterRTA',
     shareText: 'Fire Starter RTA 🔥 Lit in {0}s! ({1}) #FireStarterRTA',
@@ -1339,6 +1342,7 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 // テスト・デバッグ用
 window.__hioko = { async card(ri, t) { const b = await renderCard({ t, acc: .97, combo: 20, n: 25, ri }); return await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); }, demo(n) { tier = n; spawnFlies(6 + (8 - n) * 5); igniteAt = performance.now() - 6000; mode = 'ignite'; $('ovTitle').classList.remove('on'); $('hud').classList.add('on'); }, get T() { return T; }, get mode() { return mode; }, get result() { return result; } };
 
+$('appVer').textContent = 'v' + APP_VERSION;
 refreshTitle();
 applyLang();
 Online.init().then(() => { if ($('ovRank').classList.contains('on')) showRank(); });
