@@ -36,3 +36,9 @@ node tests/sim.js 600   # AI同士を600戦（Node 18+）
 ## 次にやること
 
 [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) を参照してください（カードの技・特性の未実装部分、ルールの確認事項、優先順位をまとめています）。
+
+## 火おこしRTA（別ゲーム）
+
+`hiokoshi/index.html` を開くだけで遊べる、木の棒で火をおこすタイムアタックです（単一ファイル）。画面を右下⇄左下へ交互にドラッグして棒をこすり、煙→火種→着火までのタイム（速いほど上位）を競います。ランキングは端末内（localStorage）とオンライン（Firebase 等）で、結果画面から画像つきでシェアできます。
+
+Firebase でのリリースとオンラインランキングの手順は [`docs/FIREBASE.md`](docs/FIREBASE.md) を参照。

@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#120d0a">
+<title>火おこしRTA</title>
+<style>
+:root{
+  --bg:#120d0a; --panel:rgba(30,18,10,.92); --ink:#f6e7cf; --mute:#b79b78;
+  --fire:#ff7a1a; --fire2:#ffc84a; --line:#5a3d26; --good:#9be564;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic","Meiryo","WenQuanYi Zen Hei",sans-serif;
+  user-select:none;-webkit-user-select:none}
+body{display:flex;min-height:100dvh}
+#stage{position:relative;margin:auto;display:grid;width:min(100%,max(75dvh,320px));aspect-ratio:3/4;container-type:inline-size;background:#000}
+#stage>*{grid-area:1/1}
+canvas#cv{position:relative;z-index:0}
+#hud{z-index:3}
+#combo{z-index:3}
+.ov{position:relative;z-index:4}
+#errbar{position:fixed;left:0;right:0;top:0;z-index:99;background:#7a0c0c;color:#fff;font:12px/1.4 monospace;padding:6px 10px;white-space:pre-wrap;user-select:text;-webkit-user-select:text;display:none}
+canvas#cv{align-self:start;width:100%;height:auto;display:block;touch-action:none;cursor:grab}
+#hud{position:absolute;left:0;right:0;top:0;padding:2.5cqw 3cqw;pointer-events:none;display:none}
+#hud.on{display:block}
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:2cqw}
+#time{font-size:11cqw;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  text-shadow:0 .4cqw 0 #000a,0 0 3cqw #ff7a1a66}
+#time small{font-size:4.5cqw;margin-left:1cqw;color:var(--mute)}
+.btns{display:flex;gap:2cqw;pointer-events:auto}
+.ib{width:9cqw;height:9cqw;border-radius:50%;border:.5cqw solid var(--line);background:#1e120acc;color:var(--ink);
+  font-size:4.6cqw;display:grid;place-items:center;cursor:pointer;padding:0}
+#gaugeWrap{margin-top:2cqw}
+#gauge{position:relative;height:4.4cqw;border-radius:2.2cqw;background:#0008;border:.4cqw solid var(--line);overflow:hidden}
+#gfill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#8a8a8a,#c98a3a 45%,#ff7a1a 75%,#ffd34d)}
+#gauge i{position:absolute;top:0;bottom:0;width:.3cqw;background:#fff5}
+#glabels{display:flex;margin-top:.8cqw;font-size:2.6cqw;color:var(--mute);position:relative;height:3.5cqw}
+#glabels span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+#hint{margin-top:1.5cqw;text-align:center;font-size:4cqw;font-weight:700;min-height:5cqw;color:var(--fire2);
+  text-shadow:0 .3cqw 0 #000}
+#combo{position:absolute;left:3cqw;top:118cqw;font-size:6cqw;font-weight:900;color:var(--good);
+  text-shadow:0 .4cqw 0 #000;opacity:0;transition:opacity .15s}
+#combo.on{opacity:1}
+.ov{display:none;align-self:stretch;align-items:center;justify-content:center;padding:2cqw 4cqw;
+  background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.78),rgba(8,4,2,.95))}
+.ov.on{display:flex}
+.card{width:100%;text-align:center;padding:5cqw 0 18cqw}   /* 下に余白：SNSアプリ内ブラウザの下バーに隠れないように */
+h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
+  text-shadow:0 .6cqw 0 #7a2a00,0 0 5cqw #ff7a1a88}
+.sub{color:var(--mute);font-size:3.4cqw;margin:1cqw 0 2.5cqw}
+.how{background:#00000055;border:.4cqw solid var(--line);border-radius:3cqw;padding:2.4cqw;
+  text-align:left;font-size:3.2cqw;line-height:1.55;margin-bottom:2.5cqw}
+.how b{color:var(--fire2)}
+.rec{display:grid;grid-template-columns:repeat(2,1fr);gap:2cqw;margin-bottom:2.5cqw}
+.rec div,.stat div{background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw 1cqw}
+.rec small,.stat small{display:block;font-size:2.8cqw;color:var(--mute)}
+.rec b,.stat b{font-size:4.8cqw;font-variant-numeric:tabular-nums}
+.btn{display:block;width:100%;border:0;border-radius:3cqw;padding:2.6cqw;margin-top:2cqw;font:inherit;
+  font-size:4.6cqw;font-weight:900;color:#2a1000;cursor:pointer;
+  background:linear-gradient(#ffd34d,#ff8a1f);box-shadow:0 1cqw 0 #8a3a00,0 2cqw 4cqw #0008}
+.btn:active{transform:translateY(.8cqw);box-shadow:0 .2cqw 0 #8a3a00}
+.btn.sec{background:linear-gradient(#e8d5b5,#b99a6e);box-shadow:0 1cqw 0 #5a4326,0 2cqw 4cqw #0008}
+.btn.share{background:linear-gradient(#7fd6ff,#2f8fe0);color:#001a2e;box-shadow:0 1cqw 0 #124a7a,0 2cqw 4cqw #0008}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:2.4cqw}
+#rank{font-size:9cqw;font-weight:900;color:var(--fire2);text-shadow:0 .5cqw 0 #7a2a00;line-height:1.1}
+#rtime{font-size:15cqw;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;margin:1cqw 0}
+#rtime small{font-size:6cqw;color:var(--mute)}
+#newbest{display:none;color:var(--good);font-weight:900;font-size:4cqw;margin-top:1cqw}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;margin:3cqw 0}
+#preview{width:100%;border-radius:2cqw;border:.4cqw solid var(--line);margin-top:2cqw;display:block}
+#nameRow,#nameRow2{display:flex;gap:2cqw;align-items:center;margin-bottom:2cqw;font-size:3.4cqw;color:var(--mute)}
+#nameRow input,#nameRow2 input{flex:1;min-width:0;background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;padding:2cqw;color:var(--ink);font:inherit;font-size:4cqw}
+#rrank{margin-top:1cqw;font-size:4.4cqw;font-weight:800;color:var(--good)}
+.tabs{display:flex;gap:2cqw;margin-bottom:2.5cqw}
+.tabs button{flex:1;padding:2.2cqw;border-radius:3cqw;border:.4cqw solid var(--line);background:#00000066;color:var(--mute);font:inherit;font-size:3.8cqw;font-weight:800;cursor:pointer}
+.tabs button.on{background:var(--fire);color:#2a1000;border-color:var(--fire2)}
+.tabs[hidden]{display:none}
+#rkMetric button{padding:2.2cqw 1cqw;font-size:3.5cqw}
+#rkMetric button.on{background:#2fb7c9;color:#04222a;border-color:#8fe6f2}
+#rkStatus{color:var(--mute);font-size:3.2cqw;margin-bottom:2cqw;min-height:4cqw}
+#rrankOn,#rrankAcc,#rrankCombo{font-size:4cqw;font-weight:800;color:var(--fire2)}
+.rk{list-style:none;margin:0 0 2cqw;padding:0;text-align:left}
+.rk li{display:grid;grid-template-columns:10cqw 1fr auto;gap:2cqw;align-items:baseline;padding:1.4cqw 2.4cqw;margin-bottom:.8cqw;
+  background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;font-size:3.8cqw}
+.rk li.me{border-color:var(--fire2);background:#ff7a1a33}
+.rk li>span:nth-child(2){min-width:0;overflow-wrap:anywhere}
+.rk b{font-variant-numeric:tabular-nums;font-size:4.4cqw}
+.rk em{font-style:normal;color:var(--mute);font-size:3cqw;display:block}
+.rk .n{color:var(--fire2);font-weight:900}
+.empty{color:var(--mute);padding:6cqw 0}
+.langrow{display:flex;justify-content:flex-end;margin-bottom:1cqw}
+.ib.lang,.ib.pill{width:auto;min-width:9cqw;padding:0 2.4cqw;border-radius:5cqw;font-size:3.4cqw;font-weight:800;color:var(--ink)}
+#ovResult.lock{pointer-events:none}   /* 結果画面が出た直後は、指のタップが下のボタンに当たらないようにする */
+#ovResult{background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.55),rgba(8,4,2,.82))}
+.topbar{position:sticky;top:0;z-index:6;display:flex;justify-content:space-between;gap:2cqw;padding:max(1.5cqw,env(safe-area-inset-top,0px)) 0 3cqw;margin-bottom:1cqw;background:linear-gradient(to bottom,rgba(8,4,2,.96) 70%,rgba(8,4,2,0))}
+.ib.pill{height:9.5cqw;font-size:4cqw}
+.ib.sharep{background:#2f8fe0;border-color:#7fd6ff;color:#001a2e;font-weight:900}
+#appVer{margin-top:4cqw;font-size:3cqw;color:var(--mute);opacity:.8;font-variant-numeric:tabular-nums}
+.nameok{flex:none;padding:2cqw 4cqw;border-radius:2.4cqw;border:.4cqw solid #8fe6f2;background:#2fb7c9;color:#04222a;font:inherit;font-size:4cqw;font-weight:900;cursor:pointer}
+.nameok[hidden]{display:none}
+#toast{position:fixed;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
+  padding:2cqw 4cqw;border-radius:3cqw;font-size:3.6cqw;opacity:0;transition:opacity .25s;pointer-events:none;
+  max-width:90%;text-align:center;z-index:5}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="errbar"></div>
+<div id="stage">
+  <canvas id="cv"></canvas>
+
+  <div id="hud">
+    <div class="row">
+      <div id="time">0.00<small data-i="unit">秒</small></div>
+      <div class="btns">
+        <button class="ib lang" id="bLang2" aria-label="Language">EN</button>
+        <button class="ib" id="bMute" aria-label="Sound">🔊</button>
+        <button class="ib" id="bRetry" aria-label="Retry">↻</button>
+      </div>
+    </div>
+    <div id="gaugeWrap">
+      <div id="gauge"><div id="gfill"></div><i style="left:25%"></i><i style="left:55%"></i><i style="left:85%"></i></div>
+      <div id="glabels"><span style="left:12.5%" data-i="gSt1">こする</span><span style="left:40%" data-i="gSt2">煙</span><span style="left:70%" data-i="gSt3">火種</span><span style="left:92.5%" data-i="gSt4">着火</span></div>
+    </div>
+    <div id="hint"></div>
+  </div>
+  <div id="combo"></div>
+
+  <div class="ov on" id="ovTitle"><div class="card">
+    <div class="langrow"><button class="ib lang" id="bLang" aria-label="Language">EN</button></div>
+    <h1 data-h="title">🔥 火おこし 🏹<br>RTA</h1>
+    <div class="sub" data-i="sub">原始人になって、木の棒で火をおこせ！</div>
+    <div class="how" data-h="how"></div>
+    <div class="rec">
+      <div><small data-i="recBest">ベスト</small><b id="tBest">-</b></div>
+      <div><small data-i="recPlays">プレイ</small><b id="tPlays">0</b></div>
+    </div>
+    <div id="nameRow"><label for="pname" data-i="nameLabel">なまえ</label><input id="pname" maxlength="30" data-p="anon" autocomplete="off"><button class="nameok" id="pnameOk" data-i="ok" hidden>OK</button></div>
+    <button class="btn" id="bStart" data-i="start">スタート</button>
+    <button class="btn sec" id="bRank" data-i="rankBtn">🏆 ランキング</button>
+    <div id="appVer"></div>
+  </div></div>
+
+  <div class="ov" id="ovRank"><div class="card">
+    <div class="topbar"><button class="ib pill" id="bRankBack2" data-i="back">もどる</button><button class="ib pill sharep" id="bRankShare" data-i="share">シェア</button></div>
+    <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
+    <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
+    <div class="tabs" id="rkMetric"><button id="mtTime" data-i="mTime">速さ</button><button id="mtAcc" data-i="mAcc">正確さ</button><button id="mtCombo" data-i="mCombo">コンボ</button></div>
+    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="30" data-p="anon" autocomplete="off"><button class="nameok" id="pname2Ok" data-i="ok" hidden>OK</button></div>
+    <div class="sub" id="rkSub"></div>
+    <div id="rkStatus"></div>
+    <ol class="rk" id="rkList"></ol>
+    <button class="btn" id="bRankBack" data-i="back">もどる</button>
+  </div></div>
+
+  <div class="ov" id="ovResult"><div class="card">
+    <div id="rank"></div>
+    <div id="rtime"></div>
+    <div id="rrank"></div>
+    <div id="rrankOn"></div>
+    <div id="rrankAcc"></div>
+    <div id="rrankCombo"></div>
+    <div id="newbest" data-i="newBest">🏆 ベスト更新！</div>
+    <div class="stat">
+      <div><small data-i="sAcc">正確さ</small><b id="sAcc"></b></div>
+      <div><small data-i="sCombo">最大コンボ</small><b id="sCombo"></b></div>
+      <div><small data-i="sN">こすった数</small><b id="sN"></b></div>
+    </div>
+    <img id="preview" alt="share image">
+    <button class="btn share" id="bShare" data-i="share">📷 画像つきでシェア</button>
+    <div class="two">
+      <button class="btn" id="bAgain" data-i="again">もう一回</button>
+      <button class="btn sec" id="bHome" data-i="home">タイトル</button>
+    </div>
+    <button class="btn sec" id="bRank2" data-i="rank2">🏆 ランキング</button>
+  </div></div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script src="version.js"></script>
+<script>
+(() => {
+'use strict';
+// ───────── 定数 ─────────
+const W = 720, H = 960;
+const P = { x: 360, y: 790 };          // 棒の先が当たる点
+const STICK_LEN = 600;
+const REV = 14;                        // 反転とみなす戻り量(px)
+const MIN_LEN = 36;                    // ストロークとみなす最小長(px)
+const IDEAL_R = 0.7;                   // 理想の傾き(下/横)。約35°
+const KEY = 'hiokoshi.v1';
+const APP_VERSION = window.HIOKOSHI_VERSION || 'dev';   // firebase deploy のたびに自動で付与（scripts/write-version.js）
+const NAME_MAX = 30;                   // 名前の最大文字数
+const clipName = v => [...String(v || '')].slice(0, NAME_MAX).join('');
+const RANK_MAX = 100;                  // ランキングの表示・保持件数
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const $ = id => document.getElementById(id);
+
+// ───────── 記録 ─────────
+function loadRec() {
+  const d = { onlineBest: null, anonNo: 0, bestTime: 0, plays: 0, name: '', ranks: [], accRanks: [], comboRanks: [], lang: '' };
+  try { Object.assign(d, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+  return d;
+}
+const rec = loadRec();
+if (!rec.anonNo) { rec.anonNo = 100 + Math.floor(Math.random() * 900); try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch (e) {} }   // 名前未設定の人に付ける3桁の番号（端末ごとに固定）
+function saveRec() { try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch (e) {} }
+const fmt = n => Math.round(n).toLocaleString('en-US');
+
+// ───────── 言語 ─────────
+const I18N = {
+  ja: {
+    unit: '秒', gSt1: 'こする', gSt2: '煙', gSt3: '火種', gSt4: '着火',
+    title: '🔥 火おこし 🏹<br>RTA', sub: '原始人になって、木の棒で火をおこせ！',
+    how: '画面を<b>ドラッグ</b>して棒をこする。<br><b>右下 ⇄ 左下</b>へ、<b>正確に・高速に・交互に</b>斜め下へこすり続けるほど煙が出て、早く火がつく！<br>ヨコすぎ・タテすぎ・バラバラだと熱が逃げる。',
+    recBest: 'ベスト', recPlays: 'プレイ', nameLabel: 'なまえ', anon: 'ななし',
+    start: 'スタート', rankBtn: '🏆 ランキング', back: 'もどる',
+    newBest: '🏆 ベスト更新！', sAcc: '正確さ', sCombo: '最大コンボ', sN: 'こすった数',
+    share: 'シェア', again: 'もう一回', home: 'タイトル', rank2: '🏆 ランキング',
+    hReady: '棒を ジグザグに こすって スタート！', hIgnite: '🔥 着火！！', hStall: '斜め下へ 右・左・右・左…と 交互に！',
+    h1: 'もっと速く こすれ！', h2: '煙が出てきた！', h3: 'おがくずに 火種が！', h4: 'もうすぐ着火！！',
+    jBack: '戻し', jFlat: 'ヨコすぎ', jSteep: 'タテすぎ', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'ざつ',
+    s1: '炎竜王', s2: '太陽神', s3: '創世の炎', r0: '火の神', r1: '炎の達人', r2: '縄文の匠', r3: '石器時代の民', r4: 'たき火見習い', r5: 'まだ寒い',
+    mNametime: '速さランキング', mNameacc: '正確さランキング', mNamecombo: 'コンボランキング', rankShareText: '火おこしRTA 🏆 {0}（{1}）',
+    mCombo: '🔥 コンボ', subOnC: 'みんなの最大コンボTOP100（1人1記録）', subLocalC: 'この端末の最大コンボTOP100', comboN: '{0}コンボ', rowInfoC: '{0}秒 ・ 正確さ{1}% ・ {2}',
+    rrankComboIn: '自分コンボランキング {0}位！', rrankComboOnIn: 'オンラインコンボ {0}位！',
+    ok: 'OK', tNameSaved: 'なまえを保存しました', unplayed: '未プレイ',
+    mTime: '⏱ 速さ', mAcc: '🎯 正確さ', subOnA: 'みんなの正確さTOP100（1人1記録）', subLocalA: 'この端末の正確さTOP100',
+    playNo: '{0}回目', rowInfoA: '{0}秒 ・ {1}', rrankAccIn: '自分正確さランキング {0}位！', rrankAccOnIn: 'オンライン正確さ {0}位！',
+    tabOnline: 'オンライン', tabLocal: '自分', subOn: 'みんなの最速100人（1人1記録）', subLocal: 'この端末の最速TOP100',
+    rkLoading: '読み込み中…', rkFail: 'ランキングを取得できませんでした', rkOffline: 'オンラインランキングは未接続です',
+    rrankOnIn: 'オンライン {0}位！', rrankOnFail: 'オンラインには登録できませんでした', rrankOnSend: 'オンラインに登録中…',
+    rrankIn: '自分ランキング {0}位！', empty: 'まだ記録がありません',
+    rowInfo: '正確さ{0}% ・ {1}',
+    cardTitle: '火おこしRTA', cardStats: '正確さ {0}% / 最大コンボ {1} / {2}ストローク', tag: '#火おこしRTA',
+    shareText: '火おこしRTA 🔥 {0}秒で着火！（{1}） #火おこしRTA',
+    tWait: '画像を作っています…もう一度押してね', tSaved: '文面をコピーし、画像を保存しました。投稿に添付してね',
+    tCopied: '文面をコピーしました。画像は長押し/右クリックで保存して添付してね', langBtn: 'EN', docTitle: '火おこしRTA'
+  },
+  en: {
+    unit: 's', gSt1: 'Rub', gSt2: 'Smoke', gSt3: 'Ember', gSt4: 'Fire',
+    title: '🔥 FIRE 🏹<br>STARTER RTA', sub: 'Be a caveman. Start a fire with a stick!',
+    how: '<b>Drag</b> on the screen to rub the stick.<br>Rub <b>down-right ⇄ down-left</b> — <b>accurately, fast, alternating</b> — to make smoke and light the fire sooner!<br>Too flat, too steep, or sloppy strokes let the heat escape.',
+    recBest: 'Best', recPlays: 'Plays', nameLabel: 'Name', anon: 'Anon',
+    start: 'Start', rankBtn: '🏆 Ranking', back: 'Back',
+    newBest: '🏆 New best!', sAcc: 'Accuracy', sCombo: 'Max combo', sN: 'Strokes',
+    share: 'Share', again: 'Again', home: 'Title', rank2: '🏆 Ranking',
+    hReady: 'Rub the stick in a zigzag to start!', hIgnite: '🔥 Ignited!!', hStall: 'Alternate down-right, down-left, down-right…',
+    h1: 'Rub faster!', h2: 'Smoke is rising!', h3: 'An ember in the sawdust!', h4: 'Almost there!!',
+    jBack: 'Reset', jFlat: 'Too flat', jSteep: 'Too steep', jPerfect: 'PERFECT', jGood: 'GOOD', jOk: 'OK', jSloppy: 'Sloppy',
+    s1: 'Flame Dragon King', s2: 'Sun God', s3: 'Genesis Flame', r0: 'God of Fire', r1: 'Flame Master', r2: 'Jomon Artisan', r3: 'Stone Age Folk', r4: 'Campfire Rookie', r5: 'Still Cold',
+    mNametime: 'Speed Ranking', mNameacc: 'Accuracy Ranking', mNamecombo: 'Combo Ranking', rankShareText: 'Fire Starter RTA 🏆 {0} ({1})',
+    mCombo: '🔥 Combo', subOnC: 'Top 100 combo players (best each)', subLocalC: 'Max combo TOP100 on this device', comboN: '{0} combo', rowInfoC: '{0}s ・ Acc {1}% ・ {2}',
+    rrankComboIn: 'My combo rank #{0}!', rrankComboOnIn: 'Online combo #{0}!',
+    ok: 'OK', tNameSaved: 'Name saved', unplayed: 'Not played',
+    mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 100 most accurate players (best each)', subLocalA: 'Top 100 most accurate runs on this device',
+    playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'My accuracy rank #{0}!', rrankAccOnIn: 'Online accuracy #{0}!',
+    tabOnline: 'Online', tabLocal: 'Mine', subOn: 'Top 100 fastest players (best time each)', subLocal: 'Fastest TOP100 on this device',
+    rkLoading: 'Loading…', rkFail: 'Couldn\'t load the ranking', rkOffline: 'Online ranking is not connected',
+    rrankOnIn: 'Online rank #{0}!', rrankOnFail: 'Couldn\'t post to the online ranking', rrankOnSend: 'Posting to the online ranking…',
+    rrankIn: 'My ranking #{0}!', empty: 'No records yet',
+    rowInfo: 'Acc {0}% ・ {1}',
+    cardTitle: 'Fire Starter RTA', cardStats: 'Accuracy {0}% / Max combo {1} / {2} strokes', tag: '#FireStarterRTA',
+    shareText: 'Fire Starter RTA 🔥 Lit in {0}s! ({1}) #FireStarterRTA',
+    tWait: 'Making the image… tap again', tSaved: 'Text copied and image saved. Attach it to your post.',
+    tCopied: 'Text copied. Long-press / right-click the image to save and attach it.', langBtn: '日本語', docTitle: 'Fire Starter RTA'
+  }
+};
+const anonName = () => t('anon') + rec.anonNo;   // 例: ななし123
+let lang = rec.lang || ((navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en');
+const t = (k, ...a) => {
+  let v = (I18N[lang] && I18N[lang][k]) ?? I18N.ja[k] ?? k;
+  a.forEach((x, i) => { v = v.replace('{' + i + '}', x); });
+  return v;
+};
+
+// ───────── Canvas ─────────
+const cv = $('cv'), ctx = cv.getContext('2d');
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+cv.width = W * dpr; cv.height = H * dpr;
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+// 背景は一度だけ描く
+const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+(function drawBG() {
+  const c = bg.getContext('2d');
+  let g = c.createLinearGradient(0, 0, 0, 600);
+  g.addColorStop(0, '#0b1230'); g.addColorStop(.55, '#3a2250'); g.addColorStop(1, '#c4673a');
+  c.fillStyle = g; c.fillRect(0, 0, W, 600);
+  for (let i = 0; i < 70; i++) {
+    c.fillStyle = `rgba(255,255,255,${rnd(.2, .9)})`;
+    c.fillRect(rnd(0, W), rnd(0, 330), 2, 2);
+  }
+  c.fillStyle = '#f4e9c8'; c.beginPath(); c.arc(610, 270, 34, 0, 7); c.fill();
+  c.fillStyle = '#e1d4ac'; c.beginPath(); c.arc(600, 262, 8, 0, 7); c.fill();
+  c.fillStyle = '#2a1a3a';
+  c.beginPath(); c.moveTo(0, 520);
+  for (let x = 0; x <= W; x += 40) c.lineTo(x, 470 + Math.sin(x * .013) * 40 + Math.sin(x * .05) * 12);
+  c.lineTo(W, 600); c.lineTo(0, 600); c.fill();
+  c.fillStyle = '#1b1022';
+  c.beginPath(); c.moveTo(0, 560);
+  for (let x = 0; x <= W; x += 30) c.lineTo(x, 540 + Math.sin(x * .02 + 2) * 26);
+  c.lineTo(W, 620); c.lineTo(0, 620); c.fill();
+  g = c.createLinearGradient(0, 580, 0, H);
+  g.addColorStop(0, '#4a3220'); g.addColorStop(1, '#1d120b');
+  c.fillStyle = g; c.fillRect(0, 580, W, H - 580);
+  for (let i = 0; i < 260; i++) {
+    c.fillStyle = `rgba(${rnd(60, 110) | 0},${rnd(40, 70) | 0},${rnd(20, 40) | 0},${rnd(.3, .7)})`;
+    const y = rnd(600, H);
+    c.fillRect(rnd(0, W), y, rnd(2, 7) * (y / 600), 2);
+  }
+})();
+
+// おがくず・草は一度だけ配置
+const specks = Array.from({ length: 150 }, () => {
+  const a = rnd(0, Math.PI * 2), r = 6 + Math.pow(Math.random(), 1.4) * 92;
+  return {
+    x: P.x + Math.cos(a) * r, y: P.y + 4 + Math.sin(a) * r * .22,
+    s: rnd(1.4, 3.6), sh: rnd(0, 1), glow: Math.hypot(Math.cos(a) * r, Math.sin(a) * r * .22) < 44 ? rnd(0, 1) : 2
+  };
+});
+const blades = [];
+for (const side of [-1, 1]) for (let i = 0; i < 34; i++) {
+  const off = 52 + Math.pow(Math.random(), .8) * 120;
+  blades.push({
+    x: P.x + side * off, y: P.y - 6 + rnd(-6, 8), h: rnd(34, 74), lean: -side * rnd(8, 40) + rnd(-10, 10),
+    ph: rnd(0, 6.28), c: Math.random() < .5 ? '#c9a74d' : '#a88a3a'
+  });
+}
+
+// ───────── ゲーム状態 ─────────
+let mode = 'title';     // title | ready | play | ignite | result
+let T = 0;              // 熱 0..100
+let tStart = 0, tEnd = 0, igniteAt = 0, elapsed = 0;
+let n = 0, qSum = 0, combo = 0, maxCombo = 0, lastL = 0;
+let spin = 0, rubSpeed = 0, depth = 0, depthVis = 0, palmShift = 0, shake = 0, clock = 0;
+let stalled = 0;
+let result = null, shareBlob = null, shareUrl = null;
+
+const smoke = [], sparks = [], flames = [], dust = [], floaters = [];
+
+function resetRun() {
+  T = 0; n = 0; qSum = 0; combo = 0; maxCombo = 0; lastL = 0; elapsed = 0; stalled = 0;
+  depth = 0; depthVis = 0;
+  smoke.length = sparks.length = flames.length = dust.length = floaters.length = 0;
+  tr = null; result = null;
+  $('time').firstChild.nodeValue = '0.00';
+  setHint('');
+}
+
+// ───────── 入力：ストローク検出 ─────────
+let down = false, px = 0, py = 0, pt = 0, tr = null, startX = 0;
+
+function toLogical(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+}
+cv.addEventListener('pointerdown', e => {
+  if (mode === 'ignite' && performance.now() - igniteAt > 900) { showResult(); return; }   // タップで結果へ
+  if (mode !== 'ready' && mode !== 'play') return;
+  e.preventDefault();
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  initAudio();
+  const p = toLogical(e);
+  down = true; px = startX = p.x; py = p.y; pt = e.timeStamp; tr = null;
+});
+cv.addEventListener('pointermove', e => {
+  if (!down) return;
+  e.preventDefault();
+  const list = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+  for (const ev of (list && list.length ? list : [e])) {
+    const p = toLogical(ev);
+    onMove(p.x, p.y, ev.timeStamp);
+  }
+});
+const up = () => { down = false; tr = null; };
+cv.addEventListener('pointerup', up);
+cv.addEventListener('pointercancel', up);
+cv.addEventListener('lostpointercapture', up);
+
+function onMove(x, y, t) {
+  if (mode !== 'ready' && mode !== 'play') return;
+  const dx = x - px, dt = Math.max(1, t - pt);
+  px = x; py = y; pt = t;
+  spin += dx * 0.09;
+  palmShift = clamp(palmShift + dx * .15, -22, 22);
+  rubSpeed = Math.max(rubSpeed, Math.min(2, Math.abs(dx) / dt));
+  if (mode === 'ready' && Math.abs(x - startX) > 8) startRun();
+  if (!tr) { tr = { dir: 0, sx: x, sy: y, st: t, ex: x, ey: y, et: t }; return; }
+  if (tr.dir === 0) {
+    if (Math.abs(x - tr.sx) > REV) { tr.dir = Math.sign(x - tr.sx); tr.ex = x; tr.ey = y; tr.et = t; }
+    return;
+  }
+  if ((x - tr.ex) * tr.dir >= 0) { tr.ex = x; tr.ey = y; tr.et = t; }
+  else if ((tr.ex - x) * tr.dir > REV) {
+    const nd = -tr.dir;
+    commit(tr);
+    if (mode !== 'play') return;
+    tr = { dir: nd, sx: tr.ex, sy: tr.ey, st: tr.et, ex: x, ey: y, et: t };
+  }
+}
+
+function startRun() {
+  mode = 'play'; tStart = performance.now(); stalled = 0;
+}
+
+// 1ストロークの評価 → 熱に変換
+function commit(s) {
+  if (mode !== 'play') return;
+  const L = Math.abs(s.ex - s.sx), dy = s.ey - s.sy;
+  if (L < MIN_LEN) return;
+  const r = dy / L;                                   // 下向き成分の比
+  const dt = Math.max(24, s.et - s.st);
+  const v = L / dt;                                   // px/ms
+  if (r < -0.35) { floatText(t('jBack'), 'rgba(200,200,200,.9)'); return; }   // 持ち替えの上向き動作
+  const accA = clamp(1 - Math.abs(r - IDEAL_R) / 0.75, 0, 1);              // 斜め下の正確さ
+  const ratio = lastL ? Math.min(L, lastL) / Math.max(L, lastL) : 1;
+  const cons = clamp((ratio - .4) / .5, 0, 1);                             // 長さの安定
+  const q = accA * (0.7 + 0.3 * cons);
+  lastL = L;
+  const spd = clamp(v / 0.8, 0.15, 1.5);
+  const lenF = clamp(L / 90, 0.4, 1.3);
+  if (q >= .5) { combo++; maxCombo = Math.max(maxCombo, combo); } else if (q < .3) combo = 0;
+  const mult = 1 + Math.min(combo, 24) * 0.035;
+  const gain = 5.0 * q * spd * lenF * mult;
+  n++; qSum += q;
+  T = Math.min(100, T + gain);
+  depth += clamp(dy, 0, 200) / 900;
+  if (depth >= 1) depth -= 1, depthVis = -.15;
+  shake = Math.min(1, shake + .35);
+  // 判定表示
+  let txt, col;
+  if (r < 0.2) { txt = t('jFlat'); col = '#ff9a7a'; }
+  else if (r > 1.5) { txt = t('jSteep'); col = '#ff9a7a'; }
+  else if (q >= .85) { txt = t('jPerfect'); col = '#ffe066'; }
+  else if (q >= .6) { txt = t('jGood'); col = '#9be564'; }
+  else if (q >= .3) { txt = t('jOk'); col = '#d9d9d9'; }
+  else { txt = t('jSloppy'); col = '#ff9a7a'; }
+  floatText(txt, col);
+  strokeSound(q, r < 0.2 || r > 1.5);
+  // おがくず
+  for (let i = 0; i < 4; i++) dust.push({
+    x: P.x + rnd(-6, 6), y: P.y, vx: s.dir * rnd(30, 110) * -1 + rnd(-30, 30), vy: rnd(-90, -20),
+    life: rnd(.35, .7), age: 0, s: rnd(1.5, 3)
+  });
+  stalled = 0;
+  if (T >= 100) ignite();
+}
+
+function floatText(text, color) {
+  for (const f of floaters) f.ty -= 50;          // 古い表示は押し上げて、少し残す
+  floaters.push({ text, color, x: P.x, y: 430, ty: 430, age: 0, life: 1.8 });
+  if (floaters.length > 3) floaters.shift();
+}
+
+function ignite() {
+  mode = 'ignite'; down = false; tr = null;
+  tEnd = performance.now(); elapsed = (tEnd - tStart) / 1000; igniteAt = tEnd;
+  boom();
+  tier = rankIdx(elapsed); spawnFlies(6 + (8 - tier) * 5);
+  setTimeout(showResult, visitDelay());
+}
+
+// ───────── スコア ─────────
+const RANKS = [[1.5, '🌌', 's3'], [2.0, '☀️', 's2'], [2.7, '🐉', 's1'], [3.5, '🔥', 'r0'], [5.5, '🌋', 'r1'], [8, '🪨', 'r2'], [12, '🏹', 'r3'], [18, '🍂', 'r4'], [Infinity, '🥶', 'r5']];   // 着火タイム(秒)未満で到達
+const rankIdx = sec => RANKS.findIndex(r => sec < r[0]);
+const rankName = i => RANKS[i][1] + ' ' + t(RANKS[i][2]);
+
+function renderResultText() {
+  if (!result) return;
+  const r = result;
+  if (!Online.kind) $('rrankOn').textContent = '';
+  else if (!$('rrankAcc').textContent) $('rrankAcc').textContent = '';
+  $('rrank').textContent = r.pos && r.pos <= RANK_MAX ? t('rrankIn', r.pos) : '';
+  if (!Online.kind) {
+    $('rrankAcc').textContent = r.posA && r.posA <= RANK_MAX ? t('rrankAccIn', r.posA) : '';
+    $('rrankCombo').textContent = r.posC && r.posC <= RANK_MAX ? t('rrankComboIn', r.posC) : '';
+  }
+  $('rank').textContent = rankName(r.ri);
+  $('rtime').innerHTML = r.t.toFixed(2) + '<small> ' + t('unit') + '</small>';
+  $('newbest').style.display = r.isBest ? 'block' : 'none';
+  $('sAcc').textContent = Math.round(r.acc * 100) + '%';
+  $('sCombo').textContent = r.combo;
+  $('sN').textContent = r.n;
+}
+function makeCard() {
+  shareBlob = null;
+  $('preview').removeAttribute('src');
+  renderCard(result).then(blob => {
+    shareBlob = blob;
+    if (shareUrl) URL.revokeObjectURL(shareUrl);
+    shareUrl = URL.createObjectURL(blob);
+    $('preview').src = shareUrl;
+  });
+}
+function showResult() {
+  if (mode !== 'ignite') return;
+  mode = 'result';
+  const acc = n ? Math.round(qSum / n * 10000) / 10000 : 0;
+  const isBest = !rec.bestTime || elapsed < rec.bestTime;
+  rec.plays++;
+  if (isBest) rec.bestTime = elapsed;
+  const entry = { p: rec.plays, t: elapsed, a: acc, c: maxCombo, n: rec.name || anonName(), d: Date.now() };
+  rec.ranks = (rec.ranks || []).concat(entry).sort((a, b) => a.t - b.t || a.d - b.d);
+  const pos = rec.ranks.indexOf(entry) + 1;
+  rec.ranks = rec.ranks.slice(0, RANK_MAX);
+  rec.accRanks = (rec.accRanks || []).concat(entry).sort((x, y) => y.a - x.a || x.t - y.t || x.d - y.d);
+  const posA = rec.accRanks.indexOf(entry) + 1;
+  rec.accRanks = rec.accRanks.slice(0, RANK_MAX);
+  rec.comboRanks = (rec.comboRanks || []).concat(entry).sort((x, y) => (y.c || 0) - (x.c || 0) || x.t - y.t || x.d - y.d);
+  const posC = rec.comboRanks.indexOf(entry) + 1;
+  rec.comboRanks = rec.comboRanks.slice(0, RANK_MAX);
+  saveRec();
+  result = { d: entry.d, t: elapsed, acc, combo: maxCombo, n, ri: rankIdx(elapsed), pos, posA, posC, isBest };
+  $('rrankAcc').textContent = ''; $('rrankCombo').textContent = '';
+  renderResultText();
+  postOnline(entry);
+  $('hud').classList.remove('on'); $('combo').classList.remove('on');
+  $('ovResult').classList.add('on', 'lock');
+  setTimeout(() => $('ovResult').classList.remove('lock'), 700);
+  makeCard();
+}
+
+// ───────── シェア画像 ─────────
+const FONT = '"Hiragino Sans","Noto Sans JP","Yu Gothic","Meiryo","WenQuanYi Zen Hei",sans-serif';
+function flameShape(c, x, y, s, fill) {
+  c.fillStyle = fill; c.beginPath();
+  c.moveTo(x, y - 150 * s);
+  c.bezierCurveTo(x + 30 * s, y - 100 * s, x + 80 * s, y - 50 * s, x + 62 * s, y - 8 * s);
+  c.bezierCurveTo(x + 50 * s, y + 22 * s, x - 50 * s, y + 22 * s, x - 62 * s, y - 8 * s);
+  c.bezierCurveTo(x - 80 * s, y - 50 * s, x - 20 * s, y - 80 * s, x, y - 150 * s);
+  c.fill();
+}
+function renderCard(r) {
+  const c = document.createElement('canvas'); c.width = 1200; c.height = 630;
+  const g = c.getContext('2d');
+  let gr = g.createLinearGradient(0, 0, 0, 630);
+  gr.addColorStop(0, '#0b1230'); gr.addColorStop(.6, '#3a2250'); gr.addColorStop(1, '#8a3a1a');
+  g.fillStyle = gr; g.fillRect(0, 0, 1200, 630);
+  for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(255,255,255,${rnd(.2, .8)})`; g.fillRect(rnd(0, 1200), rnd(0, 300), 2, 2); }
+  gr = g.createRadialGradient(290, 420, 10, 290, 420, 330);
+  gr.addColorStop(0, 'rgba(255,160,60,.55)'); gr.addColorStop(1, 'rgba(255,120,20,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 600, 630);
+  // 地面と板
+  g.fillStyle = '#2a1a10'; g.fillRect(0, 470, 1200, 160);
+  drawVisitorsCard(g, r.ri);
+  g.fillStyle = '#7a5230'; g.fillRect(90, 500, 400, 40);
+  g.fillStyle = '#5a3a20'; g.fillRect(90, 540, 400, 30);
+  // 棒
+  g.save(); g.translate(290, 500); g.rotate(.08);
+  g.fillStyle = '#9a7040'; g.fillRect(-9, -300, 18, 300);
+  g.fillStyle = '#c29a62'; g.fillRect(-9, -300, 6, 300);
+  g.restore();
+  // 炎
+  g.globalCompositeOperation = 'lighter';
+  flameShape(g, 290, 495, 1.75, '#c2310a');
+  flameShape(g, 290, 495, 1.35, '#ff8a1a');
+  flameShape(g, 290, 495, .85, '#ffe27a');
+  g.globalCompositeOperation = 'source-over';
+  // 文字
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+  g.fillStyle = '#ffc84a'; g.font = `900 70px ${FONT}`;
+  g.shadowColor = '#7a2a00'; g.shadowOffsetY = 5; g.shadowBlur = 0;
+  g.fillText(t('cardTitle'), 560, 100);
+  g.shadowColor = 'transparent';
+  g.fillStyle = '#f6e7cf';
+  g.font = `900 190px ${FONT}`; g.fillText(r.t.toFixed(2), 560, 300);
+  const tw = g.measureText(r.t.toFixed(2)).width;
+  g.font = `700 56px ${FONT}`; g.fillStyle = '#b79b78'; g.fillText(t('unit'), 560 + tw + 14, 300);
+  g.fillStyle = '#ffc84a'; g.font = `900 58px ${FONT}`; g.fillText(rankName(r.ri), 560, 400);
+  g.fillStyle = '#d6bf9c'; g.font = `600 30px ${FONT}`;
+  g.fillText(t('cardStats', Math.round(r.acc * 100), r.combo, r.n), 560, 470);
+  g.fillStyle = '#b79b78'; g.font = `600 28px ${FONT}`; g.textAlign = 'right';
+  g.fillText(t('tag'), 1160, 595);
+  return new Promise(res => c.toBlob(res, 'image/png'));
+}
+
+async function shareImage(blob, text, filename) {
+  const url = /^https?:/.test(location.protocol) ? location.href : '';
+  const file = new File([blob], filename, { type: 'image/png' });
+  // 端末の共有シート（画像つき）。タップ直後に呼ぶ必要があるので、可否は同期で判定して最初に通るものを使う
+  const full = { title: t('docTitle'), text, files: [file] };
+  if (url) full.url = url;
+  const cands = [full, { text: url ? text + ' ' + url : text, files: [file] }, { files: [file] }];
+  if (navigator.share && navigator.canShare) {
+    const data = cands.find(d => { try { return navigator.canShare(d); } catch (e) { return false; } });
+    if (data) {
+      try { await navigator.share(data); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+  }
+  // フォールバック：文面コピー + 画像保存 + X の投稿画面
+  try { navigator.clipboard.writeText(url ? text + ' ' + url : text).catch(() => {}); } catch (e) {}
+  let saved = false;
+  try {
+    const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+    if (dl) { await dl.save({ filename, data: blob }); saved = true; }
+  } catch (e) {}
+  if (!saved) {
+    const a = document.createElement('a'), u = URL.createObjectURL(blob);
+    a.href = u; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 10000);
+  }
+  const intent = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + (url ? '&url=' + encodeURIComponent(url) : '');
+  window.open(intent, '_blank', 'noopener');
+  toast(t('tSaved'));
+}
+async function doShare() {
+  if (!result) return;
+  if (!shareBlob) { toast(t('tWait')); return; }
+  await shareImage(shareBlob, t('shareText', result.t.toFixed(2), t(RANKS[result.ri][2])), 'hiokoshi-rta.png');
+}
+async function doRankShare() {
+  if (!rankBlob) { toast(t('tWait')); return; }
+  await shareImage(rankBlob, t('rankShareText', t('mName' + rankMetric), t(rankTab === 'online' ? 'tabOnline' : 'tabLocal')), 'hiokoshi-ranking.png');
+}
+
+let toastTimer;
+function toast(s) {
+  const t = $('toast'); t.textContent = s; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+}
+
+// ───────── 音 ─────────
+let ac, rubGain, rubFilter, muted = false, noiseBuf, soundQ = .5;
+function initAudio() {
+  if (ac || muted) return;
+  try {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    rubFilter = ac.createBiquadFilter(); rubFilter.type = 'bandpass'; rubFilter.frequency.value = 800; rubFilter.Q.value = .9;
+    rubGain = ac.createGain(); rubGain.gain.value = 0;
+    src.connect(rubFilter); rubFilter.connect(rubGain); rubGain.connect(ac.destination); src.start();
+  } catch (e) { ac = null; }
+}
+function audioFrame() {
+  if (!ac || !rubGain) return;
+  const on = !muted && down && (mode === 'play' || mode === 'ready');
+  // 擦りの質(soundQ)で音色を変える：良いほど高く澄んだ音、悪いほど低くざらついた音
+  const vol = Math.min(.2, rubSpeed * .13) * (.55 + .45 * soundQ);
+  rubGain.gain.setTargetAtTime(on ? vol : 0, ac.currentTime, .03);
+  rubFilter.frequency.setTargetAtTime(350 + soundQ * 1300 + rubSpeed * 500 + T * 6, ac.currentTime, .05);
+  rubFilter.Q.setTargetAtTime(.6 + soundQ * 3.2, ac.currentTime, .05);
+}
+function tone(freq, dur, vol, type) {
+  if (!ac || muted) return;
+  const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime;
+  o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .005); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+  o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + dur + .02);
+}
+// 判定ごとの一打の音
+const PENTA = [0, 2, 4, 7, 9];
+const noteHz = idx => 523.25 * Math.pow(2, (PENTA[idx % 5] + 12 * Math.floor(idx / 5)) / 12);
+function strokeSound(q, bad) {
+  soundQ = bad ? Math.min(q, .15) : q;
+  if (!ac || muted) return;
+  if (bad || q < .3) { tone(150, .1, .045, 'triangle'); burst(0, .07, 320, .06, 'lowpass'); return; }
+  const idx = Math.min(Math.max(combo, 0), 14);      // コンボが続くほど音階を駆け上がる
+  const f = noteHz(idx);
+  if (q < .6) { tone(f / 2, .12, .07, 'triangle'); }
+  else if (q < .85) { tone(f, .16, .1, 'triangle'); tone(f * 2, .1, .03, 'sine'); }
+  else { tone(f, .2, .13, 'sine'); tone(f * 2, .16, .055, 'sine'); tone(f * 3, .1, .02, 'sine'); }
+}
+function burst(delay, dur, freq, vol, type) {
+  if (!ac || muted) return;
+  const s = ac.createBufferSource(); s.buffer = noiseBuf;
+  const f = ac.createBiquadFilter(); f.type = type || 'bandpass'; f.frequency.value = freq;
+  const g = ac.createGain(); const t0 = ac.currentTime + delay;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .01); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+  s.connect(f); f.connect(g); g.connect(ac.destination); s.start(t0, Math.random()); s.stop(t0 + dur + .05);
+}
+function boom() {
+  burst(0, .6, 400, .5, 'lowpass');
+  for (let i = 0; i < 18; i++) burst(.1 + i * .11 + Math.random() * .08, .05, 2000 + Math.random() * 3000, .12);
+}
+
+// ───────── 描画 ─────────
+function drawBoard() {
+  // 上面
+  let g = ctx.createLinearGradient(0, 765, 0, 810);
+  g.addColorStop(0, '#a87a48'); g.addColorStop(1, '#8a5f34');
+  ctx.fillStyle = g; ctx.beginPath();
+  ctx.moveTo(160, 768); ctx.lineTo(560, 768); ctx.lineTo(610, 808); ctx.lineTo(110, 808); ctx.fill();
+  // 前面
+  ctx.fillStyle = '#5e3d20'; ctx.fillRect(110, 808, 500, 48);
+  ctx.fillStyle = '#4a2f18'; ctx.fillRect(110, 848, 500, 8);
+  ctx.strokeStyle = 'rgba(40,20,8,.35)'; ctx.lineWidth = 2;
+  for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.moveTo(130 + i * 55, 770 + (i % 2) * 6); ctx.lineTo(120 + i * 58, 806); ctx.stroke(); }
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(115, 815 + i * 8); ctx.lineTo(605, 815 + i * 8 + (i % 2)); ctx.stroke(); }
+  // 焦げ跡とV字の切り欠き
+  const burn = clamp(T / 100, 0, 1);
+  g = ctx.createRadialGradient(P.x, P.y + 4, 2, P.x, P.y + 4, 22 + burn * 26);
+  g.addColorStop(0, `rgba(10,4,0,${.55 + burn * .4})`); g.addColorStop(1, 'rgba(10,4,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(P.x - 60, P.y - 30, 120, 60);
+  ctx.fillStyle = '#120802'; ctx.beginPath();
+  ctx.moveTo(P.x - 14, 808); ctx.lineTo(P.x, P.y - 2); ctx.lineTo(P.x + 14, 808); ctx.fill();
+}
+function drawSawdust() {
+  const act = clamp((T - 40) / 60, 0, 1);
+  for (const s of specks) {
+    let col;
+    if (s.glow < 1 && T > 35 + s.glow * 45) {
+      col = `rgb(${200 + 55 * act | 0},${70 + 80 * act * s.sh | 0},20)`;
+    } else {
+      const b = 70 + s.sh * 60 | 0; col = `rgb(${b + 40},${b},${b * .6 | 0})`;
+    }
+    ctx.fillStyle = col; ctx.fillRect(s.x, s.y, s.s, s.s * .8);
+  }
+}
+function drawGrass(burnt) {
+  ctx.lineCap = 'round';
+  for (const b of blades) {
+    const sw = Math.sin(clock * 1.6 + b.ph) * 2 + (mode === 'ignite' || mode === 'result' ? Math.sin(clock * 9 + b.ph) * 4 : 0);
+    const k = clamp(burnt, 0, 1);
+    ctx.strokeStyle = k > 0 ? `rgb(${lerp(201, 30, k) | 0},${lerp(167, 18, k) | 0},${lerp(77, 10, k) | 0})` : b.c;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(b.x, b.y);
+    ctx.quadraticCurveTo(b.x + b.lean * .2, b.y - b.h * .6, b.x + b.lean + sw, b.y - b.h * (1 - k * .5));
+    ctx.stroke();
+  }
+}
+function drawStick() {
+  const tilt = Math.sin(clock * 40) * .004 * shake + palmShift * 0.0012;
+  const half = 14;
+  ctx.save(); ctx.translate(P.x, P.y); ctx.rotate(tilt);
+  const handY = -(190 + (1 - depthVis) * 240);
+  // 背側の手
+  const ph = Math.sin(spin);
+  drawPalm(-ph * 24 - 4, handY, true);
+  // 棒本体
+  let g = ctx.createLinearGradient(-half, 0, half, 0);
+  g.addColorStop(0, '#6a4524'); g.addColorStop(.35, '#c79a5f'); g.addColorStop(.7, '#a8794a'); g.addColorStop(1, '#5a3a1e');
+  ctx.fillStyle = g; ctx.beginPath();
+  ctx.moveTo(-6, 0); ctx.lineTo(-half, -40); ctx.lineTo(-half + 1, -STICK_LEN); ctx.lineTo(half - 1, -STICK_LEN); ctx.lineTo(half, -40); ctx.lineTo(6, 0);
+  ctx.fill();
+  // 回転がわかる螺旋の筋
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 6; i++) {
+    for (let y = 0; y > -STICK_LEN; y -= 24) {
+      const a1 = spin + i * Math.PI / 3 + y * .012, a2 = spin + i * Math.PI / 3 + (y - 24) * .012;
+      const vis = Math.cos(a1);
+      if (vis <= 0) continue;
+      ctx.strokeStyle = `rgba(50,28,10,${vis * .6})`;
+      ctx.beginPath(); ctx.moveTo(Math.sin(a1) * (half - 2), y); ctx.lineTo(Math.sin(a2) * (half - 2), y - 24); ctx.stroke();
+    }
+  }
+  // 先端のこげ
+  const hot = clamp(T / 100, 0, 1);
+  g = ctx.createLinearGradient(0, 0, 0, -50);
+  g.addColorStop(0, `rgba(${40 + hot * 200 | 0},${14 + hot * 40 | 0},0,.95)`); g.addColorStop(1, 'rgba(40,14,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(-half, -50, half * 2, 50);
+  // 手前の手
+  drawPalm(ph * 24 + 4, handY + 14, false);
+  ctx.restore();
+}
+function drawPalm(x, y, back) {
+  ctx.fillStyle = back ? '#a8704a' : '#d79a6c';
+  ctx.strokeStyle = '#6a3d22'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x - 20, y - 48, 40, 96, 16); ctx.fill(); ctx.stroke();
+  if (!back) {
+    ctx.strokeStyle = 'rgba(106,61,34,.6)';
+    for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(x - 20, y - 48 + i * 24); ctx.lineTo(x + 20, y - 48 + i * 24); ctx.stroke(); }
+  }
+}
+
+function spawnFlame() {
+  const b = blades[(Math.random() * blades.length) | 0];
+  flames.push({ x: b.x + b.lean * .5 + rnd(-8, 8), y: b.y - b.h * .3, vx: rnd(-14, 14), vy: rnd(-90, -190), age: 0, life: rnd(.5, 1.1), s: rnd(14, 30) });
+}
+function updateParticles(dt) {
+  const act = clamp(rubSpeed, 0, 1);
+  // 煙
+  const sRate = T > 8 ? clamp((T - 8) / 92, 0, 1) * (8 + 40 * act) : 0;
+  if (mode === 'play' || mode === 'ready' || mode === 'ignite') {
+    let k = sRate * dt;
+    while (k > 0) {
+      if (Math.random() < k) smoke.push({ x: P.x + rnd(-8, 8), y: P.y - 6, vx: rnd(-14, 14), vy: rnd(-40, -85), age: 0, life: rnd(1.8, 3.4), s: rnd(8, 14), ph: rnd(0, 6) });
+      k--;
+    }
+  }
+  for (let i = smoke.length - 1; i >= 0; i--) {
+    const p = smoke[i]; p.age += dt;
+    if (p.age > p.life) { smoke.splice(i, 1); continue; }
+    p.x += (p.vx + Math.sin(clock * 2 + p.ph) * 14) * dt; p.y += p.vy * dt; p.vy *= (1 - .25 * dt);
+  }
+  // 火の粉
+  if (T > 55 && mode !== 'result') {
+    let k = clamp((T - 55) / 45, 0, 1) * 26 * dt;
+    while (k > 0) { if (Math.random() < k) sparks.push({ x: P.x + rnd(-14, 14), y: P.y - 6, vx: rnd(-40, 40), vy: rnd(-70, -150), age: 0, life: rnd(.5, 1.1) }); k--; }
+  }
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const p = sparks[i]; p.age += dt;
+    if (p.age > p.life) { sparks.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 80 * dt;
+  }
+  // おがくず
+  for (let i = dust.length - 1; i >= 0; i--) {
+    const p = dust[i]; p.age += dt;
+    if (p.age > p.life) { dust.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt;
+  }
+  if ((mode === 'ignite' || mode === 'result') && Math.random() < 3 * dt) {
+    const now = (performance.now() - igniteAt) / 1000;
+    for (const r of ROAST) if (visOn(r) && now > r.at + .5 && Math.random() < .5) smoke.push({ x: r.tx, y: r.ty - 8, vx: rnd(-6, 6), vy: rnd(-30, -50), age: 0, life: rnd(1, 1.8), s: 4, ph: rnd(0, 6) });
+  }
+  // 炎
+  if (mode === 'ignite' || mode === 'result') {
+    const ia = Math.min(1, (performance.now() - igniteAt) / 900);
+    let k = (30 + 150 * ia) * dt;
+    while (k > 0) { if (Math.random() < k) spawnFlame(); k--; }
+  }
+  for (let i = flames.length - 1; i >= 0; i--) {
+    const p = flames[i]; p.age += dt;
+    if (p.age > p.life) { flames.splice(i, 1); continue; }
+    p.x += (p.vx + Math.sin(clock * 12 + p.y * .05) * 18) * dt; p.y += p.vy * dt;
+  }
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const f = floaters[i]; f.age += dt; f.y += (f.ty - f.y) * Math.min(1, dt * 14);
+    if (f.age > f.life) floaters.splice(i, 1);
+  }
+}
+function drawParticles() {
+  for (const p of smoke) {
+    const k = p.age / p.life, r = p.s + k * 40;
+    const dark = clamp((T - 40) / 60, 0, 1);
+    const c = 190 - dark * 90 | 0;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+    const a = (1 - k) * Math.min(1, k * 6) * (.28 + clamp(T / 100, 0, 1) * .22);
+    g.addColorStop(0, `rgba(${c},${c},${c + 10},${a})`); g.addColorStop(1, `rgba(${c},${c},${c + 10},0)`);
+    ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2);
+  }
+  ctx.fillStyle = '#6b4a2b';
+  for (const p of dust) ctx.fillRect(p.x, p.y, p.s, p.s);
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of sparks) {
+    const a = 1 - p.age / p.life;
+    ctx.fillStyle = `rgba(255,${150 + 80 * a | 0},60,${a})`; ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
+  }
+  for (const p of flames) {
+    const k = p.age / p.life, r = p.s * (1 - k * .7);
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+    g.addColorStop(0, `rgba(255,${230 - k * 120 | 0},${120 - k * 100 | 0},${.8 * (1 - k)})`);
+    g.addColorStop(.5, `rgba(255,${120 - k * 60 | 0},20,${.5 * (1 - k)})`);
+    g.addColorStop(1, 'rgba(200,40,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawGlow() {
+  const heat = clamp((T - 40) / 60, 0, 1);
+  const fl = (mode === 'ignite' || mode === 'result') ? Math.min(1, (performance.now() - igniteAt) / 700) : 0;
+  const a = Math.max(heat * .8, fl);
+  if (a <= 0) return;
+  ctx.globalCompositeOperation = 'lighter';
+  const r = 30 + heat * 50 + fl * 380;
+  const g = ctx.createRadialGradient(P.x, P.y - 6, 0, P.x, P.y - 6, r);
+  g.addColorStop(0, `rgba(255,140,40,${a * (.7 + Math.sin(clock * 14) * .15)})`);
+  g.addColorStop(1, 'rgba(255,90,10,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawGuide() {
+  if (mode !== 'ready') return;
+  const p = (Math.sin(clock * 5) + 1) / 2;
+  ctx.save(); ctx.globalAlpha = .55 + p * .4;
+  ctx.strokeStyle = '#ffe066'; ctx.fillStyle = '#ffe066'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const pts = [[-130, 250], [130, 340], [-130, 430], [130, 520]];
+  ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(P.x + q[0], q[1]) : ctx.moveTo(P.x + q[0], q[1])); ctx.stroke();
+  const e = pts[3], s = pts[2];
+  const a = Math.atan2(e[1] - s[1], e[0] - s[0]);
+  ctx.beginPath(); ctx.moveTo(P.x + e[0], e[1]);
+  ctx.lineTo(P.x + e[0] - Math.cos(a - .5) * 30, e[1] - Math.sin(a - .5) * 30);
+  ctx.lineTo(P.x + e[0] - Math.cos(a + .5) * 30, e[1] - Math.sin(a + .5) * 30); ctx.fill();
+  ctx.restore();
+}
+function drawFloaters() {
+  ctx.textAlign = 'center'; ctx.font = `900 44px ${FONT}`; ctx.lineWidth = 7; ctx.lineJoin = 'round';
+  for (const f of floaters) {
+    ctx.globalAlpha = clamp((1 - f.age / f.life) * 1.6, 0, 1); ctx.strokeStyle = '#000'; ctx.strokeText(f.text, f.x, f.y);
+    ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ───────── 火のまわりに集まる来訪者（着火タイムのランクに応じて増える） ─────────
+let tier = 8;           // rankIdx(着火タイム)。小さいほど速い＝来訪者が豪華
+const SIL = '#160d08';
+const sil = c => { c.fillStyle = SIL; c.strokeStyle = SIL; c.shadowColor = 'rgba(255,140,50,.55)'; c.shadowBlur = 10; };
+const ell = (c, x, y, rx, ry, rot = 0) => { c.beginPath(); c.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); c.fill(); };
+const poly = (c, p) => { c.beginPath(); c.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); c.closePath(); c.fill(); };
+const limb = (c, x, y, w, h) => { c.beginPath(); c.roundRect(x - w / 2, y, w, h, w / 3); c.fill(); };
+const curve = (c, p, w) => { c.save(); c.lineCap = 'round'; c.lineJoin = 'round'; c.lineWidth = w; c.beginPath(); c.moveTo(p[0], p[1]); c.quadraticCurveTo(p[2], p[3], p[4], p[5]); c.stroke(); c.restore(); };
+const eye = (c, x, y, r) => { c.save(); c.shadowBlur = 0; c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(255,215,90,.95)'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.restore(); };
+const DRAW = {
+  rabbit(c) { ell(c, -2, -13, 15, 11); ell(c, 14, -24, 8, 8); ell(c, 11, -39, 3, 10, -.2); ell(c, 18, -38, 3, 10, .15); ell(c, -8, -7, 9, 8); ell(c, -17, -14, 4, 4); eye(c, 18, -26, 1.6); },
+  owl(c) {
+    c.fillStyle = '#2a1a10'; c.shadowBlur = 0; c.fillRect(-16, -22, 32, 22); sil(c);
+    c.translate(0, -20);
+    ell(c, 0, -22, 12, 19); ell(c, 0, -46, 12, 11); poly(c, [-10, -52, -6, -64, -2, -54]); poly(c, [10, -52, 6, -64, 2, -54]);
+    eye(c, -5, -47, 3.6); eye(c, 5, -47, 3.6);
+  },
+  deer(c) {
+    for (const x of [-24, -16, 18, 26]) limb(c, x, -40, 5, 40);
+    ell(c, 0, -52, 34, 15); poly(c, [20, -58, 30, -62, 44, -100, 34, -102]); ell(c, 46, -102, 11, 6.5, -.35); ell(c, -34, -56, 5, 3, .5);
+    c.lineWidth = 3; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(44, -106); c.lineTo(40, -134); c.moveTo(41, -122); c.lineTo(30, -128); c.moveTo(42, -112); c.lineTo(52, -126); c.stroke();
+    ell(c, 38, -108, 3, 6, -.4); eye(c, 50, -104, 1.8);
+  },
+  wolf(c) {
+    for (const x of [-22, -14, 16, 24]) limb(c, x, -26, 5, 26);
+    ell(c, 0, -34, 30, 12); ell(c, 18, -36, 14, 13); ell(c, 40, -48, 11, 8, -.2); poly(c, [46, -52, 62, -44, 46, -42]);
+    poly(c, [36, -56, 38, -68, 44, -57]); poly(c, [42, -57, 47, -67, 50, -55]); curve(c, [-28, -38, -50, -44, -56, -24], 7); eye(c, 46, -50, 1.8);
+  },
+  mammoth(c) {
+    for (const x of [-48, -24, 26, 50]) limb(c, x, -62, 22, 62);
+    ell(c, 0, -96, 72, 46); ell(c, 12, -128, 42, 30); ell(c, 62, -98, 30, 34); ell(c, 50, -100, 12, 22);
+    curve(c, [84, -84, 100, -40, 88, -12], 16);
+    c.save(); c.shadowBlur = 0; c.strokeStyle = 'rgba(215,200,160,.9)'; c.lineCap = 'round'; c.lineWidth = 6;
+    c.beginPath(); c.moveTo(78, -74); c.quadraticCurveTo(120, -64, 112, -100); c.stroke(); c.restore();
+    eye(c, 76, -106, 2.2);
+  },
+  trike(c) {
+    for (const x of [-30, -12, 26, 42]) limb(c, x, -30, 14, 30);
+    ell(c, 0, -46, 52, 28); poly(c, [-48, -52, -100, -30, -48, -34]); ell(c, 54, -66, 26, 30, -.3); ell(c, 76, -52, 24, 14);
+    poly(c, [70, -62, 104, -92, 82, -56]); poly(c, [82, -60, 116, -84, 90, -54]); poly(c, [96, -50, 110, -56, 102, -42]); eye(c, 82, -58, 2);
+  },
+  trex(c) {
+    ell(c, -6, -62, 14, 26, -.2); poly(c, [-16, -44, 6, -44, 10, -8, -8, -8]); poly(c, [-8, -8, 22, -8, 24, 0, -10, 0]);
+    ell(c, 0, -104, 34, 42, -.35); poly(c, [-20, -118, -112, -76, -112, -66, -14, -84]); ell(c, 18, -130, 14, 26, .4);
+    ell(c, 34, -152, 32, 16, .1); poly(c, [10, -148, 62, -144, 58, -132, 14, -136]); limb(c, 34, -122, 5, 16);
+    eye(c, 42, -156, 2.4);
+  },
+  brachio(c) {
+    for (const x of [-52, -26, 34, 58]) limb(c, x, -86, 20, 86);
+    ell(c, 0, -112, 70, 38); curve(c, [-60, -120, -130, -104, -150, -70], 26); curve(c, [50, -128, 96, -170, 96, -270], 26);
+    ell(c, 100, -282, 18, 11, -.2); eye(c, 108, -284, 2.2);
+  }
+};
+const VIS = [   // ri: この順位以上（数字が小さいほど上位）で登場 / at: 着火からの到着秒 / s*: 画面 / c*: シェア画像
+  { id: 'rabbit', ri: 7, at: .8, from: -1, sx: 585, sy: 764, ss: 1, cx: 515, cy: 503, cs: 0.85 },
+  { id: 'owl', ri: 6, at: 1.2, from: 1, fly: 1, sx: 175, sy: 762, ss: .9, cx: 188, cy: 503, cs: 0.6 },
+  { id: 'deer', ri: 5, at: 1.5, from: -1, sx: 85, sy: 762, ss: .9, cx: 112, cy: 503, cs: 0.7 },
+  { id: 'wolf', ri: 4, at: 2.0, from: 1, sx: 655, sy: 762, ss: .9, cx: 445, cy: 503, cs: 0.7 },
+  { id: 'mammoth', ri: 3, at: 2.4, from: -1, sx: 105, sy: 655, ss: .85, cx: 60, cy: 486, cs: 0.78 },
+  { id: 'trike', ri: 2, at: 2.8, from: -1, sx: 235, sy: 722, ss: .75, cx: 165, cy: 482, cs: 0.5 },
+  { id: 'trex', ri: 1, at: 3.2, from: 1, sx: 480, sy: 720, ss: .62, cx: 525, cy: 482, cs: 0.42 },
+  { id: 'brachio', ri: 0, at: 3.6, from: 1, sx: 595, sy: 640, ss: .85, cx: 440, cy: 478, cs: 0.5 }
+];
+const ROAST = [{ id: 'fish', ri: 6, at: .9, bx: 188, by: 796, tx: 252, ty: 716 }, { id: 'meat', ri: 5, at: 1.7, bx: 532, by: 796, tx: 468, ty: 718 }];
+const visOn = (v, tr = tier) => tr <= v.ri;
+const mixHex = (a, b, k) => `rgb(${a.map((x, i) => Math.round(lerp(x, b[i], k))).join(',')})`;
+const easeOut = k => 1 - Math.pow(1 - clamp(k, 0, 1), 3);
+const visitDelay = () => Math.max(2300, (Math.max(0, ...VIS.filter(v => visOn(v)).map(v => v.at), ...ROAST.filter(v => visOn(v)).map(v => v.at)) + 1.4) * 1000);
+
+function drawAnimal(c, id, x, y, s, dir) {
+  c.save(); c.translate(x, y); c.scale(dir * s, s); sil(c); DRAW[id](c); c.restore();
+}
+function drawVisitors() {
+  if (mode !== 'ignite' && mode !== 'result') return;
+  const now = (performance.now() - igniteAt) / 1000;
+  const list = VIS.filter(v => visOn(v) && now > v.at - 1.2).sort((a, b) => a.sy - b.sy);
+  for (const v of list) {
+    const k = easeOut((now - (v.at - 1.2)) / 1.2), moving = k < 1;
+    const x0 = v.fly ? W + 80 : (v.from < 0 ? -170 : W + 170), y0 = v.fly ? 260 : v.sy;
+    const x = lerp(x0, v.sx, k), y = lerp(y0, v.sy, k) - (moving && !v.fly ? Math.abs(Math.sin(clock * 13)) * 5 : 0) + Math.sin(clock * 1.7 + v.sx) * (moving ? 0 : 1.2);
+    const dir = moving ? (v.sx > x0 ? 1 : -1) : (v.sx < P.x ? 1 : -1);
+    drawAnimal(ctx, v.id, x, y, v.ss, dir);
+  }
+}
+function drawRoast() {
+  if (mode !== 'ignite' && mode !== 'result') return;
+  const now = (performance.now() - igniteAt) / 1000;
+  for (const r of ROAST) {
+    if (!visOn(r) || now < r.at) continue;
+    const k = easeOut((now - r.at) / .5), cook = clamp((now - r.at) / 4, 0, 1);
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = '#6b4a2b'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(r.bx, r.by); ctx.lineTo(lerp(r.bx, r.tx, k), lerp(r.by, r.ty, k)); ctx.stroke();
+    ctx.translate(lerp(r.bx, r.tx, k), lerp(r.by, r.ty, k)); ctx.rotate(Math.atan2(r.ty - r.by, r.tx - r.bx) + (r.id === 'fish' ? 0 : .3)); ctx.scale(k * 1.3, k * 1.3);
+    if (r.id === 'fish') {
+      ctx.fillStyle = mixHex([235, 160, 150], [110, 58, 26], cook); ctx.beginPath(); ctx.ellipse(10, 0, 20, 8, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(-24, -8); ctx.lineTo(-24, 8); ctx.fill();
+      ctx.fillStyle = '#1a0f08'; ctx.beginPath(); ctx.arc(24, -2, 1.6, 0, 7); ctx.fill();
+    } else {
+      ctx.fillStyle = '#e9dcc0'; ctx.beginPath(); ctx.arc(-18, -2, 3.5, 0, 7); ctx.arc(-18, 3, 3.5, 0, 7); ctx.fill(); ctx.fillRect(-18, -1.5, 12, 3);
+      ctx.fillStyle = mixHex([200, 90, 80], [96, 48, 22], cook); ctx.beginPath(); ctx.ellipse(6, 0, 17, 12, 0, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+let flies = [];
+function spawnFlies(n) { flies = Array.from({ length: n }, () => ({ x: rnd(30, 690), y: rnd(300, 740), ph: rnd(0, 6.3), sp: rnd(.5, 1.1), r: rnd(18, 60), at: rnd(.4, 3) })); }
+function drawFireflies() {
+  if (mode !== 'ignite' && mode !== 'result') return;
+  const now = (performance.now() - igniteAt) / 1000;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const f of flies) {
+    const age = now - f.at; if (age < 0) continue;
+    const a = Math.min(1, age) * (.3 + .7 * Math.abs(Math.sin(clock * f.sp * 2.2 + f.ph)));
+    const x = f.x + Math.sin(clock * f.sp + f.ph) * f.r, y = f.y + Math.cos(clock * f.sp * .7 + f.ph * 2) * f.r * .6;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 9);
+    g.addColorStop(0, `rgba(210,255,110,${a})`); g.addColorStop(.4, `rgba(170,240,80,${a * .45})`); g.addColorStop(1, 'rgba(170,240,80,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - 9, y - 9, 18, 18);
+  }
+  ctx.restore();
+}
+// シェア画像用：同じ来訪者を静止画で描く
+function drawVisitorsCard(g, tr) {
+  for (const v of VIS.filter(v => visOn(v, tr)).sort((a, b) => a.cy - b.cy)) drawAnimal(g, v.id, v.cx, v.cy, v.cs, v.cx < 290 ? 1 : -1);
+  g.save(); g.globalCompositeOperation = 'lighter';
+  for (let i = 0, n = 4 + (8 - tr) * 4; i < n; i++) {
+    const x = rnd(20, 560), y = rnd(250, 470), gr = g.createRadialGradient(x, y, 0, x, y, 12);
+    gr.addColorStop(0, 'rgba(210,255,110,.95)'); gr.addColorStop(.4, 'rgba(170,240,80,.4)'); gr.addColorStop(1, 'rgba(170,240,80,0)');
+    g.fillStyle = gr; g.fillRect(x - 12, y - 12, 24, 24);
+  }
+  g.restore();
+}
+
+function render() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.drawImage(bg, 0, 0);
+  drawVisitors();
+  const burnt = (mode === 'ignite' || mode === 'result') ? (performance.now() - igniteAt) / 3000 : 0;
+  ctx.save();
+  if (shake > 0) ctx.translate(Math.sin(clock * 90) * shake * 1.5, 0);
+  drawBoard(); drawSawdust(); drawGrass(burnt); drawStick();
+  ctx.restore();
+  drawGlow(); drawParticles(); drawRoast(); drawFireflies(); drawGuide(); drawFloaters();
+}
+
+// ───────── HUD ─────────
+let lastHint = '';
+function setHint(s) { if (s !== lastHint) { $('hint').textContent = s; lastHint = s; } }
+function updateHud() {
+  $('time').firstChild.nodeValue = elapsed.toFixed(2);
+  $('gfill').style.width = T + '%';
+  const cb = $('combo');
+  if (combo >= 3 && mode === 'play') { cb.textContent = combo + ' COMBO'; cb.classList.add('on'); } else cb.classList.remove('on');
+  let h;
+  if (mode === 'ready') h = t('hReady');
+  else if (mode === 'ignite') h = t('hIgnite');
+  else if (stalled > 2.5 && T < 60) h = t('hStall');
+  else if (T < 25) h = t('h1');
+  else if (T < 55) h = t('h2');
+  else if (T < 85) h = t('h3');
+  else h = t('h4');
+  setHint(h);
+}
+
+// ───────── ループ ─────────
+let last = performance.now();
+function showErr(msg) { const b = document.getElementById('errbar'); if (b) { b.style.display = 'block'; b.textContent = String(msg).slice(0, 600); } }
+window.addEventListener('error', e => showErr('Error: ' + e.message + (e.lineno ? ' (line ' + e.lineno + ')' : '')));
+window.addEventListener('unhandledrejection', e => console.warn('unhandled', e.reason));
+function frame(now) {
+  try { frameBody(now); } catch (e) { showErr('Frame error: ' + (e && e.stack || e)); }
+  requestAnimationFrame(frame);
+}
+function frameBody(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; clock += dt;
+  if (mode === 'play') {
+    elapsed = (now - tStart) / 1000;
+    T = Math.max(0, T - (1.05 + .042 * T) * dt);
+    stalled += dt;
+    if (T < 0.5 && elapsed > 90) elapsed = 99.99;
+  }
+  rubSpeed *= Math.exp(-dt * 7);
+  shake = Math.max(0, shake - dt * 4);
+  depthVis = lerp(depthVis, depth, 1 - Math.exp(-dt * 20));
+  if (depth < depthVis - .5) depthVis = depth;
+  updateParticles(dt);
+  render();
+  if (mode === 'play' || mode === 'ready' || mode === 'ignite') updateHud();
+  audioFrame();
+}
+
+// ───────── 画面遷移 ─────────
+// オンラインランキングの窓口。claude.ai の Artifact では共有DB、それ以外は REST（下記）に接続する。
+//   REST: <meta name="ranking-endpoint" content="https://…"> か window.HIOKOSHI_RANK_URL を設定すると、
+//   GET  {url}/scores?limit=10[&metric=acc] → [{n,t,a,c,d,u?}, …]（既定はタイム昇順＝速い順、metric=acc は正確さ順、metric=combo は最大コンボ順）
+//   POST {url}/scores  {n,t,a} → 1人1記録のベスト更新は サーバー側で処理
+const Online = {
+  kind: null, db: null, uid: null, url: null, fs: null, fdb: null, cache: {},
+  async init() {
+    try {
+      if (window.claude && window.claude.use) {
+        const db = await window.claude.use('db');
+        if (db) {
+          const user = await window.claude.use('user');
+          this.uid = user && user.id ? await user.id() : null;
+          this.db = db; this.kind = 'db'; return;
+        }
+      }
+    } catch (e) {}
+    const cfg = window.HIOKOSHI_FIREBASE;
+    if (cfg && cfg.projectId) {            // Firebase（匿名ログイン + Firestore）
+      try {
+        const V = 'https://www.gstatic.com/firebasejs/10.14.1/';
+        const [app, auth, fs] = await Promise.all([import(V + 'firebase-app.js'), import(V + 'firebase-auth.js'), import(V + 'firebase-firestore.js')]);
+        const a = app.initializeApp(cfg);
+        const cred = await auth.signInAnonymously(auth.getAuth(a));
+        this.fs = fs; this.fdb = fs.getFirestore(a); this.uid = cred.user.uid; this.kind = 'fb'; return;
+      } catch (e) { console.warn('Firebase init failed', e); }
+    }
+    const m = document.querySelector('meta[name="ranking-endpoint"]');
+    const u = window.HIOKOSHI_RANK_URL || (m && m.content);
+    if (u && /^https?:/.test(u)) { this.url = u.replace(/\/$/, ''); this.kind = 'rest'; }
+  },
+  // metric: 'time'（速い順）| 'acc'（正確さの高い順、同率はタイムが速い順）
+  async top(metric = 'time', n = RANK_MAX) {
+    const M = { time: ['scores', 't', 'asc'], acc: ['accuracy', 'a', 'desc'], combo: ['combo', 'c', 'desc'] }[metric] || ['scores', 't', 'asc'];
+    const [col, field, dir] = M, take = metric === 'time' ? n : Math.min(1000, n + 25);   // 同率の並べ替えのため少しだけ多めに取る
+    const hit = this.cache[metric + ':' + n];
+    if (hit && Date.now() - hit.at < 60000) return hit.docs.slice();                      // 60秒は読み直さない（タブの行き来用。自分の登録・改名・ランキング画面を開き直すとリセット）
+    let docs;
+    if (this.kind === 'db') {
+      const snap = await this.db.collection(col).orderBy(field, dir).limit(take).get();
+      docs = snap.docs.map(d => d.data());
+    } else if (this.kind === 'fb') {
+      const f = this.fs;
+      const snap = await f.getDocs(f.query(f.collection(this.fdb, col), f.orderBy(field, dir), f.limit(take)));
+      docs = snap.docs.map(d => d.data());
+    } else if (this.kind === 'rest') {
+      const r = await fetch(this.url + '/scores?limit=' + take + (metric === 'time' ? '' : '&metric=' + metric));
+      if (!r.ok) throw new Error('http ' + r.status);
+      docs = await r.json();
+    } else throw new Error('offline');
+    docs = docs.filter(e => e && typeof e.t === 'number' && typeof e.a === 'number' && (metric !== 'combo' || typeof e.c === 'number'));
+    if (metric === 'acc') docs.sort((x, y) => y.a - x.a || x.t - y.t);
+    if (metric === 'combo') docs.sort((x, y) => y.c - x.c || x.t - y.t);
+    docs = docs.slice(0, n);
+    this.cache[metric + ':' + n] = { at: Date.now(), docs };
+    return docs.slice();
+  },
+  // アプリを開いた時点で、まだ記録が無ければ「未プレイ」として登録する（ランキングの末尾に出る。端末ごとに最初の1回だけ）
+  async touch() {
+    if (!this.uid) return;
+    const base = { n: clipName(rec.name || anonName()), t: 99999, a: 0, d: Date.now(), u: this.uid, np: true };
+    if (this.kind === 'fb') {
+      const f = this.fs, best = await this.ensureBest();
+      if (best.t != null || best.a != null || best.c != null) return;      // 既に記録（またはその枠）がある
+      await f.setDoc(f.doc(this.fdb, 'scores', this.uid), base);
+      await f.setDoc(f.doc(this.fdb, 'accuracy', this.uid), base);
+      await f.setDoc(f.doc(this.fdb, 'combo', this.uid), { ...base, c: 0 });
+      best.t = 99999; best.a = 0; best.c = 0; best.np = true; rec.onlineBest = best; saveRec();
+    } else if (this.kind === 'db') {
+      if ((await this.db.doc('scores/' + this.uid).get()).exists) return;
+      await this.db.doc('scores/' + this.uid).set(base);
+      await this.db.doc('accuracy/' + this.uid).set(base);
+      await this.db.doc('combo/' + this.uid).set({ ...base, c: 0 });
+    }
+    this.cache = {};
+  },
+  // この端末が覚えている「自分のオンライン最高記録」。無ければサーバーから1回だけ読む
+  async ensureBest() {
+    const ob = rec.onlineBest;
+    if (ob && ob.u === this.uid) return ob;
+    const f = this.fs;
+    const [d1, d2, d3] = await Promise.all(['scores', 'accuracy', 'combo'].map(c => f.getDoc(f.doc(this.fdb, c, this.uid))));
+    const best = { u: this.uid, t: d1.exists() ? d1.data().t : null, a: d2.exists() ? d2.data().a : null, c: d3.exists() ? d3.data().c : null,
+      np: [d1, d2, d3].some(d => d.exists() && d.data().np === true) };      // np: 未プレイの記録（最初のプレイで置き換える）
+    rec.onlineBest = best; saveRec();
+    return best;
+  },
+  // 名前の変更を、自分のオンライン記録にも反映する（タイムや正確さは変えない）
+  async rename(name) {
+    const n = clipName(name);
+    if (!n) return;
+    if (this.kind === 'db' && this.uid) {
+      for (const c of ['scores', 'accuracy', 'combo']) { const ref = this.db.doc(c + '/' + this.uid); if ((await ref.get()).exists) await ref.update({ n }); }
+    } else if (this.kind === 'fb' && this.uid) {
+      const f = this.fs, best = await this.ensureBest();
+      const has = { scores: best.t != null, accuracy: best.a != null, combo: best.c != null };   // 在る記録だけ、読まずに更新する
+      for (const c of ['scores', 'accuracy', 'combo']) if (has[c]) await f.updateDoc(f.doc(this.fdb, c, this.uid), { n });
+    }
+    this.cache = {};
+  },
+  async submit(e) {
+    try { await this.ready; } catch (err) {}             // アプリを開いたときの「未プレイ」登録が終わってから
+    if (this.kind === 'db') {
+      if (!this.uid) throw new Error('no user');
+      const base = { n: e.n, t: e.t, a: e.a, d: e.d, u: this.uid };
+      const r1 = this.db.doc('scores/' + this.uid), c1 = await r1.get();
+      if (!(c1.exists && !c1.data().np && c1.data().t <= e.t)) await r1.set(base);
+      const r2 = this.db.doc('accuracy/' + this.uid), c2 = await r2.get();
+      if (!(c2.exists && !c2.data().np && c2.data().a >= e.a)) await r2.set(base);
+      const r3 = this.db.doc('combo/' + this.uid), c3 = await r3.get();
+      if (!(c3.exists && !c3.data().np && c3.data().c >= e.c)) await r3.set({ ...base, c: e.c });
+      this.cache = {};
+    } else if (this.kind === 'fb') {
+      // 読み取りは、この端末で初めてのときだけ。以降は覚えている最高記録と比べ、良くなった種類だけ書く
+      const f = this.fs, base = { n: clipName(e.n), t: e.t, a: e.a, d: e.d, u: this.uid };
+      const best = await this.ensureBest();
+      const fresh = best.np === true;                                   // 未プレイの枠は、最初のプレイで3つとも置き換える
+      const flags = { time: fresh || best.t == null || e.t < best.t, acc: fresh || best.a == null || e.a > best.a, combo: fresh || best.c == null || e.c > best.c };
+      if (flags.time) { await f.setDoc(f.doc(this.fdb, 'scores', this.uid), base); best.t = e.t; rec.onlineBest = best; saveRec(); }
+      if (flags.acc) { await f.setDoc(f.doc(this.fdb, 'accuracy', this.uid), base); best.a = e.a; rec.onlineBest = best; saveRec(); }
+      if (flags.combo) { await f.setDoc(f.doc(this.fdb, 'combo', this.uid), { ...base, c: e.c }); best.c = e.c; rec.onlineBest = best; saveRec(); }
+      best.np = false; rec.onlineBest = best; saveRec();
+      this.cache = {};
+      return flags;
+    } else if (this.kind === 'rest') {
+      const r = await fetch(this.url + '/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n: e.n, t: e.t, a: e.a, c: e.c }) });
+      if (!r.ok) throw new Error('http ' + r.status);
+    } else throw new Error('offline');
+  }
+};
+// 不適切な名前は、本人以外には「ななし」と表示する（本人の端末・本人のオンライン記録では、そのまま見える）
+const HIDDEN_NAME_PATTERNS = ['どうスクのライオン'];
+const normName = v => String(v || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+const shownName = (e, own) => {
+  const name = String(e.n || '');
+  const mine = own || (e.u && Online.uid && e.u === Online.uid);
+  return !mine && HIDDEN_NAME_PATTERNS.some(p => normName(name).includes(normName(p))) ? t('anon') : name;
+};
+const isMine = (e, hl) => !!hl && ((e.u && Online.uid && e.u === Online.uid) || e.d === hl);
+
+let rankTab = 'local', rankMetric = 'time', rankHl = null, rankToken = 0;
+const fmtDate = e => { const d = new Date(e.d); return (d.getMonth() + 1) + '/' + d.getDate(); };
+const rankBig = (e, metric) => e.np ? t('unplayed') : metric === 'acc' ? (e.a * 100).toFixed(1) + '%' : metric === 'combo' ? t('comboN', e.c) : Number(e.t).toFixed(2) + t('unit');
+const rankInfo = (e, metric) => {
+  const date = fmtDate(e);
+  if (e.np) return date;                       // 未プレイ（アプリを開いただけ）の行
+  return metric === 'acc' ? t('rowInfoA', Number(e.t).toFixed(2), date) : metric === 'combo' ? t('rowInfoC', Number(e.t).toFixed(2), Math.round(e.a * 100), date) : t('rowInfo', Math.round(e.a * 100), date);
+};
+function drawRankList(list, hl, metric, own) {
+  const ul = $('rkList'); ul.textContent = '';
+  if (!list.length) { ul.innerHTML = '<div class="empty">' + t('empty') + '</div>'; return; }
+  list.slice(0, RANK_MAX).forEach((e, i) => {
+    const li = document.createElement('li');
+    if (isMine(e, hl)) li.className = 'me';
+    li.innerHTML = `<span class="n">${i + 1}</span><span></span><b>${rankBig(e, metric)}</b>`;
+    const mid = li.children[1];
+    mid.textContent = shownName(e, own);
+    const em = document.createElement('em');
+    em.textContent = (e.p ? t('playNo', e.p) + ' ・ ' : '') + rankInfo(e, metric);
+    mid.appendChild(em);
+    ul.appendChild(li);
+  });
+  makeRankCard(list.slice(0, RANK_MAX), hl, metric, own);
+}
+
+// ランキングのシェア画像（上位10件を2列で）
+let rankBlob = null, rankCardToken = 0;
+function fitText(g, text, maxW) {
+  if (g.measureText(text).width <= maxW) return text;
+  const a = [...text];
+  while (a.length > 1 && g.measureText(a.join('') + '…').width > maxW) a.pop();
+  return a.join('') + '…';
+}
+function makeRankCard(list, hl, metric, own) {
+  const my = ++rankCardToken; rankBlob = null;
+  if (!list.length) return;
+  const c = document.createElement('canvas'); c.width = 1200; c.height = 630;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 630);
+  gr.addColorStop(0, '#0b1230'); gr.addColorStop(.6, '#3a2250'); gr.addColorStop(1, '#8a3a1a');
+  g.fillStyle = gr; g.fillRect(0, 0, 1200, 630);
+  for (let i = 0; i < 70; i++) { g.fillStyle = `rgba(255,255,255,${rnd(.15, .7)})`; g.fillRect(rnd(0, 1200), rnd(0, 200), 2, 2); }
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+  g.fillStyle = '#ffc84a'; g.font = `900 54px ${FONT}`;
+  g.fillText('🏆 ' + t('cardTitle') + ' ' + t('mName' + metric), 50, 80);
+  g.fillStyle = '#b79b78'; g.font = `600 28px ${FONT}`; g.textAlign = 'right';
+  g.fillText(t(rankTab === 'online' ? 'tabOnline' : 'tabLocal'), 1150, 78);
+  g.textAlign = 'left';
+  const colW = 550, rowH = 84, y0 = 112;
+  list.slice(0, 10).forEach((e, i) => {
+    const x = 50 + (i >= 5 ? 1 : 0) * (colW + 50), y = y0 + (i % 5) * (rowH + 12);
+    g.fillStyle = isMine(e, hl) ? 'rgba(255,122,26,.35)' : 'rgba(0,0,0,.4)';
+    g.beginPath(); g.roundRect(x, y, colW, rowH, 16); g.fill();
+    if (isMine(e, hl)) { g.strokeStyle = '#ffc84a'; g.lineWidth = 3; g.stroke(); }
+    g.fillStyle = i < 3 ? '#ffc84a' : '#f6e7cf'; g.font = `900 40px ${FONT}`; g.textAlign = 'center'; g.fillText(String(i + 1), x + 44, y + 56); g.textAlign = 'left';
+    g.fillStyle = '#f6e7cf'; g.font = `700 30px ${FONT}`; g.font = `800 38px ${FONT}`; const vw = g.measureText(rankBig(e, metric)).width; g.font = `700 30px ${FONT}`;
+    g.fillText(fitText(g, shownName(e, own), colW - 92 - vw - 40), x + 92, y + 38);
+    g.fillStyle = '#b79b78'; g.font = `500 20px ${FONT}`; g.fillText(rankInfo(e, metric), x + 92, y + 68);
+    g.fillStyle = '#f6e7cf'; g.font = `800 38px ${FONT}`; g.textAlign = 'right'; g.fillText(rankBig(e, metric), x + colW - 22, y + 55); g.textAlign = 'left';
+  });
+  g.fillStyle = '#b79b78'; g.font = `600 26px ${FONT}`; g.textAlign = 'right'; g.fillText(t('tag'), 1150, 608);
+  c.toBlob(b => { if (my === rankCardToken) rankBlob = b; }, 'image/png');
+}
+async function showRank(hl, tab, metric) {
+  if (hl !== undefined) rankHl = hl;
+  if (tab) rankTab = tab;
+  if (metric) rankMetric = metric;
+  const online = !!Online.kind, acc = rankMetric === 'acc', cmb = rankMetric === 'combo';
+  $('rkTabs').hidden = !online;
+  if (!online) rankTab = 'local';
+  $('tabOn').classList.toggle('on', rankTab === 'online');
+  $('tabLocal').classList.toggle('on', rankTab === 'local');
+  $('mtTime').classList.toggle('on', !acc && !cmb);
+  $('mtAcc').classList.toggle('on', acc);
+  $('mtCombo').classList.toggle('on', cmb);
+  $('rkSub').textContent = t((rankTab === 'online' ? 'subOn' : 'subLocal') + (acc ? 'A' : cmb ? 'C' : ''));
+  const my = ++rankToken;
+  if (rankTab === 'local') {
+    $('rkStatus').textContent = online ? '' : t('rkOffline');
+    drawRankList(acc ? (rec.accRanks || []) : cmb ? (rec.comboRanks || []).filter(e => typeof e.c === 'number') : (rec.ranks || []), rankHl, rankMetric, true); return;
+  }
+  $('rkStatus').textContent = t('rkLoading'); $('rkList').textContent = '';
+  try {
+    const list = await Online.top(rankMetric, RANK_MAX);
+    if (my !== rankToken) return;
+    $('rkStatus').textContent = ''; drawRankList(list, rankHl, rankMetric);
+  } catch (e) { if (my === rankToken) $('rkStatus').textContent = t('rkFail'); }
+}
+// 結果画面：オンラインへ登録して順位を表示
+async function postOnline(entry) {
+  const el = $('rrankOn'), ea = $('rrankAcc'), ec = $('rrankCombo');
+  if (!Online.kind) { el.textContent = ''; return; }
+  el.textContent = t('rrankOnSend');
+  try {
+    await Online.submit(entry);
+    // オンラインランキングを1回だけ取得し、その中から自分の記録（ベスト）の順位を判別する
+    const [lt, la, lc] = await Promise.all([Online.top('time', RANK_MAX), Online.top('acc', RANK_MAX), Online.top('combo', RANK_MAX)]);
+    if (!result || result.d !== entry.d) return;
+    const pos = l => { const i = l.findIndex(e => isMine(e, entry.d)); return i >= 0 ? i + 1 : null; };
+    const p1 = pos(lt), p2 = pos(la), p3 = pos(lc);
+    el.textContent = p1 ? t('rrankOnIn', p1) : '';
+    ea.textContent = p2 ? t('rrankAccOnIn', p2) : '';
+    ec.textContent = p3 ? t('rrankComboOnIn', p3) : '';
+  } catch (e) { if (result && result.d === entry.d) el.textContent = t('rrankOnFail'); }
+}
+function refreshTitle() {
+  $('pname').value = rec.name || ''; $('pname2').value = rec.name || ''; $('pnameOk').hidden = $('pname2Ok').hidden = true;
+  $('tBest').textContent = rec.bestTime ? rec.bestTime.toFixed(2) + t('unit') : '-';
+  $('tPlays').textContent = rec.plays;
+}
+function toReady() {
+  resetRun(); down = false;
+  mode = 'ready';
+  $('ovTitle').classList.remove('on'); $('ovResult').classList.remove('on');
+  $('hud').classList.add('on');
+}
+function toTitle() {
+  mode = 'title'; resetRun(); refreshTitle();
+  $('hud').classList.remove('on'); $('ovResult').classList.remove('on'); $('ovTitle').classList.add('on');
+}
+let lastCommittedName = rec.name || '';
+// 名前の入力中は端末にもネットにも保存しない。変化があったときだけ OK ボタンを出し、押したときに確定して送る
+function syncNameOk(id) { $(id + 'Ok').hidden = clipName($(id).value.trim()) === (rec.name || ''); }
+function commitName(v) {
+  const name = clipName(String(v).trim());
+  rec.name = name;
+  for (const id of ['pname', 'pname2']) { $(id).value = name; syncNameOk(id); }
+  if (name === lastCommittedName) { saveRec(); return; }
+  lastCommittedName = name;
+  const shown = name || anonName();
+  for (const list of [rec.ranks, rec.accRanks, rec.comboRanks]) (list || []).forEach(e => { e.n = shown; });   // この端末の記録は同じ人のものとして改名
+  saveRec();
+  if ($('ovRank').classList.contains('on')) showRank();
+  Online.rename(shown).then(() => { if ($('ovRank').classList.contains('on') && rankTab === 'online') showRank(); }).catch(() => {});
+}
+for (const id of ['pname', 'pname2']) {
+  $(id).addEventListener('input', () => syncNameOk(id));
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!$(id + 'Ok').hidden) $(id + 'Ok').click(); else e.target.blur(); } });
+  $(id + 'Ok').onclick = () => { commitName($(id).value); $(id).blur(); toast(t('tNameSaved')); };
+}
+let rankFrom = 'ovTitle';
+function openRank(from, hl) { Online.cache = {}; rankFrom = from; showRank(hl || null, Online.kind ? 'online' : 'local'); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
+$('bRank').onclick = () => openRank('ovTitle');
+$('bRank2').onclick = () => openRank('ovResult', result && result.d);
+$('mtTime').onclick = () => showRank(undefined, undefined, 'time');
+$('mtAcc').onclick = () => showRank(undefined, undefined, 'acc');
+$('mtCombo').onclick = () => showRank(undefined, undefined, 'combo');
+$('tabOn').onclick = () => showRank(undefined, 'online');
+$('tabLocal').onclick = () => showRank(undefined, 'local');
+$('bRankBack').onclick = $('bRankBack2').onclick = () => { $('ovRank').classList.remove('on'); $(rankFrom).classList.add('on'); window.scrollTo(0, 0); };
+$('bStart').onclick = () => { initAudio(); toReady(); };
+$('bAgain').onclick = toReady;
+$('bRetry').onclick = toReady;
+$('bHome').onclick = toTitle;
+$('bShare').onclick = doShare;
+$('bRankShare').onclick = doRankShare;
+$('bMute').onclick = () => {
+  muted = !muted; $('bMute').textContent = muted ? '🔇' : '🔊';
+  if (!muted) initAudio();
+};
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.title = t('docTitle');
+  document.querySelectorAll('[data-i]').forEach(e => { e.textContent = t(e.dataset.i); });
+  document.querySelectorAll('[data-h]').forEach(e => { e.innerHTML = t(e.dataset.h); });
+  document.querySelectorAll('[data-p]').forEach(e => { e.placeholder = e.dataset.p === 'anon' ? anonName() : t(e.dataset.p); });
+  document.querySelectorAll('.lang').forEach(e => { e.textContent = t('langBtn'); });
+  lastHint = '';
+  if ($('ovRank').classList.contains('on')) showRank();
+  if (result && mode === 'result') { renderResultText(); makeCard(); }
+}
+function toggleLang() { lang = lang === 'ja' ? 'en' : 'ja'; rec.lang = lang; saveRec(); applyLang(); }
+$('bLang').onclick = toggleLang;
+$('bLang2').onclick = toggleLang;
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// テスト・デバッグ用
+window.__hioko = { async card(ri, t) { const b = await renderCard({ t, acc: .97, combo: 20, n: 25, ri }); return await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); }, demo(n) { tier = n; spawnFlies(6 + (8 - n) * 5); igniteAt = performance.now() - 6000; mode = 'ignite'; $('ovTitle').classList.remove('on'); $('hud').classList.add('on'); }, get T() { return T; }, get mode() { return mode; }, get result() { return result; } };
+
+$('appVer').textContent = /^\d/.test(APP_VERSION) ? 'v' + APP_VERSION : APP_VERSION;
+refreshTitle();
+applyLang();
+Online.ready = Online.init().then(() => Online.touch()).catch(() => {});
+Online.ready.then(() => { if ($('ovRank').classList.contains('on')) showRank(); });
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1人1ドキュメント（ドキュメントID = 匿名ログインのuid）。最速タイムだけを保持する。
+    match /scores/{uid} {
+      allow read: if true;
+
+      allow create: if request.auth != null && request.auth.uid == uid && validScore(request.resource.data, uid);
+
+      // 更新はタイムが縮まるときだけ
+      allow update: if request.auth != null && request.auth.uid == uid
+                    && validScore(request.resource.data, uid)
+                    && (request.resource.data.t < resource.data.t || onlyNameChanged() || wasUnplayed());
+
+      allow delete: if false;
+    }
+
+    // コンボランキング用：最大コンボの最高記録（1人1ドキュメント）
+    match /combo/{uid} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid && validCombo(request.resource.data, uid);
+      allow update: if request.auth != null && request.auth.uid == uid
+                    && validCombo(request.resource.data, uid)
+                    && (request.resource.data.c > resource.data.c || onlyNameChanged() || wasUnplayed());
+      allow delete: if false;
+    }
+
+    // 正確さランキング用：最高正確さの記録（同じく1人1ドキュメント）
+    match /accuracy/{uid} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid && validScore(request.resource.data, uid);
+      allow update: if request.auth != null && request.auth.uid == uid
+                    && validScore(request.resource.data, uid)
+                    && (request.resource.data.a > resource.data.a || onlyNameChanged() || wasUnplayed());
+      allow delete: if false;
+    }
+
+    // 名前だけの変更（記録そのものは変えない）
+    function onlyNameChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['n']);
+    }
+
+    // 未プレイの記録（アプリを開いただけ）：np=true、タイム99999・正確さ0・コンボ0 の固定値。最初のプレイで置き換えられる
+    function wasUnplayed() {
+      return resource.data.get('np', false) == true;
+    }
+
+    function validCombo(d, uid) {
+      return d.keys().hasOnly(['n', 't', 'a', 'c', 'd', 'u', 'np'])
+        && d.keys().hasAll(['n', 't', 'a', 'c', 'd', 'u'])
+        && (!d.keys().hasAny(['np']) || (d.np == true && d.t == 99999 && d.a == 0 && d.c == 0))
+        && d.u == uid
+        && d.n is string && d.n.size() >= 1 && d.n.size() <= 30
+        && (d.t is int || d.t is float) && d.t > 0 && d.t < 100000
+        && (d.a is int || d.a is float) && d.a >= 0 && d.a <= 1
+        && d.c is int && d.c >= 0 && d.c <= 1000
+        && d.d is int;
+    }
+
+    function validScore(d, uid) {
+      return d.keys().hasOnly(['n', 't', 'a', 'd', 'u', 'np'])
+        && d.keys().hasAll(['n', 't', 'a', 'd', 'u'])
+        && (!d.keys().hasAny(['np']) || (d.np == true && d.t == 99999 && d.a == 0))
+        && d.u == uid
+        && d.n is string && d.n.size() >= 1 && d.n.size() <= 30
+        && (d.t is int || d.t is float) && d.t > 0 && d.t < 100000
+        && (d.a is int || d.a is float) && d.a >= 0 && d.a <= 1
+        && d.d is int;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
