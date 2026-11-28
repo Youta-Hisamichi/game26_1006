@@ -195,11 +195,12 @@ const $ = id => document.getElementById(id);
 
 // ───────── 記録 ─────────
 function loadRec() {
-  const d = { bestTime: 0, plays: 0, name: '', ranks: [], accRanks: [], comboRanks: [], lang: '' };
+  const d = { anonNo: 0, bestTime: 0, plays: 0, name: '', ranks: [], accRanks: [], comboRanks: [], lang: '' };
   try { Object.assign(d, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   return d;
 }
 const rec = loadRec();
+if (!rec.anonNo) { rec.anonNo = 100 + Math.floor(Math.random() * 900); try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch (e) {} }   // 名前未設定の人に付ける3桁の番号（端末ごとに固定）
 function saveRec() { try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch (e) {} }
 const fmt = n => Math.round(n).toLocaleString('en-US');
 
@@ -260,6 +261,7 @@ const I18N = {
     tCopied: 'Text copied. Long-press / right-click the image to save and attach it.', langBtn: '日本語', docTitle: 'Fire Starter RTA'
   }
 };
+const anonName = () => t('anon') + rec.anonNo;   // 例: ななし123
 let lang = rec.lang || ((navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en');
 const t = (k, ...a) => {
   let v = (I18N[lang] && I18N[lang][k]) ?? I18N.ja[k] ?? k;
@@ -493,7 +495,7 @@ function showResult() {
   const isBest = !rec.bestTime || elapsed < rec.bestTime;
   rec.plays++;
   if (isBest) rec.bestTime = elapsed;
-  const entry = { p: rec.plays, t: elapsed, a: acc, c: maxCombo, n: rec.name || t('anon'), d: Date.now() };
+  const entry = { p: rec.plays, t: elapsed, a: acc, c: maxCombo, n: rec.name || anonName(), d: Date.now() };
   rec.ranks = (rec.ranks || []).concat(entry).sort((a, b) => a.t - b.t || a.d - b.d);
   const pos = rec.ranks.indexOf(entry) + 1;
   rec.ranks = rec.ranks.slice(0, RANK_MAX);
@@ -1280,7 +1282,7 @@ function toTitle() {
 }
 function commitName(v) {
   rec.name = clipName(String(v).trim());
-  const shown = rec.name || t('anon');
+  const shown = rec.name || anonName();
   for (const list of [rec.ranks, rec.accRanks, rec.comboRanks]) (list || []).forEach(e => { e.n = shown; });   // この端末の記録は同じ人のものとして改名
   saveRec();
   $('pname').value = $('pname2').value = rec.name;
@@ -1321,7 +1323,7 @@ function applyLang() {
   document.title = t('docTitle');
   document.querySelectorAll('[data-i]').forEach(e => { e.textContent = t(e.dataset.i); });
   document.querySelectorAll('[data-h]').forEach(e => { e.innerHTML = t(e.dataset.h); });
-  document.querySelectorAll('[data-p]').forEach(e => { e.placeholder = t(e.dataset.p); });
+  document.querySelectorAll('[data-p]').forEach(e => { e.placeholder = e.dataset.p === 'anon' ? anonName() : t(e.dataset.p); });
   document.querySelectorAll('.lang').forEach(e => { e.textContent = t('langBtn'); });
   lastHint = '';
   if ($('ovRank').classList.contains('on')) showRank();
