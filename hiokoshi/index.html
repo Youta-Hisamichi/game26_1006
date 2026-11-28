@@ -96,6 +96,8 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 #ovResult{background:radial-gradient(ellipse at 50% 40%,rgba(18,10,5,.55),rgba(8,4,2,.82))}
 .stickybar{position:sticky;bottom:0;z-index:6;padding:5cqw 0 calc(max(2cqw,env(safe-area-inset-bottom,0px)) + 14cqw);background:linear-gradient(to bottom,rgba(8,4,2,0),rgba(8,4,2,.96) 30%);display:grid;grid-template-columns:1fr 1fr;gap:2.4cqw}
 #appVer{margin-top:4cqw;font-size:3cqw;color:var(--mute);opacity:.8;font-variant-numeric:tabular-nums}
+.nameok{flex:none;padding:2cqw 4cqw;border-radius:2.4cqw;border:.4cqw solid #8fe6f2;background:#2fb7c9;color:#04222a;font:inherit;font-size:4cqw;font-weight:900;cursor:pointer}
+.nameok[hidden]{display:none}
 #toast{position:fixed;left:50%;bottom:6cqw;transform:translateX(-50%);background:#000c;color:#fff;
   padding:2cqw 4cqw;border-radius:3cqw;font-size:3.6cqw;opacity:0;transition:opacity .25s;pointer-events:none;
   max-width:90%;text-align:center;z-index:5}
@@ -133,7 +135,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
       <div><small data-i="recBest">ベスト</small><b id="tBest">-</b></div>
       <div><small data-i="recPlays">プレイ</small><b id="tPlays">0</b></div>
     </div>
-    <div id="nameRow"><label for="pname" data-i="nameLabel">なまえ</label><input id="pname" maxlength="30" data-p="anon" autocomplete="off"></div>
+    <div id="nameRow"><label for="pname" data-i="nameLabel">なまえ</label><input id="pname" maxlength="30" data-p="anon" autocomplete="off"><button class="nameok" id="pnameOk" data-i="ok" hidden>OK</button></div>
     <button class="btn" id="bStart" data-i="start">スタート</button>
     <button class="btn sec" id="bRank" data-i="rankBtn">🏆 ランキング</button>
     <div id="appVer"></div>
@@ -144,7 +146,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
     <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
     <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
     <div class="tabs" id="rkMetric"><button id="mtTime" data-i="mTime">速さ</button><button id="mtAcc" data-i="mAcc">正確さ</button><button id="mtCombo" data-i="mCombo">コンボ</button></div>
-    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="30" data-p="anon" autocomplete="off"></div>
+    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="30" data-p="anon" autocomplete="off"><button class="nameok" id="pname2Ok" data-i="ok" hidden>OK</button></div>
     <div class="sub" id="rkSub"></div>
     <div id="rkStatus"></div>
     <ol class="rk" id="rkList"></ol>
@@ -226,6 +228,7 @@ const I18N = {
     mNametime: '速さランキング', mNameacc: '正確さランキング', mNamecombo: 'コンボランキング', rankShareText: '火おこしRTA 🏆 {0}（{1}）',
     mCombo: '🔥 コンボ', subOnC: 'みんなの最大コンボTOP100（1人1記録）', subLocalC: 'この端末の最大コンボTOP100', comboN: '{0}コンボ', rowInfoC: '{0}秒 ・ 正確さ{1}% ・ {2}',
     rrankComboIn: '自分コンボランキング {0}位！', rrankComboOnIn: 'オンラインコンボ {0}位！',
+    ok: 'OK', tNameSaved: 'なまえを保存しました',
     mTime: '⏱ 速さ', mAcc: '🎯 正確さ', subOnA: 'みんなの正確さTOP100（1人1記録）', subLocalA: 'この端末の正確さTOP100',
     playNo: '{0}回目', rowInfoA: '{0}秒 ・ {1}', rrankAccIn: '自分正確さランキング {0}位！', rrankAccOnIn: 'オンライン正確さ {0}位！',
     tabOnline: 'オンライン', tabLocal: 'この端末', subOn: 'みんなの最速100人（1人1記録）', subLocal: 'この端末の最速TOP100',
@@ -253,6 +256,7 @@ const I18N = {
     mNametime: 'Speed Ranking', mNameacc: 'Accuracy Ranking', mNamecombo: 'Combo Ranking', rankShareText: 'Fire Starter RTA 🏆 {0} ({1})',
     mCombo: '🔥 Combo', subOnC: 'Top 100 combo players (best each)', subLocalC: 'Max combo TOP100 on this device', comboN: '{0} combo', rowInfoC: '{0}s ・ Acc {1}% ・ {2}',
     rrankComboIn: 'My combo rank #{0}!', rrankComboOnIn: 'Online combo #{0}!',
+    ok: 'OK', tNameSaved: 'Name saved',
     mTime: '⏱ Speed', mAcc: '🎯 Accuracy', subOnA: 'Top 100 most accurate players (best each)', subLocalA: 'Top 100 most accurate runs on this device',
     playNo: 'Run #{0}', rowInfoA: '{0}s ・ {1}', rrankAccIn: 'My accuracy rank #{0}!', rrankAccOnIn: 'Online accuracy #{0}!',
     tabOnline: 'Online', tabLocal: 'This device', subOn: 'Top 100 fastest players (best time each)', subLocal: 'Fastest TOP100 on this device',
@@ -1272,7 +1276,7 @@ async function postOnline(entry) {
   } catch (e) { if (result && result.d === entry.d) el.textContent = t('rrankOnFail'); }
 }
 function refreshTitle() {
-  $('pname').value = rec.name || ''; $('pname2').value = rec.name || '';
+  $('pname').value = rec.name || ''; $('pname2').value = rec.name || ''; $('pnameOk').hidden = $('pname2Ok').hidden = true;
   $('tBest').textContent = rec.bestTime ? rec.bestTime.toFixed(2) + t('unit') : '-';
   $('tPlays').textContent = rec.plays;
 }
@@ -1286,13 +1290,14 @@ function toTitle() {
   mode = 'title'; resetRun(); refreshTitle();
   $('hud').classList.remove('on'); $('ovResult').classList.remove('on'); $('ovTitle').classList.add('on');
 }
-let lastCommittedName = rec.name || '', nameTimer;
+let lastCommittedName = rec.name || '';
+// 名前の入力中は端末にもネットにも保存しない。変化があったときだけ OK ボタンを出し、押したときに確定して送る
+function syncNameOk(id) { $(id + 'Ok').hidden = clipName($(id).value.trim()) === (rec.name || ''); }
 function commitName(v) {
-  clearTimeout(nameTimer);
   const name = clipName(String(v).trim());
   rec.name = name;
-  for (const id of ['pname', 'pname2']) if (document.activeElement !== $(id)) $(id).value = name;   // 入力中の欄は書き換えない（末尾の空白などが消えるのを防ぐ）
-  if (name === lastCommittedName) { saveRec(); return; }            // 変わっていなければ何も送らない
+  for (const id of ['pname', 'pname2']) { $(id).value = name; syncNameOk(id); }
+  if (name === lastCommittedName) { saveRec(); return; }
   lastCommittedName = name;
   const shown = name || anonName();
   for (const list of [rec.ranks, rec.accRanks, rec.comboRanks]) (list || []).forEach(e => { e.n = shown; });   // この端末の記録は同じ人のものとして改名
@@ -1301,12 +1306,9 @@ function commitName(v) {
   Online.rename(shown).then(() => { if ($('ovRank').classList.contains('on') && rankTab === 'online') showRank(); }).catch(() => {});
 }
 for (const id of ['pname', 'pname2']) {
-  $(id).addEventListener('input', e => {      // 1文字ごとにはネットへ送らない。端末内に保存するだけ
-    rec.name = clipName(e.target.value.trim()); saveRec();
-    clearTimeout(nameTimer); const v = e.target.value; nameTimer = setTimeout(() => commitName(v), 900);   // 入力が止まって0.9秒後に確定
-  });
-  $(id).addEventListener('change', e => commitName(e.target.value));   // フォーカスが外れたとき・Enter で即確定
-  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+  $(id).addEventListener('input', () => syncNameOk(id));
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!$(id + 'Ok').hidden) $(id + 'Ok').click(); else e.target.blur(); } });
+  $(id + 'Ok').onclick = () => { commitName($(id).value); $(id).blur(); toast(t('tNameSaved')); };
 }
 let rankFrom = 'ovTitle';
 function openRank(from, hl) { rankFrom = from; showRank(hl || null, Online.kind ? 'online' : 'local'); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
