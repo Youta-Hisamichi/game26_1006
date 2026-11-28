@@ -1343,7 +1343,7 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 // テスト・デバッグ用
 window.__hioko = { async card(ri, t) { const b = await renderCard({ t, acc: .97, combo: 20, n: 25, ri }); return await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); }, demo(n) { tier = n; spawnFlies(6 + (8 - n) * 5); igniteAt = performance.now() - 6000; mode = 'ignite'; $('ovTitle').classList.remove('on'); $('hud').classList.add('on'); }, get T() { return T; }, get mode() { return mode; }, get result() { return result; } };
 
-$('appVer').textContent = 'v' + APP_VERSION;
+$('appVer').textContent = /^\d/.test(APP_VERSION) ? 'v' + APP_VERSION : APP_VERSION;
 refreshTitle();
 applyLang();
 Online.init().then(() => { if ($('ovRank').classList.contains('on')) showRank(); });
