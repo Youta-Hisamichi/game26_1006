@@ -85,6 +85,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
 .rk li{display:grid;grid-template-columns:10cqw 1fr auto;gap:2cqw;align-items:baseline;padding:1.4cqw 2.4cqw;margin-bottom:.8cqw;
   background:#00000066;border:.4cqw solid var(--line);border-radius:2.4cqw;font-size:3.8cqw}
 .rk li.me{border-color:var(--fire2);background:#ff7a1a33}
+.rk li>span:nth-child(2){min-width:0;overflow-wrap:anywhere}
 .rk b{font-variant-numeric:tabular-nums;font-size:4.4cqw}
 .rk em{font-style:normal;color:var(--mute);font-size:3cqw;display:block}
 .rk .n{color:var(--fire2);font-weight:900}
@@ -130,7 +131,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
       <div><small data-i="recBest">ベスト</small><b id="tBest">-</b></div>
       <div><small data-i="recPlays">プレイ</small><b id="tPlays">0</b></div>
     </div>
-    <div id="nameRow"><label for="pname" data-i="nameLabel">なまえ</label><input id="pname" maxlength="8" data-p="anon" autocomplete="off"></div>
+    <div id="nameRow"><label for="pname" data-i="nameLabel">なまえ</label><input id="pname" maxlength="30" data-p="anon" autocomplete="off"></div>
     <button class="btn" id="bStart" data-i="start">スタート</button>
     <button class="btn sec" id="bRank" data-i="rankBtn">🏆 ランキング</button>
   </div></div>
@@ -140,7 +141,7 @@ h1{margin:0;font-size:10cqw;line-height:1.05;font-weight:900;color:var(--fire2);
     <h1 style="font-size:9cqw" data-i="rankBtn">🏆 ランキング</h1>
     <div class="tabs" id="rkTabs" hidden><button id="tabOn" data-i="tabOnline">オンライン</button><button id="tabLocal" data-i="tabLocal">この端末</button></div>
     <div class="tabs" id="rkMetric"><button id="mtTime" data-i="mTime">速さ</button><button id="mtAcc" data-i="mAcc">正確さ</button><button id="mtCombo" data-i="mCombo">コンボ</button></div>
-    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="8" data-p="anon" autocomplete="off"></div>
+    <div id="nameRow2"><label for="pname2" data-i="nameLabel">なまえ</label><input id="pname2" maxlength="30" data-p="anon" autocomplete="off"></div>
     <div class="sub" id="rkSub"></div>
     <div id="rkStatus"></div>
     <ol class="rk" id="rkList"></ol>
@@ -184,6 +185,8 @@ const REV = 14;                        // 反転とみなす戻り量(px)
 const MIN_LEN = 36;                    // ストロークとみなす最小長(px)
 const IDEAL_R = 0.7;                   // 理想の傾き(下/横)。約35°
 const KEY = 'hiokoshi.v1';
+const NAME_MAX = 30;                   // 名前の最大文字数
+const clipName = v => [...String(v || '')].slice(0, NAME_MAX).join('');
 const RANK_MAX = 100;                  // ランキングの表示・保持件数
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -1123,7 +1126,7 @@ const Online = {
   },
   // 名前の変更を、自分のオンライン記録にも反映する（タイムや正確さは変えない）
   async rename(name) {
-    const n = String(name || '').slice(0, 8);
+    const n = clipName(name);
     if (!n) return;
     if (this.kind === 'db' && this.uid) {
       for (const c of ['scores', 'accuracy', 'combo']) { const ref = this.db.doc(c + '/' + this.uid); if ((await ref.get()).exists) await ref.update({ n }); }
@@ -1143,7 +1146,7 @@ const Online = {
       const r3 = this.db.doc('combo/' + this.uid), c3 = await r3.get();
       if (!(c3.exists && c3.data().c >= e.c)) await r3.set({ ...base, c: e.c });
     } else if (this.kind === 'fb') {
-      const f = this.fs, base = { n: String(e.n).slice(0, 8), t: e.t, a: e.a, d: e.d, u: this.uid };
+      const f = this.fs, base = { n: clipName(e.n), t: e.t, a: e.a, d: e.d, u: this.uid };
       const r1 = f.doc(this.fdb, 'scores', this.uid), c1 = await f.getDoc(r1);
       if (!(c1.exists() && c1.data().t <= e.t)) await f.setDoc(r1, base);
       const r2 = f.doc(this.fdb, 'accuracy', this.uid), c2 = await f.getDoc(r2);
@@ -1184,6 +1187,12 @@ function drawRankList(list, hl, metric) {
 
 // ランキングのシェア画像（上位10件を2列で）
 let rankBlob = null, rankCardToken = 0;
+function fitText(g, text, maxW) {
+  if (g.measureText(text).width <= maxW) return text;
+  const a = [...text];
+  while (a.length > 1 && g.measureText(a.join('') + '…').width > maxW) a.pop();
+  return a.join('') + '…';
+}
 function makeRankCard(list, hl, metric) {
   const my = ++rankCardToken; rankBlob = null;
   if (!list.length) return;
@@ -1206,7 +1215,8 @@ function makeRankCard(list, hl, metric) {
     g.beginPath(); g.roundRect(x, y, colW, rowH, 16); g.fill();
     if (isMine(e, hl)) { g.strokeStyle = '#ffc84a'; g.lineWidth = 3; g.stroke(); }
     g.fillStyle = i < 3 ? '#ffc84a' : '#f6e7cf'; g.font = `900 40px ${FONT}`; g.textAlign = 'center'; g.fillText(String(i + 1), x + 44, y + 56); g.textAlign = 'left';
-    g.fillStyle = '#f6e7cf'; g.font = `700 30px ${FONT}`; g.fillText(String(e.n || '').slice(0, 8), x + 92, y + 38);
+    g.fillStyle = '#f6e7cf'; g.font = `700 30px ${FONT}`; g.font = `800 38px ${FONT}`; const vw = g.measureText(rankBig(e, metric)).width; g.font = `700 30px ${FONT}`;
+    g.fillText(fitText(g, String(e.n || ''), colW - 92 - vw - 40), x + 92, y + 38);
     g.fillStyle = '#b79b78'; g.font = `500 20px ${FONT}`; g.fillText(rankInfo(e, metric), x + 92, y + 68);
     g.fillStyle = '#f6e7cf'; g.font = `800 38px ${FONT}`; g.textAlign = 'right'; g.fillText(rankBig(e, metric), x + colW - 22, y + 55); g.textAlign = 'left';
   });
@@ -1269,7 +1279,7 @@ function toTitle() {
   $('hud').classList.remove('on'); $('ovResult').classList.remove('on'); $('ovTitle').classList.add('on');
 }
 function commitName(v) {
-  rec.name = String(v).trim().slice(0, 8);
+  rec.name = clipName(String(v).trim());
   const shown = rec.name || t('anon');
   for (const list of [rec.ranks, rec.accRanks, rec.comboRanks]) (list || []).forEach(e => { e.n = shown; });   // この端末の記録は同じ人のものとして改名
   saveRec();
@@ -1280,7 +1290,7 @@ function commitName(v) {
 for (const id of ['pname', 'pname2']) {
   let timer;
   $(id).addEventListener('input', e => {      // 入力が止まったら自動で確定（OKボタンなし）
-    rec.name = e.target.value.trim().slice(0, 8); saveRec();
+    rec.name = clipName(e.target.value.trim()); saveRec();
     clearTimeout(timer); const v = e.target.value; timer = setTimeout(() => commitName(v), 900);
   });
   $(id).addEventListener('change', e => commitName(e.target.value));
