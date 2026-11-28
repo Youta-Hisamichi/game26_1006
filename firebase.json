@@ -2,6 +2,12 @@
   "hosting": {
     "public": "mojibonsai",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "FIREBASE_SETUP.md", "firestore.rules"],
-    "cleanUrls": true
+    "cleanUrls": true,
+    "headers": [
+      {
+        "source": "**",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
   }
 }
