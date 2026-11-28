@@ -16,6 +16,16 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // コンボランキング用：最大コンボの最高記録（1人1ドキュメント）
+    match /combo/{uid} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid && validCombo(request.resource.data, uid);
+      allow update: if request.auth != null && request.auth.uid == uid
+                    && validCombo(request.resource.data, uid)
+                    && (request.resource.data.c > resource.data.c || onlyNameChanged());
+      allow delete: if false;
+    }
+
     // 正確さランキング用：最高正確さの記録（同じく1人1ドキュメント）
     match /accuracy/{uid} {
       allow read: if true;
@@ -29,6 +39,17 @@ service cloud.firestore {
     // 名前だけの変更（記録そのものは変えない）
     function onlyNameChanged() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['n']);
+    }
+
+    function validCombo(d, uid) {
+      return d.keys().hasOnly(['n', 't', 'a', 'c', 'd', 'u'])
+        && d.keys().hasAll(['n', 't', 'a', 'c', 'd', 'u'])
+        && d.u == uid
+        && d.n is string && d.n.size() >= 1 && d.n.size() <= 8
+        && (d.t is int || d.t is float) && d.t >= 1 && d.t < 100000
+        && (d.a is int || d.a is float) && d.a >= 0 && d.a <= 1
+        && d.c is int && d.c >= 0 && d.c <= 1000
+        && d.d is int;
     }
 
     function validScore(d, uid) {
