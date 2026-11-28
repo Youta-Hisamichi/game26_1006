@@ -1088,7 +1088,7 @@ function frameBody(now) {
 //   GET  {url}/scores?limit=10[&metric=acc] → [{n,t,a,c,d,u?}, …]（既定はタイム昇順＝速い順、metric=acc は正確さ順、metric=combo は最大コンボ順）
 //   POST {url}/scores  {n,t,a} → 1人1記録のベスト更新は サーバー側で処理
 const Online = {
-  kind: null, db: null, uid: null, url: null, fs: null, fdb: null,
+  kind: null, db: null, uid: null, url: null, fs: null, fdb: null, cache: {},
   async init() {
     try {
       if (window.claude && window.claude.use) {
@@ -1118,6 +1118,8 @@ const Online = {
   async top(metric = 'time', n = RANK_MAX) {
     const M = { time: ['scores', 't', 'asc'], acc: ['accuracy', 'a', 'desc'], combo: ['combo', 'c', 'desc'] }[metric] || ['scores', 't', 'asc'];
     const [col, field, dir] = M, take = metric === 'time' ? n : Math.min(1000, n + 25);   // 同率の並べ替えのため少しだけ多めに取る
+    const hit = this.cache[metric + ':' + n];
+    if (hit && Date.now() - hit.at < 60000) return hit.docs.slice();                      // 60秒は読み直さない（タブの行き来用。自分の登録・改名・ランキング画面を開き直すとリセット）
     let docs;
     if (this.kind === 'db') {
       const snap = await this.db.collection(col).orderBy(field, dir).limit(take).get();
@@ -1134,7 +1136,9 @@ const Online = {
     docs = docs.filter(e => e && typeof e.t === 'number' && typeof e.a === 'number' && (metric !== 'combo' || typeof e.c === 'number'));
     if (metric === 'acc') docs.sort((x, y) => y.a - x.a || x.t - y.t);
     if (metric === 'combo') docs.sort((x, y) => y.c - x.c || x.t - y.t);
-    return docs.slice(0, n);
+    docs = docs.slice(0, n);
+    this.cache[metric + ':' + n] = { at: Date.now(), docs };
+    return docs.slice();
   },
   // この端末が覚えている「自分のオンライン最高記録」。無ければサーバーから1回だけ読む
   async ensureBest() {
@@ -1157,6 +1161,7 @@ const Online = {
       const has = { scores: best.t != null, accuracy: best.a != null, combo: best.c != null };   // 在る記録だけ、読まずに更新する
       for (const c of ['scores', 'accuracy', 'combo']) if (has[c]) await f.updateDoc(f.doc(this.fdb, c, this.uid), { n });
     }
+    this.cache = {};
   },
   async submit(e) {
     if (this.kind === 'db') {
@@ -1168,6 +1173,7 @@ const Online = {
       if (!(c2.exists && c2.data().a >= e.a)) await r2.set(base);
       const r3 = this.db.doc('combo/' + this.uid), c3 = await r3.get();
       if (!(c3.exists && c3.data().c >= e.c)) await r3.set({ ...base, c: e.c });
+      this.cache = {};
     } else if (this.kind === 'fb') {
       // 読み取りは、この端末で初めてのときだけ。以降は覚えている最高記録と比べ、良くなった種類だけ書く
       const f = this.fs, base = { n: clipName(e.n), t: e.t, a: e.a, d: e.d, u: this.uid };
@@ -1176,6 +1182,7 @@ const Online = {
       if (flags.time) { await f.setDoc(f.doc(this.fdb, 'scores', this.uid), base); best.t = e.t; rec.onlineBest = best; saveRec(); }
       if (flags.acc) { await f.setDoc(f.doc(this.fdb, 'accuracy', this.uid), base); best.a = e.a; rec.onlineBest = best; saveRec(); }
       if (flags.combo) { await f.setDoc(f.doc(this.fdb, 'combo', this.uid), { ...base, c: e.c }); best.c = e.c; rec.onlineBest = best; saveRec(); }
+      this.cache = {};
       return flags;
     } else if (this.kind === 'rest') {
       const r = await fetch(this.url + '/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n: e.n, t: e.t, a: e.a, c: e.c }) });
@@ -1325,7 +1332,7 @@ for (const id of ['pname', 'pname2']) {
   $(id + 'Ok').onclick = () => { commitName($(id).value); $(id).blur(); toast(t('tNameSaved')); };
 }
 let rankFrom = 'ovTitle';
-function openRank(from, hl) { rankFrom = from; showRank(hl || null, Online.kind ? 'online' : 'local'); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
+function openRank(from, hl) { Online.cache = {}; rankFrom = from; showRank(hl || null, Online.kind ? 'online' : 'local'); $(from).classList.remove('on'); $('ovRank').classList.add('on'); }
 $('bRank').onclick = () => openRank('ovTitle');
 $('bRank2').onclick = () => openRank('ovResult', result && result.d);
 $('mtTime').onclick = () => showRank(undefined, undefined, 'time');
