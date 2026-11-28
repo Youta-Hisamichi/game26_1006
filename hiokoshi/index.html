@@ -1088,7 +1088,7 @@ function frameBody(now) {
 //   GET  {url}/scores?limit=10[&metric=acc] → [{n,t,a,c,d,u?}, …]（既定はタイム昇順＝速い順、metric=acc は正確さ順、metric=combo は最大コンボ順）
 //   POST {url}/scores  {n,t,a} → 1人1記録のベスト更新は サーバー側で処理
 const Online = {
-  kind: null, db: null, uid: null, url: null, fs: null, fdb: null, cache: {},
+  kind: null, db: null, uid: null, url: null, fs: null, fdb: null,
   async init() {
     try {
       if (window.claude && window.claude.use) {
@@ -1118,8 +1118,6 @@ const Online = {
   async top(metric = 'time', n = RANK_MAX) {
     const M = { time: ['scores', 't', 'asc'], acc: ['accuracy', 'a', 'desc'], combo: ['combo', 'c', 'desc'] }[metric] || ['scores', 't', 'asc'];
     const [col, field, dir] = M, take = metric === 'time' ? n : Math.min(1000, n + 25);   // 同率の並べ替えのため少しだけ多めに取る
-    const hit = this.cache[metric + ':' + n];
-    if (hit && Date.now() - hit.at < 60000) return hit.docs.slice();                      // 60秒は読み直さない（自分の登録・改名でリセット）
     let docs;
     if (this.kind === 'db') {
       const snap = await this.db.collection(col).orderBy(field, dir).limit(take).get();
@@ -1136,9 +1134,7 @@ const Online = {
     docs = docs.filter(e => e && typeof e.t === 'number' && typeof e.a === 'number' && (metric !== 'combo' || typeof e.c === 'number'));
     if (metric === 'acc') docs.sort((x, y) => y.a - x.a || x.t - y.t);
     if (metric === 'combo') docs.sort((x, y) => y.c - x.c || x.t - y.t);
-    docs = docs.slice(0, n);
-    this.cache[metric + ':' + n] = { at: Date.now(), docs };
-    return docs.slice();
+    return docs.slice(0, n);
   },
   // この端末が覚えている「自分のオンライン最高記録」。無ければサーバーから1回だけ読む
   async ensureBest() {
@@ -1149,16 +1145,6 @@ const Online = {
     const best = { u: this.uid, t: d1.exists() ? d1.data().t : null, a: d2.exists() ? d2.data().a : null, c: d3.exists() ? d3.data().c : null };
     rec.onlineBest = best; saveRec();
     return best;
-  },
-  // 自分より良い記録の件数を数えて順位を出す（一覧は読まない）
-  async rankOf(metric, e) {
-    const f = this.fs;
-    const cnt = async (col, field, op, v) => (await f.getCountFromServer(f.query(f.collection(this.fdb, col), f.where(field, op, v)))).data().count;
-    if (metric === 'time') return (await cnt('scores', 't', '<', e.t)) + 1;
-    const col = metric === 'acc' ? 'accuracy' : 'combo', field = metric === 'acc' ? 'a' : 'c', v = metric === 'acc' ? e.a : e.c;
-    const better = await cnt(col, field, '>', v);
-    const tied = await f.getDocs(f.query(f.collection(this.fdb, col), f.where(field, '==', v)));   // 同率はタイムが速い順
-    return better + tied.docs.filter(d => { const x = d.data(); return x.t < e.t || (x.t === e.t && x.d < e.d); }).length + 1;
   },
   // 名前の変更を、自分のオンライン記録にも反映する（タイムや正確さは変えない）
   async rename(name) {
@@ -1171,7 +1157,6 @@ const Online = {
       const has = { scores: best.t != null, accuracy: best.a != null, combo: best.c != null };   // 在る記録だけ、読まずに更新する
       for (const c of ['scores', 'accuracy', 'combo']) if (has[c]) await f.updateDoc(f.doc(this.fdb, c, this.uid), { n });
     }
-    this.cache = {};
   },
   async submit(e) {
     if (this.kind === 'db') {
@@ -1183,7 +1168,6 @@ const Online = {
       if (!(c2.exists && c2.data().a >= e.a)) await r2.set(base);
       const r3 = this.db.doc('combo/' + this.uid), c3 = await r3.get();
       if (!(c3.exists && c3.data().c >= e.c)) await r3.set({ ...base, c: e.c });
-      this.cache = {};
     } else if (this.kind === 'fb') {
       // 読み取りは、この端末で初めてのときだけ。以降は覚えている最高記録と比べ、良くなった種類だけ書く
       const f = this.fs, base = { n: clipName(e.n), t: e.t, a: e.a, d: e.d, u: this.uid };
@@ -1192,7 +1176,6 @@ const Online = {
       if (flags.time) { await f.setDoc(f.doc(this.fdb, 'scores', this.uid), base); best.t = e.t; rec.onlineBest = best; saveRec(); }
       if (flags.acc) { await f.setDoc(f.doc(this.fdb, 'accuracy', this.uid), base); best.a = e.a; rec.onlineBest = best; saveRec(); }
       if (flags.combo) { await f.setDoc(f.doc(this.fdb, 'combo', this.uid), { ...base, c: e.c }); best.c = e.c; rec.onlineBest = best; saveRec(); }
-      this.cache = {};
       return flags;
     } else if (this.kind === 'rest') {
       const r = await fetch(this.url + '/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n: e.n, t: e.t, a: e.a, c: e.c }) });
@@ -1295,19 +1278,15 @@ async function postOnline(entry) {
   if (!Online.kind) { el.textContent = ''; return; }
   el.textContent = t('rrankOnSend');
   try {
-    const flags = await Online.submit(entry);
-    let p1 = null, p2 = null, p3 = null;
-    if (Online.kind === 'fb') {        // 良くなった種類だけ、件数を数えて順位を出す（一覧は読まない）
-      [p1, p2, p3] = await Promise.all([['time', flags.time], ['acc', flags.acc], ['combo', flags.combo]].map(([m, on]) => on ? Online.rankOf(m, entry) : null));
-    } else {
-      const [lt, la, lc] = await Promise.all([Online.top('time', RANK_MAX), Online.top('acc', RANK_MAX), Online.top('combo', RANK_MAX)]);
-      const pos = l => { const i = l.findIndex(e => isMine(e, entry.d)); return i >= 0 ? i + 1 : null; };
-      p1 = pos(lt); p2 = pos(la); p3 = pos(lc);
-    }
+    await Online.submit(entry);
+    // オンラインランキングを1回だけ取得し、その中から自分の記録（ベスト）の順位を判別する
+    const [lt, la, lc] = await Promise.all([Online.top('time', RANK_MAX), Online.top('acc', RANK_MAX), Online.top('combo', RANK_MAX)]);
     if (!result || result.d !== entry.d) return;
-    el.textContent = p1 && p1 <= RANK_MAX ? t('rrankOnIn', p1) : '';
-    ea.textContent = p2 && p2 <= RANK_MAX ? t('rrankAccOnIn', p2) : '';
-    ec.textContent = p3 && p3 <= RANK_MAX ? t('rrankComboOnIn', p3) : '';
+    const pos = l => { const i = l.findIndex(e => isMine(e, entry.d)); return i >= 0 ? i + 1 : null; };
+    const p1 = pos(lt), p2 = pos(la), p3 = pos(lc);
+    el.textContent = p1 ? t('rrankOnIn', p1) : '';
+    ea.textContent = p2 ? t('rrankAccOnIn', p2) : '';
+    ec.textContent = p3 ? t('rrankComboOnIn', p3) : '';
   } catch (e) { if (result && result.d === entry.d) el.textContent = t('rrankOnFail'); }
 }
 function refreshTitle() {
